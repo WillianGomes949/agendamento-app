@@ -2,37 +2,15 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import {
-  getServicos,
-  createServico,
-  updateServico,
-  deleteServico,
-} from "@/lib/gas-api";
-import type { Servico, FormularioServico } from "@/lib/types";
 
-export async function fetchServicos(): Promise<Servico[]> {
-  const res = await getServicos();
-  return Array.isArray(res) ? res : res?.data || [];
-}
+// ✅ Server Actions agora apenas revalidam cache
+// O fetch real é feito pelo Client Component via gas-api.ts
 
-export async function criarServico(data: FormularioServico): Promise<void> {
-  await createServico({
-    ...data,
-    status: "pendente",
-  });
+export async function revalidateServicos() {
   revalidatePath("/agendamentos");
 }
 
-export async function atualizarServico(
-  id: number,
-  data: Partial<Servico>,
-): Promise<void> {
-  await updateServico({ id, ...data });
+export async function revalidateServico(id: string) {
   revalidatePath("/agendamentos");
   revalidatePath(`/agendamentos/${id}`);
-}
-
-export async function removerServico(id: number): Promise<void> {
-  await deleteServico(id);
-  revalidatePath("/agendamentos");
 }

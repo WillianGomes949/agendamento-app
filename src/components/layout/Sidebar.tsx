@@ -2,24 +2,34 @@
 "use client";
 
 import { motion, AnimatePresence } from "framer-motion";
-import { Home, CalendarDays, Wrench, Users, Settings } from "lucide-react";
+import { 
+  Home, 
+  CalendarDays, 
+  Wrench, 
+  Users, 
+  Settings, 
+  BarChart3,
+  X
+} from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-
-const navItems = [
-  { label: "Dashboard", href: "/agendamentos", icon: Home },
-  { label: "Agendamentos", href: "/agendamentos", icon: CalendarDays },
-  { label: "Serviços", href: "/agendamentos", icon: Wrench },
-  { label: "Técnicos", href: "#", icon: Users },
-  { label: "Configurações", href: "#", icon: Settings },
-];
 
 interface SidebarProps {
   isOpen: boolean;
   isCollapsed: boolean;
+  onCloseMobile: () => void;
 }
 
-export default function Sidebar({ isOpen, isCollapsed }: SidebarProps) {
+const navItems = [
+  { label: "Dashboard", href: "/", icon: Home },
+  { label: "Agendamentos", href: "/agendamentos", icon: CalendarDays },
+  { label: "Serviços", href: "/servicos", icon: Wrench },
+  { label: "Relatórios", href: "/relatorios", icon: BarChart3 },
+  { label: "Técnicos", href: "/tecnicos", icon: Users },
+  { label: "Configurações", href: "/configuracoes", icon: Settings },
+];
+
+export default function Sidebar({ isOpen, isCollapsed, onCloseMobile }: SidebarProps) {
   const pathname = usePathname();
 
   return (
@@ -31,7 +41,9 @@ export default function Sidebar({ isOpen, isCollapsed }: SidebarProps) {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
             className="fixed inset-0 bg-black/40 z-40 lg:hidden backdrop-blur-sm"
+            onClick={onCloseMobile}
           />
         )}
       </AnimatePresence>
@@ -52,25 +64,35 @@ export default function Sidebar({ isOpen, isCollapsed }: SidebarProps) {
               TrackApp
             </span>
           )}
+          <button 
+            onClick={onCloseMobile}
+            className="lg:hidden p-1.5 hover:bg-gray-100 rounded-lg text-gray-500"
+            aria-label="Fechar menu"
+          >
+            <X size={18} />
+          </button>
         </div>
 
         <nav className="flex-1 py-4 px-3 space-y-1 overflow-y-auto scrollbar-thin">
           {navItems.map((item) => {
-            const isActive = pathname === item.href || (item.href !== "#" && pathname.startsWith(item.href));
+            const isActive = pathname === item.href || (item.href !== "/" && pathname.startsWith(item.href));
             const Icon = item.icon;
             return (
               <Link
                 key={item.label}
                 href={item.href}
+                onClick={() => onCloseMobile()}
                 className={`flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 group ${
                   isActive
                     ? "bg-blue-50 text-blue-600 shadow-sm"
                     : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
                 }`}
+                aria-current={isActive ? "page" : undefined}
               >
                 <Icon
                   size={20}
                   className={isActive ? "text-blue-600" : "text-gray-500 group-hover:text-gray-700"}
+                  aria-hidden="true"
                 />
                 {!isCollapsed && (
                   <span className="font-medium text-sm whitespace-nowrap">{item.label}</span>

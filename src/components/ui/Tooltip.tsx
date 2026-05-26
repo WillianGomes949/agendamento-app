@@ -27,19 +27,51 @@ const positionClasses: Record<TooltipPosition, string> = {
   right: "left-full top-1/2 -translate-y-1/2 ml-2",
 };
 
-const arrowClasses: Record<TooltipPosition, string> = {
-  top: "top-full left-1/2 -translate-x-1/2 -mt-1 border-t-gray-800",
-  bottom: "bottom-full left-1/2 -translate-x-1/2 -mb-1 border-b-gray-800",
-  left: "left-full top-1/2 -translate-y-1/2 -ml-1 border-l-gray-800",
-  right: "right-full top-1/2 -translate-y-1/2 -mr-1 border-r-gray-800",
-};
-
 const variantClasses: Record<TooltipVariant, string> = {
   dark: "bg-gray-900 text-white",
   light: "bg-white text-gray-900 border border-gray-200 shadow-lg",
   info: "bg-blue-600 text-white",
   warning: "bg-yellow-500 text-white",
   error: "bg-red-600 text-white",
+};
+
+// Arrow borders corrigidos por posição e variante
+const arrowBorderClasses: Record<TooltipPosition, Record<TooltipVariant, string>> = {
+  top: {
+    dark: "border-t-gray-900",
+    light: "border-t-white",
+    info: "border-t-blue-600",
+    warning: "border-t-yellow-500",
+    error: "border-t-red-600",
+  },
+  bottom: {
+    dark: "border-b-gray-900",
+    light: "border-b-white",
+    info: "border-b-blue-600",
+    warning: "border-b-yellow-500",
+    error: "border-b-red-600",
+  },
+  left: {
+    dark: "border-l-gray-900",
+    light: "border-l-white",
+    info: "border-l-blue-600",
+    warning: "border-l-yellow-500",
+    error: "border-l-red-600",
+  },
+  right: {
+    dark: "border-r-gray-900",
+    light: "border-r-white",
+    info: "border-r-blue-600",
+    warning: "border-r-yellow-500",
+    error: "border-r-red-600",
+  },
+};
+
+const arrowPositionClasses: Record<TooltipPosition, string> = {
+  top: "top-full left-1/2 -translate-x-1/2 -mt-1",
+  bottom: "bottom-full left-1/2 -translate-x-1/2 -mb-1",
+  left: "left-full top-1/2 -translate-y-1/2 -ml-1",
+  right: "right-full top-1/2 -translate-y-1/2 -mr-1",
 };
 
 export function Tooltip({
@@ -54,46 +86,21 @@ export function Tooltip({
   showArrow = true,
 }: TooltipProps) {
   const [isVisible, setIsVisible] = useState(false);
-  const [isHovered, setIsHovered] = useState(false);
-  const timeoutRef = useRef<NodeJS.Timeout>();
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const handleMouseEnter = () => {
     if (disabled) return;
-    
     timeoutRef.current = setTimeout(() => {
       setIsVisible(true);
-      setIsHovered(true);
     }, delay);
   };
 
   const handleMouseLeave = () => {
     if (timeoutRef.current) {
       clearTimeout(timeoutRef.current);
+      timeoutRef.current = null;
     }
     setIsVisible(false);
-    setIsHovered(false);
-  };
-
-  // Calcular offset para posicionamento
-  const getOffsetStyle = (): React.CSSProperties => {
-    const styles: React.CSSProperties = {};
-    
-    switch (position) {
-      case "top":
-        styles.marginBottom = offset;
-        break;
-      case "bottom":
-        styles.marginTop = offset;
-        break;
-      case "left":
-        styles.marginRight = offset;
-        break;
-      case "right":
-        styles.marginLeft = offset;
-        break;
-    }
-    
-    return styles;
   };
 
   return (
@@ -103,7 +110,7 @@ export function Tooltip({
       onMouseLeave={handleMouseLeave}
     >
       <div className="cursor-help">{children}</div>
-      
+
       <AnimatePresence>
         {isVisible && !disabled && (
           <motion.div
@@ -117,19 +124,21 @@ export function Tooltip({
               variantClasses[variant],
               className
             )}
-            style={getOffsetStyle()}
+            style={{ 
+              marginTop: position === "bottom" ? offset : undefined,
+              marginBottom: position === "top" ? offset : undefined,
+              marginLeft: position === "right" ? offset : undefined,
+              marginRight: position === "left" ? offset : undefined,
+            }}
           >
             {showArrow && (
               <div
                 className={cn(
                   "absolute w-0 h-0 border-4 border-transparent",
-                  arrowClasses[position],
-                  variant === "dark" && "border-t-gray-900",
-                  variant === "light" && "border-t-white",
-                  variant === "info" && "border-t-blue-600",
-                  variant === "warning" && "border-t-yellow-500",
-                  variant === "error" && "border-t-red-600"
+                  arrowPositionClasses[position],
+                  arrowBorderClasses[position][variant]
                 )}
+                aria-hidden="true"
               />
             )}
             {content}

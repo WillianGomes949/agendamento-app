@@ -4,7 +4,7 @@
 import { useParams, useRouter } from "next/navigation";
 import { useServicos } from "@/hooks/useServicos";
 import { motion } from "framer-motion";
-import { ArrowLeft, Phone, MapPin, Car, Calendar, User, AlertCircle, Loader2 } from "lucide-react";
+import { ArrowLeft, Phone, MapPin, Car, Calendar, User, AlertCircle, Loader2, Wrench } from "lucide-react";
 import { formatarContato } from "@/lib/utils";
 import { StatusBadge } from "@/components/features/StatusBadge";
 import { Card } from "@/components/ui/Card";
@@ -13,10 +13,32 @@ import { Button } from "@/components/ui/Button";
 export default function ServicoDetalhesPage() {
   const params = useParams();
   const router = useRouter();
-  const id = Number(params.id);
+  const id = String(params.id);  // ✅ STRING, não Number
 
   const { servicos, loading, error } = useServicos();
-  const servico = servicos.find((s) => s.id === id);
+
+  // ✅ Comparação segura de strings
+  const servico = servicos.find((s) => String(s.id) === id);
+
+  // ✅ Funções seguras para acessar propriedades
+  const getClienteNome = () => servico?.cliente?.nome || "Cliente não informado";
+  const getClienteContato = () => servico?.cliente?.contato || "";
+  const getOrdemServico = () => servico?.ordemServico || "N/A";
+  const getVeiculoPlaca = () => servico?.veiculo?.placa || "N/A";
+  const getVeiculoModelo = () => servico?.veiculo?.marcaModelo || "N/A";
+  const getTipoServico = () => servico?.tipoServico || "N/A";
+  const getEnderecoRua = () => servico?.endereco?.rua || "";
+  const getEnderecoNumero = () => servico?.endereco?.numero || "";
+  const getEnderecoBairro = () => servico?.endereco?.bairro || "";
+  const getEnderecoCidade = () => servico?.endereco?.cidade || "";
+  const getEnderecoEstado = () => servico?.endereco?.estado || "";
+  const getEnderecoCep = () => servico?.endereco?.cep || "";
+  const getData = () => servico?.data || "Data não informada";
+  const getDiaSemana = () => servico?.diaSemana || "";
+  const getHorario = () => servico?.horario || "Horário não informado";
+  const getObservacao = () => servico?.observacao || "";
+  const getStatus = () => servico?.status || "pendente";
+  const getTecnico = () => servico?.tecnico || "Não informado";
 
   if (loading) {
     return (
@@ -75,12 +97,10 @@ export default function ServicoDetalhesPage() {
 
         <Card className="mb-6 p-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">{servico.cliente.nome}</h1>
-            <p className="text-gray-500 mt-1">
-              Ordem de Serviço: {servico.ordemServico || "N/A"}
-            </p>
+            <h1 className="text-2xl font-bold text-gray-900">{getClienteNome()}</h1>
+            <p className="text-gray-500 mt-1">Ordem de Serviço: {getOrdemServico()}</p>
           </div>
-          <StatusBadge status={servico.status} className="self-start" />
+          <StatusBadge status={getStatus()} className="self-start" />
         </Card>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -90,7 +110,7 @@ export default function ServicoDetalhesPage() {
             </h2>
             <div className="flex items-center gap-3 text-gray-600">
               <Phone className="w-5 h-5 text-gray-400" />
-              <span>{formatarContato(servico.cliente.contato)}</span>
+              <span>{formatarContato(getClienteContato())}</span>
             </div>
           </Card>
 
@@ -101,15 +121,15 @@ export default function ServicoDetalhesPage() {
             <div className="space-y-3 text-sm">
               <div className="flex items-center gap-3">
                 <span className="font-medium text-gray-500 w-16">Placa:</span>
-                <span className="font-mono uppercase">{servico.veiculo.placa}</span>
+                <span className="font-mono uppercase">{getVeiculoPlaca()}</span>
               </div>
               <div className="flex items-center gap-3">
                 <span className="font-medium text-gray-500 w-16">Modelo:</span>
-                <span>{servico.veiculo.marcaModelo}</span>
+                <span>{getVeiculoModelo()}</span>
               </div>
               <div className="flex items-center gap-3">
                 <span className="font-medium text-gray-500 w-16">Tipo:</span>
-                <span>{servico.tipoServico}</span>
+                <span>{getTipoServico()}</span>
               </div>
             </div>
           </Card>
@@ -120,36 +140,57 @@ export default function ServicoDetalhesPage() {
             </h2>
             <address className="not-italic space-y-1 text-gray-600">
               <p>
-                {servico.endereco.rua}, {servico.endereco.numero}
+                {getEnderecoRua()}{getEnderecoNumero() ? `, ${getEnderecoNumero()}` : ""}
               </p>
               <p>
-                {servico.endereco.bairro} - {servico.endereco.cidade}/{servico.endereco.estado.toUpperCase()}
+                {getEnderecoBairro()} 
+                {getEnderecoBairro() && getEnderecoCidade() ? " - " : ""} 
+                {getEnderecoCidade()}
+                {getEnderecoEstado() ? `/${getEnderecoEstado().toUpperCase()}` : ""}
               </p>
-              <p className="text-sm text-gray-500">CEP: {servico.endereco.cep}</p>
+              {getEnderecoCep() && (
+                <p className="text-sm text-gray-500">CEP: {getEnderecoCep()}</p>
+              )}
             </address>
+          </Card>
+
+          <Card className="p-5">
+            <h2 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
+              <Wrench className="w-5 h-5 text-orange-500" /> Técnico Responsável
+            </h2>
+            <div className="flex items-center gap-3 text-gray-600">
+              <User className="w-5 h-5 text-gray-400" />
+              <span className="font-medium">{getTecnico()}</span>
+            </div>
+          </Card>
+
+          <Card className="p-5">
+            <h2 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
+              <Calendar className="w-5 h-5 text-green-500" /> Agenda
+            </h2>
+            <div className="space-y-2 text-sm">
+              <div className="flex justify-between">
+                <span className="text-gray-500">Data</span>
+                <span className="font-medium">
+                  {getData()}{getDiaSemana() ? ` • ${getDiaSemana()}` : ""}
+                </span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-500">Horário</span>
+                <span className="font-medium">{getHorario()}</span>
+              </div>
+            </div>
           </Card>
 
           <Card className="p-5 md:col-span-2">
             <h2 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
-              <Calendar className="w-5 h-5 text-green-500" /> Agenda & Observações
+              <Calendar className="w-5 h-5 text-amber-500" /> Observações
             </h2>
-            <div className="grid grid-cols-2 gap-4 mb-4 text-sm">
-              <div>
-                <p className="text-gray-500">Data</p>
-                <p className="font-medium">
-                  {servico.data} • {servico.diaSemana}
-                </p>
-              </div>
-              <div>
-                <p className="text-gray-500">Horário</p>
-                <p className="font-medium">{servico.horario}</p>
-              </div>
-            </div>
-            {servico.observacao ? (
+            {getObservacao() ? (
               <div className="bg-amber-50 border border-amber-200 rounded-lg p-3">
                 <p className="text-sm text-amber-800">
                   <span className="font-semibold">Obs: </span>
-                  {servico.observacao}
+                  {getObservacao()}
                 </p>
               </div>
             ) : (

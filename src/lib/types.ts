@@ -1,15 +1,12 @@
 // src/lib/types.ts
-export type StatusServico = 'pendente' | 'aguardando' | 'concluido' | 'cancelado';
+// Tipos centralizados — alinhados com o backend Google Apps Script
 
-export type DiaSemana = 
-  | 'SEGUNDA' | 'TERÇA' | 'QUARTA' | 'QUINTA' | 'SEXTA' | 'SÁBADO' | 'DOMINGO';
-
-export type TipoServico = 
-  | 'SUBSTITUIÇÃO DE CHIP' 
-  | 'INSTALAÇÃO' 
-  | 'MANUTENÇÃO' 
-  | 'RETIRADA' 
-  | string; // Flexibilidade para variações do mock
+export type StatusServico = 
+  | "pendente" 
+  | "em_andamento" 
+  | "concluido" 
+  | "cancelado" 
+  | "deletado";
 
 export interface Cliente {
   nome: string;
@@ -31,37 +28,66 @@ export interface Endereco {
 }
 
 export interface Servico {
-  id: number;
+  id: string;
   tecnico: string;
-  data: string;          // DD/MM/YYYY
-  diaSemana: DiaSemana;
-  horario: string;       // HH:00
-  tipoServico: TipoServico;
+  data: string;
+  diaSemana: string;
+  horario: string;
+  tipoServico: string;
   ordemServico: string | null;
   observacao: string | null;
   cliente: Cliente;
   veiculo: Veiculo;
   endereco: Endereco;
   status: StatusServico;
-}
-
-export interface FiltrosServicos {
-  data?: string;
-  tecnico?: string;
-  status?: StatusServico  | "";
-  tipoServico?: TipoServico;
-  busca?: string;
+  criadoEm: string;
+  atualizadoEm: string;
 }
 
 export interface FormularioServico {
-   tecnico: string;
+  tecnico: string;
   data: string;
   horario: string;
-  tipoServico: TipoServico;
+  tipoServico: string;
+  ordemServico?: string | null;
+  observacao?: string | null;
   cliente: Cliente;
   veiculo: Veiculo;
   endereco: Endereco;
-  observacao: string;
-  status?: StatusServico;
 }
 
+export interface FiltrosServicos {
+  busca?: string;
+  data?: string;
+  status?: StatusServico;
+  tecnico?: string;
+  clienteNome?: string;
+  veiculoPlaca?: string;
+  dataInicio?: string;
+  dataFim?: string;
+  page?: number;
+  pageSize?: number;
+  sortBy?: string;
+  sortOrder?: "asc" | "desc";
+}
+
+export interface PaginatedResponse<T> {
+  success: boolean;
+  requestId: string;
+  meta: {
+    total: number;
+    page: number;
+    pageSize: number;
+    totalPages: number;
+  };
+  data: T[];
+}
+
+export interface ApiError {
+  success: false;
+  error: string;
+  details?: string;
+  requestId?: string;
+  _httpStatus: number;
+  _timestamp: string;
+}

@@ -20,8 +20,8 @@ interface ModalProps {
 const sizeClasses: Record<ModalSize, string> = {
   sm: "max-w-sm",
   md: "max-w-md",
-  lg: "max-w-lg",
-  xl: "max-w-xl",
+  lg: "max-w-2xl",
+  xl: "max-w-4xl",
 };
 
 export function Modal({ isOpen, onClose, title, children, size = "md", className, closeOnOverlayClick = true }: ModalProps) {
@@ -39,41 +39,45 @@ export function Modal({ isOpen, onClose, title, children, size = "md", className
     };
   }, [isOpen, onClose]);
 
-  if (!isOpen) return null;
-
   return (
     <AnimatePresence>
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        transition={{ duration: 0.2 }}
-        className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4"
-        onClick={closeOnOverlayClick ? onClose : undefined}
-      >
+      {isOpen && (
         <motion.div
-          initial={{ scale: 0.95, opacity: 0, y: 10 }}
-          animate={{ scale: 1, opacity: 1, y: 0 }}
-          exit={{ scale: 0.95, opacity: 0, y: 10 }}
-          transition={{ type: "spring", stiffness: 300, damping: 25 }}
-          onClick={(e) => e.stopPropagation()}
-          className={cn(
-            "w-full bg-white rounded-2xl shadow-xl border border-gray-200 overflow-hidden",
-            sizeClasses[size],
-            className
-          )}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.2 }}
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4"
+          onClick={closeOnOverlayClick ? onClose : undefined}
         >
-          {title && (
-            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
-              <h3 className="text-lg font-semibold text-gray-900">{title}</h3>
-              <button onClick={onClose} className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors">
-                <X className="w-5 h-5 text-gray-500" />
-              </button>
-            </div>
-          )}
-          <div className="p-6">{children}</div>
+          <motion.div
+            initial={{ scale: 0.95, opacity: 0, y: 10 }}
+            animate={{ scale: 1, opacity: 1, y: 0 }}
+            exit={{ scale: 0.95, opacity: 0, y: 10 }}
+            transition={{ type: "spring", stiffness: 300, damping: 25 }}
+            onClick={(e) => e.stopPropagation()}
+            className={cn(
+              "w-full bg-white rounded-2xl shadow-xl border border-gray-200 overflow-hidden max-h-[90vh] overflow-y-auto",
+              sizeClasses[size],
+              className
+            )}
+          >
+            {title && (
+              <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 sticky top-0 bg-white z-10">
+                <h3 className="text-lg font-semibold text-gray-900">{title}</h3>
+                <button 
+                  onClick={onClose} 
+                  className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors"
+                  aria-label="Fechar"
+                >
+                  <X className="w-5 h-5 text-gray-500" aria-hidden="true" />
+                </button>
+              </div>
+            )}
+            <div className="p-6">{children}</div>
+          </motion.div>
         </motion.div>
-      </motion.div>
+      )}
     </AnimatePresence>
   );
 }

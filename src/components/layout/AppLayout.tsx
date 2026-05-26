@@ -9,36 +9,53 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
 
   // Evita mismatch de hidratação e sincroniza com viewport
   useEffect(() => {
     setMounted(true);
-    const handleResize = () => {
-      if (window.innerWidth >= 1024) {
+    const checkMobile = () => {
+      const mobile = window.innerWidth < 1024;
+      setIsMobile(mobile);
+      if (mobile) {
         setMobileMenuOpen(false);
-        setSidebarCollapsed(false);
-      } else {
         setSidebarCollapsed(true);
+      } else {
+        setSidebarCollapsed(false);
       }
     };
-    
-    handleResize();
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
+
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
+    return () => window.removeEventListener("resize", checkMobile);
   }, []);
 
-  if (!mounted) return null;
+  if (!mounted) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex">
+        <div className="flex-1 flex flex-col">
+          <div className="h-16 bg-white border-b border-gray-200" />
+          <main className="flex-1 p-4 md:p-6 lg:p-8">
+            {children}
+          </main>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 flex">
       <Sidebar
         isOpen={mobileMenuOpen}
-        isCollapsed={sidebarCollapsed}
+        isCollapsed={sidebarCollapsed && !isMobile}
+        onCloseMobile={() => setMobileMenuOpen(false)}
       />
-      
+
       <div
         className="flex-1 flex flex-col min-w-0 transition-all duration-300 ease-in-out"
-        style={{ marginLeft: sidebarCollapsed ? "4rem" : "16rem" }}
+        style={{ 
+          marginLeft: isMobile ? "0" : (sidebarCollapsed ? "4rem" : "16rem") 
+        }}
       >
         <Header
           onToggleSidebar={() => setSidebarCollapsed(!sidebarCollapsed)}
