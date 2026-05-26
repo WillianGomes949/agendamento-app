@@ -3,7 +3,10 @@ import { z } from "zod";
 
 export const clienteSchema = z.object({
   nome: z.string().min(1, "Nome do cliente é obrigatório"),
-  contato: z.string().min(10, "Contato deve ter pelo menos 10 dígitos").max(11, "Contato deve ter no máximo 11 dígitos"),
+  contato: z
+    .string()
+    .min(10, "Contato deve ter pelo menos 10 dígitos")
+    .max(11, "Contato deve ter no máximo 11 dígitos"),
 });
 
 export const veiculoSchema = z.object({
@@ -22,9 +25,18 @@ export const enderecoSchema = z.object({
 
 export const formularioServicoSchema = z.object({
   tecnico: z.string().min(1, "Técnico é obrigatório"),
-  data: z.string().regex(/^\d{2}\/\d{2}\/\d{4}$/, "Data deve estar no formato DD/MM/YYYY"),
-  horario: z.string().regex(/^([01]\d|2[0-3]):([0-5]\d)$/, "Horário deve estar no formato HH:MM"),
+  data: z
+    .string()
+    .regex(/^\d{2}\/\d{2}\/\d{4}$/, "Data deve estar no formato DD/MM/YYYY"),
+  horario: z
+    .string()
+    .regex(
+      /^([01]\d|2[0-3]):([0-5]\d)$/,
+      "Horário deve estar no formato HH:MM",
+    ),
+
   tipoServico: z.string().min(1, "Tipo de serviço é obrigatório"),
+  status: z.string().optional(),
   ordemServico: z.string().nullable().optional(),
   observacao: z.string().optional(),
   cliente: clienteSchema,

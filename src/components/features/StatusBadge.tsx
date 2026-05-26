@@ -2,7 +2,6 @@
 "use client";
 
 import { Clock, Hourglass, CheckCircle, XCircle, Trash2, type LucideIcon } from "lucide-react";
-import type { StatusServico } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
 interface StatusConfig {
@@ -11,7 +10,8 @@ interface StatusConfig {
   classes: string;
 }
 
-const STATUS_CONFIG: Record<StatusServico, StatusConfig> = {
+// ✅ Usamos string genérica ao invés de forçar o type restrito
+const STATUS_CONFIG: Record<string, StatusConfig> = {
   pendente: { 
     label: "Pendente", 
     icon: Clock, 
@@ -39,14 +39,22 @@ const STATUS_CONFIG: Record<StatusServico, StatusConfig> = {
   },
 };
 
-export function StatusBadge({ status, className }: { status: StatusServico; className?: string }) {
-  const config = STATUS_CONFIG[status];
+export function StatusBadge({ status, className }: { status: string; className?: string }) {
+  // ✅ Normaliza o status que vem da planilha
+  // Ex: "EM ANDAMENTO" -> "em_andamento" | "CONCLUÍDO" -> "concluido"
+  const normalizedKey = (status || "pendente")
+    .toLowerCase()
+    .normalize("NFD") // Separa os acentos
+    .replace(/[\u0300-\u036f]/g, "") // Remove os acentos
+    .replace(/\s+/g, "_"); // Troca espaços por underline
+
+  const config = STATUS_CONFIG[normalizedKey];
 
   if (!config) {
-    // Fallback para status desconhecido
+    // Fallback para status novo/desconhecido criado na planilha
     return (
       <span className={cn(
-        "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border bg-gray-50 text-gray-600 border-gray-200",
+        "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border bg-gray-50 text-gray-600 border-gray-200 uppercase",
         className
       )}>
         {status}

@@ -1,12 +1,7 @@
 // src/lib/types.ts
 // Tipos centralizados — alinhados com o backend Google Apps Script
 
-export type StatusServico = 
-  | "pendente" 
-  | "em_andamento" 
-  | "concluido" 
-  | "cancelado" 
-  | "deletado";
+export type StatusServico = string;
 
 export interface Cliente {
   nome: string;

@@ -1,0 +1,130 @@
+// src/hooks/useConfig.ts
+"use client";
+
+import { useState, useEffect, useCallback } from "react";
+
+interface ConfigOptions {
+  tecnicos: { value: string; label: string }[];
+  tiposServico: { value: string; label: string }[];
+  horarios: { value: string; label: string }[];
+  status: { value: string; label: string }[]; // ✅ Adicionado
+}
+
+interface UseConfigReturn {
+  options: ConfigOptions;
+  loading: boolean;
+  error: string | null;
+  refresh: () => void;
+}
+
+const API_BASE = "/api/config";
+
+function sanitizarHorario(valor: unknown): string {
+  if (!valor) return "";
+  if (typeof valor === "string") {
+    const trimmed = valor.trim();
+    if (/^([01]?\d|2[0-3]):([0-5]\d)$/.test(trimmed)) {
+      const [h, m] = trimmed.split(":");
+      return `${h.padStart(2, "0")}:${m}`;
+    }
+    const match = trimmed.match(/(\d{1,2}):(\d{2})/);
+    if (match) {
+      const horas = match[1].padStart(2, "0");
+      const minutos = match[2];
+      return `${horas}:${minutos}`;
+    }
+    return trimmed;
+  }
+  if (valor instanceof Date) {
+    return valor.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit", hour12: false });
+  }
+  if (typeof valor === "number") {
+    const date = new Date(valor);
+    return date.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit", hour12: false });
+  }
+  return String(valor);
+}
+
+async function fetchConfig(tipo: string): Promise<string[]> {
+  const response = await fetch(`${API_BASE}?tipo=${tipo}`, { cache: "no-store" });
+  if (!response.ok) {
+    throw new Error(`HTTP ${response.status}`);
+  }
+  const result = await response.json();
+  if (!result.success) {
+    throw new Error(result.error || "Erro ao carregar configuração");
+  }
+
+  const dados = (result.data || []) as unknown[];
+  if (tipo === "horarios") {
+    return dados.map(sanitizarHorario).filter(h => h !== "" && /^([01]\d|2[0-3]):([0-5]\d)$/.test(h));
+  }
+  return dados.map(String).filter(s => s.trim() !== "");
+}
+
+export function useConfig(): UseConfigReturn {
+  const [options, setOptions] = useState<ConfigOptions>({
+    tecnicos: [],
+    tiposServico: [],
+    horarios: [],
+    status: [], // ✅ Inicializado
+  });
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const load = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      // ✅ Fetch do status incluído no Promise.all
+      const [tecnicos, tipos, horarios, status] = await Promise.all([
+        fetchConfig("tecnicos"),
+        fetchConfig("tipos"),
+        fetchConfig("horarios"),
+        fetchConfig("status"),
+      ]);
+
+      setOptions({
+        tecnicos: tecnicos.map(t => ({ value: t, label: t })),
+        tiposServico: tipos.map(t => ({ value: t, label: t })),
+        horarios: horarios.map(h => ({ value: h, label: h })),
+        status: status.map(s => ({ value: s, label: s })), // ✅ Mapeado
+      });
+    } catch (err) {
+      console.error("[useConfig] Erro:", err);
+      setError(err instanceof Error ? err.message : "Falha ao carregar configurações");
+
+      setOptions({
+        tecnicos: [
+          { value: "JACKSON", label: "Jackson" },
+          { value: "MARCOS", label: "Marcos" },
+          { value: "ROBERTO", label: "Roberto" },
+        ],
+        tiposServico: [
+          { value: "INSTALAÇÃO", label: "Instalação" },
+          { value: "MANUTENÇÃO", label: "Manutenção" },
+        ],
+        horarios: [
+          { value: "08:00", label: "08:00" },
+          { value: "09:00", label: "09:00" },
+        ],
+        // ✅ Fallback de status
+        status: [
+          { value: "PENDENTE", label: "PENDENTE" },
+          { value: "EM ANDAMENTO", label: "EM ANDAMENTO" },
+          { value: "CONCLUIDO", label: "CONCLUIDO" },
+          { value: "CANCELADO", label: "CANCELADO" },
+          { value: "DELETADO", label: "DELETADO" },
+        ]
+      });
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    load();
+  }, [load]);
+
+  return { options, loading, error, refresh: load };
+}

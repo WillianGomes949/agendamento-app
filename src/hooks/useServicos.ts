@@ -57,7 +57,7 @@ export function useServicos(initialFilters?: FiltrosServicos) {
             estado: String(limpo.endereco?.estado ?? ""),
             cep: String(limpo.endereco?.cep ?? "")
           },
-          status: (limpo.status ?? "pendente") as Servico["status"],
+         status: String(limpo.status || "PENDENTE") as any,
           criadoEm: String(limpo.criadoEm ?? ""),
           atualizadoEm: String(limpo.atualizadoEm ?? "")
         };
