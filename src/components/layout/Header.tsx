@@ -12,7 +12,6 @@ import {
 } from "lucide-react";
 import { useState, useRef } from "react";
 import Link from "next/link";
-import { useTheme } from "@/hooks/useTheme";
 import { useClickOutside } from "@/hooks/useClickOutside";
 
 interface HeaderProps {
