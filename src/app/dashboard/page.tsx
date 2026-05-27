@@ -103,14 +103,7 @@ export default function DashboardPage() {
             Aqui está o resumo da sua operação de hoje.
           </p>
         </div>
-        <div className="flex gap-3">
-          <Link href="/agendamentos" className="w-full sm:w-auto focus:outline-none">
-            <Button variant="outline" className="w-full bg-white">
-              <Calendar className="w-4 h-4 mr-2" />
-              Ver Agenda
-            </Button>
-          </Link>
-        </div>
+        
       </motion.div>
 
       {/* Cartões de KPI (Métricas Principais) */}
@@ -163,9 +156,14 @@ export default function DashboardPage() {
         <motion.div variants={itemVariants} className="xl:col-span-2 space-y-4">
           <div className="flex items-center justify-between">
             <h2 className="text-xl font-bold text-slate-900">Próximos Agendamentos</h2>
-            <Link href="/agendamentos" className="text-sm font-semibold text-blue-600 hover:text-blue-700 flex items-center gap-1 group transition-colors focus:outline-none">
-              Ver todos <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-            </Link>
+            <div className="flex gap-3">
+          <Link href="/agendamentos" className="w-full sm:w-auto focus:outline-none">
+            <Button variant="primary" className="w-full">
+              <Calendar className="w-4 h-4 mr-2" />
+              Ver Agenda
+            </Button>
+          </Link>
+        </div>
           </div>
 
           <Card padding="none" className="overflow-hidden">
@@ -221,15 +219,6 @@ export default function DashboardPage() {
           <h2 className="text-xl font-bold text-slate-900">Acesso Rápido</h2>
           
           <div className="grid grid-cols-1 gap-4">
-            <Card hoverable className="p-5 flex flex-col justify-center gap-2 group cursor-pointer border-transparent bg-linear-to-br from-slate-900 to-slate-800 text-white">
-              <TrendingUp className="w-8 h-8 text-blue-400 mb-2 group-hover:-translate-y-1 transition-transform duration-300" />
-              <h3 className="text-lg font-bold">Relatório Mensal</h3>
-              <p className="text-slate-400 text-sm">Visualize o desempenho e as métricas financeiras deste mês.</p>
-              <div className="mt-4 flex items-center text-sm font-semibold text-blue-400 group-hover:text-blue-300 transition-colors">
-                Gerar Relatório <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
-              </div>
-            </Card>
-
             <Card className="p-5">
               <h3 className="font-bold text-slate-900 flex items-center gap-2 mb-4">
                 <Activity className="w-5 h-5 text-slate-400" /> Status da Operação
@@ -251,6 +240,16 @@ export default function DashboardPage() {
                 </div>
               </div>
             </Card>
+            <Card hoverable className="p-5 flex flex-col justify-center gap-2 group cursor-pointer border-transparent bg-linear-to-br from-slate-900 to-slate-800 text-white">
+              <TrendingUp className="w-8 h-8 text-blue-400 mb-2 group-hover:-translate-y-1 transition-transform duration-300" />
+              <h3 className="text-lg font-bold">Relatório Mensal</h3>
+              <p className="text-slate-400 text-sm">Visualize o desempenho e as métricas financeiras deste mês.</p>
+              <div className="mt-4 flex items-center text-sm font-semibold text-blue-400 group-hover:text-blue-300 transition-colors">
+                Gerar Relatório <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
+              </div>
+            </Card>
+
+            
           </div>
         </motion.div>
 

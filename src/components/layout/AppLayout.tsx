@@ -5,6 +5,7 @@ import { useState, useEffect, useCallback } from "react";
 import Sidebar from "./Sidebar";
 import Header from "./Header";
 import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts";
+import { useServicos } from "@/hooks/useServicos";
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -12,14 +13,18 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const [mounted, setMounted] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [isHoveringSidebar, setIsHoveringSidebar] = useState(false);
+  const {
+    loading,
+    agendamentosPendentes, // ← PEGAR DO HOOK
+  } = useServicos();
 
   useEffect(() => {
     setMounted(true);
-    
+
     const checkMobile = () => {
       const mobile = window.innerWidth < 1024;
       setIsMobile(mobile);
-      
+
       if (mobile) {
         setMobileMenuOpen(false);
         setSidebarCollapsed(true);
@@ -72,7 +77,11 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   }
 
   // Largura dinâmica tratada via variável de estilo apenas no Desktop
-  const effectiveSidebarWidth = isMobile ? "0px" : (sidebarCollapsed ? "5rem" : "16rem");
+  const effectiveSidebarWidth = isMobile
+    ? "0px"
+    : sidebarCollapsed
+      ? "5rem"
+      : "16rem";
 
   return (
     <div className="min-h-screen bg-slate-50 flex font-sans">
@@ -82,6 +91,8 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         onCloseMobile={() => setMobileMenuOpen(false)}
         onHoverStart={() => setIsHoveringSidebar(true)}
         onHoverEnd={() => setIsHoveringSidebar(false)}
+        agendamentosPendentes={agendamentosPendentes} // ← SÓ PENDENTES
+        isLoading={loading}
       />
 
       <div
@@ -94,11 +105,9 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           isSidebarCollapsed={sidebarCollapsed}
           isMobile={isMobile}
         />
-        
+
         <main className="flex-1 p-4 sm:p-6 lg:p-8 overflow-y-auto">
-          <div className="max-w-7xl mx-auto pb-20 lg:pb-0">
-            {children}
-          </div>
+          <div className="max-w-7xl mx-auto pb-20 lg:pb-0">{children}</div>
         </main>
       </div>
     </div>

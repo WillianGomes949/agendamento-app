@@ -1,7 +1,7 @@
 // src/app/agendamentos/page.tsx
 "use client";
 
-import { useState, useMemo, useCallback } from "react";
+import { useState, useCallback } from "react";
 import { useServicos } from "@/hooks/useServicos";
 import { FilterBar } from "@/components/features/FilterBar";
 import { ServiceList } from "@/components/features/ServiceList";
@@ -9,12 +9,7 @@ import { FloatingActionButton } from "@/components/features/FloatingActionButton
 import { DeleteConfirmModal } from "@/components/modals/DeleteConfirmModal";
 import ServicoForm from "@/components/modals/ServicoForm";
 import type { FiltrosServicos, Servico, FormularioServico } from "@/lib/types";
-import {
-  Loader2,
-  AlertCircle,
-  Plus,
-  CalendarX2,
-} from "lucide-react";
+import { Loader2, AlertCircle, Plus, CalendarX2 } from "lucide-react";
 import { Toaster, toast } from "react-hot-toast";
 
 export default function AgendamentosPage() {
@@ -31,47 +26,17 @@ export default function AgendamentosPage() {
     isCreating,
     isUpdating,
     isDeleting,
+    filters,
+    setFilters,
   } = useServicos();
 
-  const [filters, setFilters] = useState<FiltrosServicos>({});
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingServico, setEditingServico] = useState<Servico | null>(null);
   const [deletingServico, setDeletingServico] = useState<Servico | null>(null);
 
-  const filtered = useMemo(
-    () =>
-      servicos.filter((s) => {
-        if (!s?.id) return false;
-
-        if (filters.data && s.data !== filters.data) return false;
-        if (filters.tecnico && s.tecnico !== filters.tecnico) return false;
-        if (filters.status && s.status !== filters.status) return false;
-
-        if (filters.busca) {
-          const t = filters.busca.toLowerCase();
-          const clienteNome = s.cliente?.nome?.toLowerCase() || "";
-          const veiculoPlaca =
-            s.veiculo?.placa?.toLowerCase().replace(/[^a-z0-9]/g, "") || "";
-          const enderecoCidade = s.endereco?.cidade?.toLowerCase() || "";
-          const tecnicoNome = s.tecnico?.toLowerCase() || "";
-
-          const searchTerm = t.replace(/[^a-z0-9]/g, "");
-
-          return (
-            clienteNome.includes(t) ||
-            veiculoPlaca.includes(searchTerm) ||
-            enderecoCidade.includes(t) ||
-            tecnicoNome.includes(t)
-          );
-        }
-        return true;
-      }),
-    [servicos, filters],
-  );
-
   const handleFilterChange = useCallback(
     (f: Partial<FiltrosServicos>) => setFilters((prev) => ({ ...prev, ...f })),
-    [],
+    [setFilters],
   );
 
   const handleCreate = useCallback(
@@ -197,12 +162,14 @@ export default function AgendamentosPage() {
               filters={filters}
               onChange={handleFilterChange}
               datas={datasDisponiveis}
+              totalResults={servicos.length}
               tecnicos={tecnicos}
+              isLoading={loading}
             />
           </div>
 
           {/* Empty State Redesenhado */}
-          {filtered.length === 0 && !error && (
+          {servicos.length === 0 && !error && (
             <div className="flex flex-col items-center justify-center py-16 px-4 bg-white rounded-2xl border-2 border-dashed border-slate-200 text-center">
               <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mb-4">
                 <CalendarX2 className="w-8 h-8 text-slate-400" />
@@ -214,7 +181,9 @@ export default function AgendamentosPage() {
                 {filters.data ||
                 filters.tecnico ||
                 filters.status ||
-                filters.busca
+                filters.busca ||
+                filters.dataInicio ||
+                filters.dataFim
                   ? "Não encontramos resultados para os filtros aplicados. Tente ajustar sua busca."
                   : "Você ainda não possui serviços cadastrados. Comece adicionando um novo agendamento."}
               </p>
@@ -222,7 +191,9 @@ export default function AgendamentosPage() {
               {filters.data ||
               filters.tecnico ||
               filters.status ||
-              filters.busca ? (
+              filters.busca ||
+              filters.dataInicio ||
+              filters.dataFim ? (
                 <button
                   onClick={() => setFilters({})}
                   className="px-5 py-2.5 bg-slate-100 text-slate-700 font-medium rounded-xl hover:bg-slate-200 transition-colors"
@@ -245,10 +216,10 @@ export default function AgendamentosPage() {
           )}
 
           {/* Lista de Serviços */}
-          {filtered.length > 0 && (
+          {servicos.length > 0 && (
             <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 ease-out">
               <ServiceList
-                servicos={filtered}
+                servicos={servicos}
                 onEdit={openEditForm}
                 onDelete={openDeleteConfirm}
               />
@@ -256,7 +227,7 @@ export default function AgendamentosPage() {
           )}
         </section>
 
-        {/* FAB mantido apenas para mobile, garantindo que não colida com o layout desktop */}
+        {/* FAB mantido apenas para mobile */}
         <div className="md:hidden">
           <FloatingActionButton
             onClick={() => {
@@ -284,7 +255,9 @@ export default function AgendamentosPage() {
           onConfirm={handleDelete}
           title="Excluir serviço"
           message={`Tem certeza que deseja excluir o agendamento? Esta ação não pode ser desfeita.`}
-          itemName={deletingServico?.cliente?.nome.toLocaleUpperCase() || "este serviço"}
+          itemName={
+            deletingServico?.cliente?.nome.toLocaleUpperCase() || "este serviço"
+          }
           isLoading={isDeleting}
         />
       </div>

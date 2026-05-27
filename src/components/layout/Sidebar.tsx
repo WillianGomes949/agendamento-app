@@ -15,6 +15,7 @@ import {
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
+import { useServicos } from "@/hooks/useServicos";
 
 interface SidebarProps {
   isOpen: boolean;
@@ -22,24 +23,25 @@ interface SidebarProps {
   onCloseMobile: () => void;
   onHoverStart?: () => void;
   onHoverEnd?: () => void;
+  agendamentosPendentes?: number;
+  isLoading?: boolean;
 }
 
-const navItems = [
+const baseNavItems = [
   {
     label: "Agendamentos",
     href: "/agendamentos",
     icon: CalendarDays,
-    badge: null,
+    badgeKey: "agendamentos" as const,
   },
-  { label: "Dashboard", href: "/dashboard", icon: Home, badge: null },
-  { label: "Serviços", href: "/servicos", icon: Wrench, badge: null },
-  { label: "Relatórios", href: "/relatorios", icon: BarChart3, badge: null },
-  { label: "Técnicos", href: "/tecnicos", icon: Users, badge: null },
+  { label: "Dashboard", href: "/dashboard", icon: Home },
+  { label: "Serviços", href: "/servicos", icon: Wrench },
+  { label: "Relatórios", href: "/relatorios", icon: BarChart3 },
+  { label: "Técnicos", href: "/tecnicos", icon: Users },
   {
     label: "Configurações",
     href: "/configuracoes",
     icon: Settings,
-    badge: null,
   },
 ];
 
@@ -49,9 +51,14 @@ export default function Sidebar({
   onCloseMobile,
   onHoverStart,
   onHoverEnd,
+  agendamentosPendentes,
+  isLoading = false,
 }: SidebarProps) {
   const pathname = usePathname();
   const [isHovered, setIsHovered] = useState(false);
+
+  // Pega a quantidade de serviços do hook
+  const { servicos, loading } = useServicos();
 
   const handleMouseEnter = () => {
     setIsHovered(true);
@@ -63,6 +70,15 @@ export default function Sidebar({
   };
 
   const sidebarWidth = isCollapsed && !isHovered ? "5rem" : "16rem";
+
+  // Monta os itens com badge dinâmico
+  const navItems = baseNavItems.map((item) => ({
+    ...item,
+    badge:
+      item.label === "Agendamentos" && servicos.length > 0
+        ? String(servicos.length)
+        : undefined,
+  }));
 
   return (
     <>
@@ -98,7 +114,7 @@ export default function Sidebar({
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              className="md:hidden flex items-center gap-3"
+              className="flex items-center gap-3"
             >
               <div className="w-8 h-8 bg-slate-900 rounded-xl flex items-center justify-center">
                 <span className="text-white font-bold text-sm">TA</span>
@@ -109,7 +125,7 @@ export default function Sidebar({
             </motion.div>
           )}
           {isCollapsed && !isHovered && (
-            <div className="md:hidden w-8 h-8 bg-slate-900 rounded-xl flex items-center justify-center mx-auto">
+            <div className="w-8 h-8 bg-slate-900 rounded-xl flex items-center justify-center mx-auto">
               <span className="text-white font-bold text-sm">TA</span>
             </div>
           )}
@@ -130,6 +146,14 @@ export default function Sidebar({
                 pathname === item.href ||
                 (item.href !== "/" && pathname.startsWith(item.href));
               const Icon = item.icon;
+
+              const badge =
+                item.badgeKey === "agendamentos" &&
+                agendamentosPendentes !== undefined &&
+                agendamentosPendentes > 0
+                  ? String(agendamentosPendentes)
+                  : undefined;
+
               return (
                 <Link
                   key={item.label}
@@ -147,13 +171,25 @@ export default function Sidebar({
                       <span className="font-semibold text-sm whitespace-nowrap">
                         {item.label}
                       </span>
-                      {item.badge && (
+                      {badge && (
                         <span
-                          className={`ml-auto text-xs px-2 py-0.5 rounded-full font-bold ${isActive ? "bg-white/20 text-white" : "bg-blue-100 text-blue-700"}`}
+                          className={`ml-auto text-xs px-2 py-0.5 rounded-full font-bold ${
+                            isActive
+                              ? "bg-white/20 text-white"
+                              : "bg-amber-100 text-amber-700"
+                          }`}
                         >
-                          {item.badge}
+                          {badge}
                         </span>
                       )}
+                      {/* Loading spinner */}
+                      {item.badgeKey === "agendamentos" &&
+                        isLoading &&
+                        !badge && (
+                          <span className="ml-auto">
+                            <span className="inline-block w-4 h-4 border-2 border-slate-300 border-t-slate-600 rounded-full animate-spin" />
+                          </span>
+                        )}
                     </>
                   )}
                 </Link>

@@ -65,12 +65,14 @@ const isValidBrDate = (date: string): boolean => {
   if (!date) return false;
   const regex = /^(0[1-9]|[12][0-9]|3[01])\/(0[1-9]|1[0-2])\/\d{4}$/;
   if (!regex.test(date)) return false;
-  
+
   const [day, month, year] = date.split("/").map(Number);
   const jsDate = new Date(year, month - 1, day);
-  return jsDate.getFullYear() === year && 
-         jsDate.getMonth() === month - 1 && 
-         jsDate.getDate() === day;
+  return (
+    jsDate.getFullYear() === year &&
+    jsDate.getMonth() === month - 1 &&
+    jsDate.getDate() === day
+  );
 };
 
 /**
@@ -132,10 +134,10 @@ export function FilterBar({
 
   // Estados locais para os campos de data (formato ISO para o input)
   const [localDataInicio, setLocalDataInicio] = useState<string>(
-    brToIsoDate(filters.dataInicio)
+    brToIsoDate(filters.dataInicio),
   );
   const [localDataFim, setLocalDataFim] = useState<string>(
-    brToIsoDate(filters.dataFim)
+    brToIsoDate(filters.dataFim),
   );
 
   // Sincroniza os estados locais quando os filtros mudam externamente
@@ -156,7 +158,13 @@ export function FilterBar({
       filters.dataInicio,
       filters.dataFim,
     ].filter(Boolean).length;
-  }, [filters.data, filters.status, filters.tecnico, filters.dataInicio, filters.dataFim]);
+  }, [
+    filters.data,
+    filters.status,
+    filters.tecnico,
+    filters.dataInicio,
+    filters.dataFim,
+  ]);
 
   // Limpar todos os filtros
   const handleClearAll = useCallback(() => {
@@ -174,127 +182,139 @@ export function FilterBar({
   }, [onChange, onClear]);
 
   // Remover um filtro específico
-  const removeFilter = useCallback((type: keyof FiltrosServicos) => {
-    const newFilters: Partial<FiltrosServicos> = {};
-    
-    switch (type) {
-      case "busca":
-        newFilters.busca = undefined;
-        break;
-      case "data":
-        newFilters.data = undefined;
-        break;
-      case "status":
-        newFilters.status = undefined;
-        break;
-      case "tecnico":
-        newFilters.tecnico = undefined;
-        break;
-      case "dataInicio":
-        newFilters.dataInicio = undefined;
-        setLocalDataInicio("");
-        break;
-      case "dataFim":
-        newFilters.dataFim = undefined;
-        setLocalDataFim("");
-        break;
-    }
-    
-    onChange(newFilters);
-  }, [onChange]);
+  const removeFilter = useCallback(
+    (type: keyof FiltrosServicos) => {
+      const newFilters: Partial<FiltrosServicos> = {};
+
+      switch (type) {
+        case "busca":
+          newFilters.busca = undefined;
+          break;
+        case "data":
+          newFilters.data = undefined;
+          break;
+        case "status":
+          newFilters.status = undefined;
+          break;
+        case "tecnico":
+          newFilters.tecnico = undefined;
+          break;
+        case "dataInicio":
+          newFilters.dataInicio = undefined;
+          setLocalDataInicio("");
+          break;
+        case "dataFim":
+          newFilters.dataFim = undefined;
+          setLocalDataFim("");
+          break;
+      }
+
+      onChange(newFilters);
+    },
+    [onChange],
+  );
 
   // Handler para mudança de data inicial
-  const handleDataInicioChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    const isoValue = e.target.value;
-    setLocalDataInicio(isoValue);
-    
-    const brValue = isoValue ? isoToBrDate(isoValue) : undefined;
-    onChange({ 
-      dataInicio: brValue, 
-      data: undefined // Remove filtro de data única quando usa intervalo
-    });
-  }, [onChange]);
+  const handleDataInicioChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      const isoValue = e.target.value;
+      setLocalDataInicio(isoValue);
+
+      const brValue = isoValue ? isoToBrDate(isoValue) : undefined;
+      onChange({
+        dataInicio: brValue,
+        data: undefined, // Remove filtro de data única quando usa intervalo
+      });
+    },
+    [onChange],
+  );
 
   // Handler para mudança de data final
-  const handleDataFimChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    const isoValue = e.target.value;
-    setLocalDataFim(isoValue);
-    
-    const brValue = isoValue ? isoToBrDate(isoValue) : undefined;
-    onChange({ 
-      dataFim: brValue, 
-      data: undefined // Remove filtro de data única quando usa intervalo
-    });
-  }, [onChange]);
+  const handleDataFimChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      const isoValue = e.target.value;
+      setLocalDataFim(isoValue);
+
+      const brValue = isoValue ? isoToBrDate(isoValue) : undefined;
+      onChange({
+        dataFim: brValue,
+        data: undefined, // Remove filtro de data única quando usa intervalo
+      });
+    },
+    [onChange],
+  );
 
   // Ações de períodos rápidos
-  const quickActions = useMemo(() => [
-    {
-      label: "Hoje",
-      action: () => {
-        const today = formatDateToBr(new Date());
-        onChange({
-          data: today,
-          dataInicio: undefined,
-          dataFim: undefined,
-        });
-        setLocalDataInicio("");
-        setLocalDataFim("");
-        setIsAdvancedOpen(false);
+  const quickActions = useMemo(
+    () => [
+      {
+        label: "Hoje",
+        action: () => {
+          const today = formatDateToBr(new Date());
+          onChange({
+            data: today,
+            dataInicio: undefined,
+            dataFim: undefined,
+          });
+          setLocalDataInicio("");
+          setLocalDataFim("");
+          setIsAdvancedOpen(false);
+        },
       },
-    },
-    {
-      label: "Esta Semana",
-      action: () => {
-        const now = new Date();
-        const startOfWeek = getStartOfWeek(now);
-        const endOfWeek = getEndOfWeek(now);
-        
-        onChange({
-          data: undefined,
-          dataInicio: formatDateToBr(startOfWeek),
-          dataFim: formatDateToBr(endOfWeek),
-        });
-        setLocalDataInicio(brToIsoDate(formatDateToBr(startOfWeek)));
-        setLocalDataFim(brToIsoDate(formatDateToBr(endOfWeek)));
-        setIsAdvancedOpen(false);
+      {
+        label: "Esta Semana",
+        action: () => {
+          const now = new Date();
+          const startOfWeek = getStartOfWeek(now);
+          const endOfWeek = getEndOfWeek(now);
+
+          onChange({
+            data: undefined,
+            dataInicio: formatDateToBr(startOfWeek),
+            dataFim: formatDateToBr(endOfWeek),
+          });
+          setLocalDataInicio(brToIsoDate(formatDateToBr(startOfWeek)));
+          setLocalDataFim(brToIsoDate(formatDateToBr(endOfWeek)));
+          setIsAdvancedOpen(false);
+        },
       },
-    },
-    {
-      label: "Este Mês",
-      action: () => {
-        const now = new Date();
-        const startOfMonth = getStartOfMonth(now);
-        const endOfMonth = getEndOfMonth(now);
-        
-        onChange({
-          data: undefined,
-          dataInicio: formatDateToBr(startOfMonth),
-          dataFim: formatDateToBr(endOfMonth),
-        });
-        setLocalDataInicio(brToIsoDate(formatDateToBr(startOfMonth)));
-        setLocalDataFim(brToIsoDate(formatDateToBr(endOfMonth)));
-        setIsAdvancedOpen(false);
+      {
+        label: "Este Mês",
+        action: () => {
+          const now = new Date();
+          const startOfMonth = getStartOfMonth(now);
+          const endOfMonth = getEndOfMonth(now);
+
+          onChange({
+            data: undefined,
+            dataInicio: formatDateToBr(startOfMonth),
+            dataFim: formatDateToBr(endOfMonth),
+          });
+          setLocalDataInicio(brToIsoDate(formatDateToBr(startOfMonth)));
+          setLocalDataFim(brToIsoDate(formatDateToBr(endOfMonth)));
+          setIsAdvancedOpen(false);
+        },
       },
-    },
-    {
-      label: "Próximos 7 dias",
-      action: () => {
-        const today = new Date();
-        const nextWeek = new Date(today);
-        nextWeek.setDate(nextWeek.getDate() + 7);
-        
-        onChange({
-          data: undefined,
-          dataInicio: formatDateToBr(today),
-          dataFim: formatDateToBr(nextWeek),
-        });
-        setLocalDataInicio(brToIsoDate(formatDateToBr(today)));
-        setLocalDataFim(brToIsoDate(formatDateToBr(nextWeek)));
-        setIsAdvancedOpen(false);
+      {
+        label: "Próximos 7 dias",
+        action: () => {
+          const today = new Date();
+          const nextWeek = new Date(today);
+          nextWeek.setDate(nextWeek.getDate() + 7);
+
+          onChange({
+            data: undefined,
+            dataInicio: formatDateToBr(today),
+            dataFim: formatDateToBr(nextWeek),
+          });
+          setLocalDataInicio(brToIsoDate(formatDateToBr(today)));
+          setLocalDataFim(brToIsoDate(formatDateToBr(nextWeek)));
+          setIsAdvancedOpen(false);
+        },
       },
-    },
-  ], [onChange]);
+    ],
+    [onChange],
+  );
 
   // Opções dos selects
   const statusOptions = configLoading
@@ -305,7 +325,7 @@ export function FilterBar({
     { value: "", label: "Todas as datas" },
     ...datas.filter(isValidBrDate).map((d) => ({ value: d, label: d })),
   ];
-  
+
   const tecnicoOptions = [
     { value: "", label: "Todos os técnicos" },
     ...tecnicos.map((t) => ({ value: t, label: t })),
@@ -314,7 +334,7 @@ export function FilterBar({
   // Lista de filtros ativos para exibição
   const activeFiltersList: ActiveFilter[] = useMemo(() => {
     const list: ActiveFilter[] = [];
-    
+
     if (filters.busca) {
       list.push({
         label: "Busca",
@@ -323,7 +343,7 @@ export function FilterBar({
         onRemove: () => removeFilter("busca"),
       });
     }
-    
+
     if (filters.data && isValidBrDate(filters.data)) {
       list.push({
         label: "Data",
@@ -332,9 +352,11 @@ export function FilterBar({
         onRemove: () => removeFilter("data"),
       });
     }
-    
+
     if (filters.status) {
-      const statusLabel = configOptions.status.find((s) => s.value === filters.status)?.label || filters.status;
+      const statusLabel =
+        configOptions.status.find((s) => s.value === filters.status)?.label ||
+        filters.status;
       list.push({
         label: "Status",
         value: statusLabel,
@@ -342,7 +364,7 @@ export function FilterBar({
         onRemove: () => removeFilter("status"),
       });
     }
-    
+
     if (filters.tecnico) {
       list.push({
         label: "Técnico",
@@ -351,7 +373,7 @@ export function FilterBar({
         onRemove: () => removeFilter("tecnico"),
       });
     }
-    
+
     if (filters.dataInicio && isValidBrDate(filters.dataInicio)) {
       list.push({
         label: "Início",
@@ -360,7 +382,7 @@ export function FilterBar({
         onRemove: () => removeFilter("dataInicio"),
       });
     }
-    
+
     if (filters.dataFim && isValidBrDate(filters.dataFim)) {
       list.push({
         label: "Fim",
@@ -369,7 +391,7 @@ export function FilterBar({
         onRemove: () => removeFilter("dataFim"),
       });
     }
-    
+
     return list;
   }, [filters, configOptions.status, removeFilter]);
 
@@ -396,7 +418,9 @@ export function FilterBar({
                 ref={searchInputRef}
                 placeholder="Buscar por nome, placa, cidade ou OS..."
                 value={filters.busca || ""}
-                onChange={(e) => onChange({ busca: e.target.value || undefined })}
+                onChange={(e) =>
+                  onChange({ busca: e.target.value || undefined })
+                }
                 leftIcon={Search}
                 aria-label="Buscar serviços"
                 disabled={isLoading}
@@ -407,7 +431,9 @@ export function FilterBar({
             <div className="lg:col-span-2">
               <Select
                 value={filters.data || ""}
-                onChange={(e) => onChange({ data: e.target.value || undefined })}
+                onChange={(e) =>
+                  onChange({ data: e.target.value || undefined })
+                }
                 options={dataOptions}
                 disabled={isLoading || configLoading}
               />
@@ -416,7 +442,9 @@ export function FilterBar({
             <div className="lg:col-span-2">
               <Select
                 value={filters.status || ""}
-                onChange={(e) => onChange({ status: (e.target.value as any) || undefined })}
+                onChange={(e) =>
+                  onChange({ status: (e.target.value as any) || undefined })
+                }
                 options={statusOptions}
                 disabled={isLoading || configLoading}
               />
@@ -425,7 +453,9 @@ export function FilterBar({
             <div className="lg:col-span-2">
               <Select
                 value={filters.tecnico || ""}
-                onChange={(e) => onChange({ tecnico: e.target.value || undefined })}
+                onChange={(e) =>
+                  onChange({ tecnico: e.target.value || undefined })
+                }
                 options={tecnicoOptions}
                 disabled={isLoading}
               />
@@ -435,7 +465,7 @@ export function FilterBar({
             <div className="lg:col-span-1 flex items-end">
               <button
                 onClick={() => setIsAdvancedOpen(!isAdvancedOpen)}
-                className={`w-full h-10 flex items-center justify-center gap-2 px-3 rounded-xl text-sm font-semibold transition-all ${
+                className={`w-full h-10 flex items-center justify-center gap-1 px-3 rounded-xl text-sm font-semibold transition-all ${
                   isAdvancedOpen || activeFiltersCount > 0
                     ? "bg-slate-900 text-white shadow-sm"
                     : "bg-slate-50 text-slate-700 hover:bg-slate-100 border border-slate-200/60"
@@ -445,8 +475,10 @@ export function FilterBar({
                 <span className="hidden lg:hidden xl:inline">Filtros</span>
                 {activeFiltersCount > 0 && (
                   <span
-                    className={`text-[10px] rounded-full w-5 h-5 flex items-center justify-center ${
-                      isAdvancedOpen ? "bg-white/20 text-white" : "bg-slate-200 text-slate-800"
+                    className={`text-xs rounded-full w-5 h-5 flex items-center justify-center px-2 ${
+                      isAdvancedOpen
+                        ? "bg-white/20 text-white"
+                        : "bg-slate-200 text-slate-800"
                     }`}
                   >
                     {activeFiltersCount}
@@ -526,7 +558,9 @@ export function FilterBar({
 
                     <div className="grid grid-cols-2 gap-3">
                       <div className="space-y-1">
-                        <label className="text-xs text-slate-500 font-medium">Data Inicial</label>
+                        <label className="text-xs text-slate-500 font-medium">
+                          Data Inicial
+                        </label>
                         <input
                           type="date"
                           className="w-full px-3 py-2 text-sm border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-slate-400 focus:border-transparent transition-all bg-white"
@@ -536,7 +570,9 @@ export function FilterBar({
                         />
                       </div>
                       <div className="space-y-1">
-                        <label className="text-xs text-slate-500 font-medium">Data Final</label>
+                        <label className="text-xs text-slate-500 font-medium">
+                          Data Final
+                        </label>
                         <input
                           type="date"
                           className="w-full px-3 py-2 text-sm border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-slate-400 focus:border-transparent transition-all bg-white"
@@ -547,11 +583,11 @@ export function FilterBar({
                         />
                       </div>
                     </div>
-                    
+
                     {/* Indicador de intervalo ativo */}
                     {(filters.dataInicio || filters.dataFim) && (
                       <div className="text-xs text-slate-400 bg-white rounded-lg px-2 py-1 inline-block">
-                        {filters.dataInicio && `De ${filters.dataInicio}`} 
+                        {filters.dataInicio && `De ${filters.dataInicio}`}
                         {filters.dataInicio && filters.dataFim && " até "}
                         {filters.dataFim && filters.dataFim}
                       </div>
@@ -581,8 +617,9 @@ export function FilterBar({
           )}
         </AnimatePresence>
       </div>
+      
 
-      {/* Info Bar */}
+      {/* Info Bar - CORRIGIDA: totalResults agora reflete servicosFiltrados */}
       <div className="flex items-center justify-between px-1">
         <div className="flex items-center gap-3 text-sm">
           <div className="flex items-center gap-2 px-3 py-1.5 bg-slate-100 rounded-lg">

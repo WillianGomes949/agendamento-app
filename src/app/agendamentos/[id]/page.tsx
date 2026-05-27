@@ -68,7 +68,7 @@ export default function ServicoDetalhesPage() {
             onClick={() => router.push("/agendamentos")}
             className="w-full py-3 px-4 bg-slate-900 text-white font-semibold rounded-xl hover:bg-slate-800 transition-colors focus:ring-2 focus:ring-slate-900 focus:ring-offset-2"
           >
-            Voltar para a lista
+            Voltar
           </button>
         </div>
       </div>
