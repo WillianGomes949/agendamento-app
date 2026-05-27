@@ -8,7 +8,6 @@ import {
   Wrench,
   Search,
   Plus,
-  MoreHorizontal,
   Edit3,
   Trash2,
   Calendar,
@@ -22,8 +21,6 @@ import {
   ChevronDown,
   X,
   ArrowUpDown,
-  Eye,
-  File,
   Filter,
 } from "lucide-react";
 import { Card } from "@/components/ui/Card";
@@ -259,7 +256,7 @@ export default function ServicosPage() {
   if (error) {
     return (
       <div className="min-h-[80vh] flex flex-col items-center justify-center p-6 text-center">
-        <div className="w-24 h-24 bg-rose-50 rounded-[2rem] flex items-center justify-center border border-rose-100 mb-6 shadow-sm">
+        <div className="w-24 h-24 bg-rose-50 rounded-4xl flex items-center justify-center border border-rose-100 mb-6 shadow-sm">
           <AlertCircle className="w-12 h-12 text-rose-500" />
         </div>
         <h2 className="text-2xl md:text-3xl font-extrabold text-slate-900 tracking-tight">
@@ -462,7 +459,7 @@ export default function ServicosPage() {
           </div>
 
           <div className="flex flex-wrap lg:flex-nowrap gap-3">
-            <div className="relative flex-1 min-w-[140px]">
+            <div className="relative flex-1 min-w-35">
               <select
                 value={filtroStatus}
                 onChange={(e) => setFiltroStatus(e.target.value)}
@@ -477,7 +474,7 @@ export default function ServicosPage() {
               <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
             </div>
 
-            <div className="relative flex-1 min-w-[140px]">
+            <div className="relative flex-1 min-w-35">
               <select
                 value={filtroTecnico}
                 onChange={(e) => setFiltroTecnico(e.target.value)}
@@ -493,7 +490,7 @@ export default function ServicosPage() {
               <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
             </div>
 
-            <div className="relative flex-1 min-w-[140px]">
+            <div className="relative flex-1 min-w-35">
               <select
                 value={filtroData}
                 onChange={(e) => setFiltroData(e.target.value)}
@@ -699,44 +696,44 @@ export default function ServicosPage() {
                       {formatarHorarioExibicao(servico.horario)}
                     </p>
                   </div>
-                 
-                    {/* 3. Técnico */}
-                    <div className="flex items-center gap-2">
-                      <div className="w-7 h-7 rounded-full bg-slate-100 flex items-center justify-center shrink-0">
-                        <User className="w-3.5 h-3.5 text-slate-500" />
-                      </div>
-                      <span className="text-sm font-medium text-slate-700 truncate uppercase">
-                        {servico.tecnico || "—"}
-                      </span>
-                    </div>
 
-                    {/* 4. Localização */}
-                    <div
-                      className="flex items-center gap-1.5 text-sm font-medium text-slate-600 truncate"
-                      title={servico.endereco?.cidade}
-                    >
-                      <MapPin className="w-4 h-4 text-slate-400 shrink-0" />
-                      <span className="truncate">
-                        {servico.endereco?.cidade || "Não informado"}
-                      </span>
+                  {/* 3. Técnico */}
+                  <div className="flex items-center gap-2">
+                    <div className="w-7 h-7 rounded-full bg-slate-100 flex items-center justify-center shrink-0">
+                      <User className="w-3.5 h-3.5 text-slate-500" />
                     </div>
-
-                    {/* 5. Status */}
-                    <div className="flex lg:justify-center">
-                      <StatusBadge
-                        status={servico.status || "pendente"}
-                        className="text-[11px] px-2.5 py-1"
-                      />
-                    </div>
+                    <span className="text-sm font-medium text-slate-700 truncate uppercase">
+                      {servico.tecnico || "—"}
+                    </span>
                   </div>
 
-                  {/* 6. Ações (Fixo à direita) */}
+                  {/* 4. Localização */}
                   <div
-                    className="flex items-center justify-end gap-2 lg:pl-4 content"
-                     // Impede que os botões abram o modal
+                    className="flex items-center gap-1.5 text-sm font-medium text-slate-600 truncate"
+                    title={servico.endereco?.cidade}
                   >
-                    <div className="flex" onClick={(e) => e.stopPropagation()}>
- <button
+                    <MapPin className="w-4 h-4 text-slate-400 shrink-0" />
+                    <span className="truncate">
+                      {servico.endereco?.cidade || "Não informado"}
+                    </span>
+                  </div>
+
+                  {/* 5. Status */}
+                  <div className="flex lg:justify-center">
+                    <StatusBadge
+                      status={servico.status || "pendente"}
+                      className="text-[11px] px-2.5 py-1"
+                    />
+                  </div>
+                </div>
+
+                {/* 6. Ações (Fixo à direita) */}
+                <div
+                  className="flex items-center justify-end gap-2 lg:pl-4 content"
+                  // Impede que os botões abram o modal
+                >
+                  <div className="flex" onClick={(e) => e.stopPropagation()}>
+                    <button
                       onClick={() => openEditForm(servico)}
                       className="w-10 h-10 flex items-center justify-center text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-colors border border-transparent hover:border-blue-100"
                       title="Editar"
@@ -750,10 +747,8 @@ export default function ServicosPage() {
                     >
                       <Trash2 className="w-4.5 h-4.5" strokeWidth={2} />
                     </button>
-                    </div>
-                   
                   </div>
-                
+                </div>
               </motion.div>
             ))}
           </motion.div>
