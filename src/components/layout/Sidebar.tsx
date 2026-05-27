@@ -35,8 +35,8 @@ const baseNavItems = [
     badgeKey: "agendamentos" as const,
   },
   { label: "Dashboard", href: "/dashboard", icon: Home },
-  { label: "Serviços", href: "/servicos", icon: Wrench },
   { label: "Relatórios", href: "/relatorios", icon: BarChart3 },
+  { label: "Serviços", href: "/servicos", icon: Wrench },
   { label: "Técnicos", href: "/tecnicos", icon: Users },
   {
     label: "Configurações",
