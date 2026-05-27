@@ -8,16 +8,22 @@ import { ServicoCard } from "./ServiceCard";
 
 interface ServiceListProps {
   servicos: Servico[];
-  onEdit: (servico: Servico) => void;   // remova o ?
-  onDelete: (servico: Servico) => void; // remova o ?
+  onEdit: (servico: Servico) => void;
+  onDelete: (servico: Servico) => void;
+   onViewDetails: (id: string) => void;
 }
 
-export function ServiceList({ servicos, onEdit, onDelete }: ServiceListProps) {
+export function ServiceList({
+  servicos,
+  onEdit,
+  onDelete,
+  onViewDetails,
+}: ServiceListProps) {
   if (!servicos || servicos.length === 0) {
     return (
-      <EmptyState 
-        title="Nenhum serviço encontrado" 
-        description="Tente ajustar os filtros ou verifique se há agendamentos para as datas selecionadas." 
+      <EmptyState
+        title="Nenhum serviço encontrado"
+        description="Tente ajustar os filtros ou verifique se há agendamentos para as datas selecionadas."
       />
     );
   }
@@ -28,6 +34,7 @@ export function ServiceList({ servicos, onEdit, onDelete }: ServiceListProps) {
         {servicos.map((servico, index) => (
           <ServicoCard
             key={servico?.id || `fallback-${index}`}
+             onViewDetails={() => onViewDetails(servico.id)}
             servico={servico}
             onEdit={onEdit}
             onDelete={onDelete}
