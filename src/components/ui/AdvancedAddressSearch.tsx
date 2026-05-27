@@ -38,7 +38,7 @@ export function AdvancedAddressSearch({
   const [street, setStreet] = useState("");
   const [results, setResults] = useState<EnderecoResponse[]>([]);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+ const [error, setError] = useState<string | undefined>(undefined);
   const [showResults, setShowResults] = useState(false);
 
   const buscarPorCep = useCallback(async () => {
@@ -47,7 +47,7 @@ export function AdvancedAddressSearch({
       return;
     }
     setLoading(true);
-    setError(null);
+    setError(undefined);
     try {
       const result = await addressService.buscarPorCep(cep);
       if (result) {
@@ -76,7 +76,7 @@ export function AdvancedAddressSearch({
       return;
     }
     setLoading(true);
-    setError(null);
+    setError(undefined);
     try {
       const enderecos = await addressService.buscarPorEndereco({
         uf,
@@ -107,7 +107,7 @@ export function AdvancedAddressSearch({
     });
     setResults([]);
     setShowResults(false);
-    setError(null);
+   setError(undefined);
   }, [onAddressSelect]);
 
   return (
