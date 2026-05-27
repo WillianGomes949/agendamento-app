@@ -59,7 +59,7 @@ export async function getServicos(filters?: FiltrosServicos): Promise<PaginatedR
 }
 
 export async function createServico(data: FormularioServico): Promise<{ success: boolean; id: string; data: Servico }> {
-  return apiFetch("POST", data as Record<string, unknown>);
+  return apiFetch("POST", { ...data });
 }
 
 export async function updateServico(id: string, data: Partial<Servico>): Promise<{ success: boolean; data: Servico }> {
