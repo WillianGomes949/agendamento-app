@@ -3,10 +3,21 @@
 
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Calendar, Clock, Car, MapPin, User, Edit2, Trash2 } from "lucide-react";
+import {
+  Calendar,
+  Clock,
+  Car,
+  MapPin,
+  User,
+  Edit2,
+  Trash2,
+} from "lucide-react";
 import type { Servico } from "@/lib/types";
 import { StatusBadge } from "./StatusBadge";
-import { formatarDataExibicao, formatarHorarioExibicao } from "@/lib/utils-format";
+import {
+  formatarDataExibicao,
+  formatarHorarioExibicao,
+} from "@/lib/utils-format";
 import { cn } from "@/lib/utils";
 import ServicoDetalhesModal from "@/components/modals/ServicoDetalhesModal";
 
@@ -17,11 +28,17 @@ interface ServiceCardProps {
   className?: string;
 }
 
-export function ServiceCard({ servico, onEdit, onDelete, className }: ServiceCardProps) {
+export function ServiceCard({
+  servico,
+  onEdit,
+  onDelete,
+  className,
+}: ServiceCardProps) {
   const hasActions = !!(onEdit || onDelete);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  const clienteNome = servico.cliente?.nome?.toUpperCase() || "Cliente não informado";
+  const clienteNome =
+    servico.cliente?.nome?.toUpperCase() || "Cliente não informado";
   const veiculoPlaca = servico.veiculo?.placa || "N/A";
   const veiculoModelo = servico.veiculo?.marcaModelo || "N/A";
   const enderecoCidade = servico.endereco?.cidade || "";
@@ -41,7 +58,11 @@ export function ServiceCard({ servico, onEdit, onDelete, className }: ServiceCar
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.95 }}
-        whileHover={{ y: -4, boxShadow: "0 12px 24px -8px rgba(15, 23, 42, 0.08)", transition: { duration: 0.2 } }}
+        whileHover={{
+          y: -4,
+          boxShadow: "0 12px 24px -8px rgba(15, 23, 42, 0.08)",
+          transition: { duration: 0.2 },
+        }}
         className={cn(
           "bg-white rounded-2xl border border-slate-200/60 shadow-sm transition-all flex flex-col overflow-hidden relative group cursor-pointer",
           className,
@@ -56,7 +77,26 @@ export function ServiceCard({ servico, onEdit, onDelete, className }: ServiceCar
         }}
       >
         <div className="relative flex-1">
-          <div className="p-5 sm:p-6 flex flex-col gap-5 flex-1" onClick={() => setIsModalOpen(true)}>
+          {/* Status indicator line */}
+          <div
+            className={`absolute top-0 left-0 w-full h-1 ${
+              servico.status?.toLowerCase() === "concluido"
+                ? "bg-emerald-500"
+                : servico.status?.toLowerCase() === "em andamento"
+                  ? "bg-indigo-500"
+                  : servico.status?.toLowerCase() === "pendente"
+                    ? "bg-amber-500"
+                    : servico.status?.toLowerCase() === "cancelado"
+                      ? "bg-rose-500"
+                      : servico.status?.toLowerCase() === "deletado"
+                        ? "bg-red-600"
+                        : "bg-slate-300"
+            }`}
+          />
+          <div
+            className="p-5 sm:p-6 flex flex-col gap-5 flex-1"
+            onClick={() => setIsModalOpen(true)}
+          >
             <div className="flex justify-between items-start gap-4">
               <div className="min-w-0">
                 <h3 className="font-extrabold text-slate-900 line-clamp-1 tracking-tight text-lg">
@@ -73,7 +113,8 @@ export function ServiceCard({ servico, onEdit, onDelete, className }: ServiceCar
               <div className="flex items-center gap-3">
                 <Calendar className="w-4 h-4 text-slate-400 shrink-0" />
                 <span className="font-medium">
-                  {dataFormatada}{diaSemana ? ` • ${diaSemana}` : ""}
+                  {dataFormatada}
+                  {diaSemana ? ` • ${diaSemana}` : ""}
                 </span>
               </div>
               <div className="flex items-center gap-3">
@@ -86,13 +127,17 @@ export function ServiceCard({ servico, onEdit, onDelete, className }: ServiceCar
                   {veiculoPlaca}
                 </span>
                 {veiculoModelo !== "N/A" && (
-                  <span className="text-slate-500 font-medium truncate"> {veiculoModelo}</span>
+                  <span className="text-slate-500 font-medium truncate">
+                    {" "}
+                    {veiculoModelo}
+                  </span>
                 )}
               </div>
               <div className="flex items-center gap-3">
                 <MapPin className="w-4 h-4 text-slate-400 shrink-0" />
                 <span className="line-clamp-1 font-medium">
-                  {enderecoCidade}{enderecoEstado ? ` / ${enderecoEstado.toUpperCase()}` : ""}
+                  {enderecoCidade}
+                  {enderecoEstado ? ` / ${enderecoEstado.toUpperCase()}` : ""}
                 </span>
               </div>
             </div>
@@ -115,7 +160,11 @@ export function ServiceCard({ servico, onEdit, onDelete, className }: ServiceCar
             >
               {onEdit && (
                 <button
-                  onClick={(e) => { e.preventDefault(); e.stopPropagation(); onEdit(servico); }}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    onEdit(servico);
+                  }}
                   className="p-2.5 bg-white/95 backdrop-blur border border-slate-200/60 rounded-xl shadow-sm hover:bg-slate-50 text-slate-600 hover:text-blue-600 transition-colors"
                   aria-label={`Editar serviço`}
                 >
@@ -124,7 +173,11 @@ export function ServiceCard({ servico, onEdit, onDelete, className }: ServiceCar
               )}
               {onDelete && (
                 <button
-                  onClick={(e) => { e.preventDefault(); e.stopPropagation(); onDelete(servico); }}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    onDelete(servico);
+                  }}
                   className="p-2.5 bg-white/95 backdrop-blur border border-slate-200/60 rounded-xl shadow-sm hover:bg-slate-50 text-slate-600 hover:text-rose-600 transition-colors"
                   aria-label={`Excluir serviço`}
                 >
