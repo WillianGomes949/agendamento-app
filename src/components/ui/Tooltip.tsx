@@ -28,42 +28,46 @@ const positionClasses: Record<TooltipPosition, string> = {
 };
 
 const variantClasses: Record<TooltipVariant, string> = {
-  dark: "bg-gray-900 text-white",
-  light: "bg-white text-gray-900 border border-gray-200 shadow-lg",
-  info: "bg-blue-600 text-white",
-  warning: "bg-yellow-500 text-white",
-  error: "bg-red-600 text-white",
+  dark: "bg-slate-900 text-white shadow-lg shadow-slate-900/20",
+  light:
+    "bg-white text-slate-900 border border-slate-200/80 shadow-xl shadow-slate-200/50",
+  info: "bg-blue-600 text-white shadow-lg shadow-blue-900/20",
+  warning: "bg-amber-500 text-white shadow-lg shadow-amber-900/20",
+  error: "bg-rose-600 text-white shadow-lg shadow-rose-900/20",
 };
 
-// Arrow borders corrigidos por posição e variante
-const arrowBorderClasses: Record<TooltipPosition, Record<TooltipVariant, string>> = {
+// Bordas da seta ajustadas para as cores do novo Design System
+const arrowBorderClasses: Record<
+  TooltipPosition,
+  Record<TooltipVariant, string>
+> = {
   top: {
-    dark: "border-t-gray-900",
+    dark: "border-t-slate-900",
     light: "border-t-white",
     info: "border-t-blue-600",
-    warning: "border-t-yellow-500",
-    error: "border-t-red-600",
+    warning: "border-t-amber-500",
+    error: "border-t-rose-600",
   },
   bottom: {
-    dark: "border-b-gray-900",
+    dark: "border-b-slate-900",
     light: "border-b-white",
     info: "border-b-blue-600",
-    warning: "border-b-yellow-500",
-    error: "border-b-red-600",
+    warning: "border-b-amber-500",
+    error: "border-b-rose-600",
   },
   left: {
-    dark: "border-l-gray-900",
+    dark: "border-l-slate-900",
     light: "border-l-white",
     info: "border-l-blue-600",
-    warning: "border-l-yellow-500",
-    error: "border-l-red-600",
+    warning: "border-l-amber-500",
+    error: "border-l-rose-600",
   },
   right: {
-    dark: "border-r-gray-900",
+    dark: "border-r-slate-900",
     light: "border-r-white",
     info: "border-r-blue-600",
-    warning: "border-r-yellow-500",
-    error: "border-r-red-600",
+    warning: "border-r-amber-500",
+    error: "border-r-rose-600",
   },
 };
 
@@ -114,17 +118,25 @@ export function Tooltip({
       <AnimatePresence>
         {isVisible && !disabled && (
           <motion.div
-            initial={{ opacity: 0, scale: 0.95, y: position === "top" ? 5 : position === "bottom" ? -5 : 0 }}
+            initial={{
+              opacity: 0,
+              scale: 0.95,
+              y: position === "top" ? 5 : position === "bottom" ? -5 : 0,
+            }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.95, y: position === "top" ? 5 : position === "bottom" ? -5 : 0 }}
+            exit={{
+              opacity: 0,
+              scale: 0.95,
+              y: position === "top" ? 5 : position === "bottom" ? -5 : 0,
+            }}
             transition={{ duration: 0.15, ease: "easeOut" }}
             className={cn(
-              "absolute z-50 px-2 py-1 text-xs rounded-md whitespace-nowrap pointer-events-none",
+              "absolute z-50 px-3 py-1.5 text-xs font-medium rounded-lg whitespace-nowrap pointer-events-none",
               positionClasses[position],
               variantClasses[variant],
-              className
+              className,
             )}
-            style={{ 
+            style={{
               marginTop: position === "bottom" ? offset : undefined,
               marginBottom: position === "top" ? offset : undefined,
               marginLeft: position === "right" ? offset : undefined,
@@ -134,9 +146,9 @@ export function Tooltip({
             {showArrow && (
               <div
                 className={cn(
-                  "absolute w-0 h-0 border-4 border-transparent",
+                  "absolute w-0 h-0 border-[5px] border-transparent",
                   arrowPositionClasses[position],
-                  arrowBorderClasses[position][variant]
+                  arrowBorderClasses[position][variant],
                 )}
                 aria-hidden="true"
               />
@@ -157,12 +169,17 @@ interface HelpTooltipProps {
 
 export function HelpTooltip({ content, className }: HelpTooltipProps) {
   return (
-    <Tooltip content={content} position="top" variant="light" className={className}>
+    <Tooltip
+      content={content}
+      position="top"
+      variant="light"
+      className={className}
+    >
       <button
         type="button"
         className={cn(
-          "inline-flex items-center justify-center w-4 h-4 rounded-full bg-gray-100 text-gray-500 text-xs font-medium hover:bg-gray-200 transition-colors",
-          className
+          "inline-flex items-center justify-center w-4 h-4 rounded-full bg-slate-100 text-slate-500 text-xs font-bold hover:bg-slate-200 hover:text-slate-900 transition-colors focus:outline-none focus:ring-2 focus:ring-slate-900 focus:ring-offset-1",
+          className,
         )}
         aria-label="Ajuda"
       >

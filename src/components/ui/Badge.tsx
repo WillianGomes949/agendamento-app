@@ -1,3 +1,4 @@
+// src/components/ui/Badge.tsx
 "use client";
 
 import { LucideIcon } from "lucide-react";
@@ -13,19 +14,19 @@ interface BadgeProps {
 }
 
 const variantClasses: Record<BadgeVariant, string> = {
-  default: "bg-blue-50 text-blue-700 border-blue-200",
-  success: "bg-green-50 text-green-700 border-green-200",
-  warning: "bg-yellow-50 text-yellow-700 border-yellow-200",
-  danger: "bg-red-50 text-red-700 border-red-200",
-  info: "bg-indigo-50 text-indigo-700 border-indigo-200",
-  neutral: "bg-gray-50 text-gray-600 border-gray-200",
+  default: "bg-slate-100 text-slate-700 ring-slate-500/10",
+  success: "bg-emerald-50 text-emerald-700 ring-emerald-600/10",
+  warning: "bg-amber-50 text-amber-700 ring-amber-600/20",
+  danger: "bg-rose-50 text-rose-700 ring-rose-600/10",
+  info: "bg-blue-50 text-blue-700 ring-blue-600/10",
+  neutral: "bg-white text-slate-600 ring-slate-200",
 };
 
 export function Badge({ variant = "default", children, icon: Icon, className }: BadgeProps) {
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium border",
+        "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-bold uppercase tracking-wider ring-1 ring-inset",
         variantClasses[variant],
         className
       )}

@@ -1,3 +1,4 @@
+// src/components/ui/Button.tsx
 "use client";
 
 import { forwardRef } from "react";
@@ -17,17 +18,17 @@ interface ButtonProps extends Omit<HTMLMotionProps<"button">, "children"> {
 }
 
 const variantClasses: Record<ButtonVariant, string> = {
-  primary: "bg-blue-600 text-white hover:bg-blue-700 focus:ring-blue-500 shadow-sm",
-  secondary: "bg-gray-100 text-gray-900 hover:bg-gray-200 focus:ring-gray-400",
-  outline: "border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 focus:ring-gray-400",
-  ghost: "bg-transparent text-gray-600 hover:bg-gray-100 hover:text-gray-900 focus:ring-gray-400",
-  danger: "bg-red-600 text-white hover:bg-red-700 focus:ring-red-500 shadow-sm",
+  primary: "bg-slate-900 text-white hover:bg-slate-800 focus:ring-slate-900 shadow-sm",
+  secondary: "bg-slate-100 text-slate-900 hover:bg-slate-200 focus:ring-slate-300",
+  outline: "border-2 border-slate-200 bg-transparent text-slate-700 hover:border-slate-300 hover:bg-slate-50 focus:ring-slate-200",
+  ghost: "bg-transparent text-slate-600 hover:bg-slate-100 hover:text-slate-900 focus:ring-slate-200",
+  danger: "bg-red-500 text-white hover:bg-red-600 focus:ring-red-500 shadow-sm",
 };
 
 const sizeClasses: Record<ButtonSize, string> = {
-  sm: "px-3 py-1.5 text-sm",
-  md: "px-4 py-2 text-sm",
-  lg: "px-6 py-3 text-base",
+  sm: "px-3 py-2 text-sm",
+  md: "px-5 py-2.5 text-sm font-semibold",
+  lg: "px-6 py-3.5 text-base font-semibold",
 };
 
 export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
@@ -38,11 +39,11 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
       <motion.button
         ref={ref}
         disabled={isDisabled}
-        whileHover={!isDisabled ? { scale: 1.02 } : {}}
-        whileTap={!isDisabled ? { scale: 0.98 } : {}}
-        transition={{ type: "spring", stiffness: 400, damping: 15 }}
+        whileHover={!isDisabled ? { scale: 1.01 } : {}}
+        whileTap={!isDisabled ? { scale: 0.96 } : {}}
+        transition={{ type: "spring", stiffness: 400, damping: 25 }}
         className={cn(
-          "inline-flex items-center justify-center gap-2 rounded-lg font-medium transition-all focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed",
+          "inline-flex items-center justify-center gap-2 rounded-xl transition-all focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed",
           variantClasses[variant],
           sizeClasses[size],
           className

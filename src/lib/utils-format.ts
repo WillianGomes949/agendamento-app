@@ -8,75 +8,51 @@
 export function formatarDataExibicao(dataInput: string | Date | null | undefined): string {
   if (!dataInput) return "Data não informada";
 
-  // Se já é string no formato DD/MM/YYYY, retorna direto
+  let date: Date;
+
   if (typeof dataInput === "string") {
-    // Verifica se está no formato brasileiro
+    // Já está no formato DD/MM/YYYY?
     if (/^\d{2}\/\d{2}\/\d{4}$/.test(dataInput)) {
       return dataInput;
     }
-    // Se é ISO string, converte
-    try {
-      const date = new Date(dataInput);
-      if (!isNaN(date.getTime())) {
-        return date.toLocaleDateString("pt-BR", {
-          day: "2-digit",
-          month: "2-digit",
-          year: "numeric"
-        });
-      }
-    } catch {
-      return String(dataInput);
-    }
+    // Tenta converter de ISO ou outro formato
+    date = new Date(dataInput);
+  } else {
+    date = dataInput;
   }
 
-  // Se é objeto Date
-  if (dataInput instanceof Date) {
-    return dataInput.toLocaleDateString("pt-BR", {
-      day: "2-digit",
-      month: "2-digit",
-      year: "numeric"
-    });
+  if (isNaN(date.getTime())) {
+    return String(dataInput);
   }
 
-  return String(dataInput);
+  // ✅ SEMPRE retorna DD/MM/YYYY com zeros
+  const day = String(date.getDate()).padStart(2, "0");
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const year = date.getFullYear();
+
+  return `${day}/${month}/${year}`;
 }
 
 /**
  * Formata uma string de horário (HH:MM) para exibição
  */
-export function formatarHorarioExibicao(horarioInput: string | Date | null | undefined): string {
-  if (!horarioInput) return "Horário não informado";
+export function formatarHorarioExibicao(horario: string | Date | null | undefined): string {
+  if (!horario) return "Horário não informado";
 
-  // Se já é string no formato HH:MM, retorna direto
-  if (typeof horarioInput === "string") {
-    if (/^([01]\d|2[0-3]):([0-5]\d)$/.test(horarioInput)) {
-      return horarioInput;
-    }
-    // Se é ISO string com hora, extrai apenas HH:MM
-    try {
-      const date = new Date(horarioInput);
-      if (!isNaN(date.getTime())) {
-        return date.toLocaleTimeString("pt-BR", {
-          hour: "2-digit",
-          minute: "2-digit",
-          hour12: false
-        });
-      }
-    } catch {
-      return String(horarioInput);
-    }
+  // Se é Date, extrai horas e minutos
+  if (horario instanceof Date) {
+    const hours = String(horario.getHours()).padStart(2, "0");
+    const minutes = String(horario.getMinutes()).padStart(2, "0");
+    return `${hours}:${minutes}`;
   }
 
-  // Se é objeto Date
-  if (horarioInput instanceof Date) {
-    return horarioInput.toLocaleTimeString("pt-BR", {
-      hour: "2-digit",
-      minute: "2-digit",
-      hour12: false
-    });
+  // Se é string, procura padrão HH:MM
+  const match = String(horario).match(/(\d{2}):(\d{2})/);
+  if (match) {
+    return `${match[1]}:${match[2]}`;
   }
 
-  return String(horarioInput);
+  return String(horario);
 }
 
 /**
@@ -108,22 +84,22 @@ export function formatarDataHoraCompleta(
 export function sanitizarDadosGAS(servico: Record<string, unknown>): Record<string, unknown> {
   const sanitizado = { ...servico };
 
-  // Garante que data permaneça como string
-  if (servico.data && typeof servico.data !== "string") {
+  // Data: garante string DD/MM/YYYY
+  if (servico.data) {
     sanitizado.data = formatarDataExibicao(servico.data as string | Date);
   }
 
-  // Garante que horário permaneça como string
-  if (servico.horario && typeof servico.horario !== "string") {
+  // Horário: garante string HH:MM
+  if (servico.horario) {
     sanitizado.horario = formatarHorarioExibicao(servico.horario as string | Date);
   }
 
-  // Garante que criadoEm e atualizadoEm sejam strings ISO
-  if (servico.criadoEm && servico.criadoEm instanceof Date) {
-    sanitizado.criadoEm = (servico.criadoEm as Date).toISOString();
+  // ISO strings para timestamps
+  if (servico.criadoEm instanceof Date) {
+    sanitizado.criadoEm = servico.criadoEm.toISOString();
   }
-  if (servico.atualizadoEm && servico.atualizadoEm instanceof Date) {
-    sanitizado.atualizadoEm = (servico.atualizadoEm as Date).toISOString();
+  if (servico.atualizadoEm instanceof Date) {
+    sanitizado.atualizadoEm = servico.atualizadoEm.toISOString();
   }
 
   return sanitizado;

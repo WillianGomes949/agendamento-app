@@ -1,3 +1,4 @@
+// src/components/ui/Input.tsx
 "use client";
 
 import { forwardRef, InputHTMLAttributes } from "react";
@@ -20,22 +21,22 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
     return (
       <div className="w-full">
         {label && (
-          <label htmlFor={inputId} className="block text-sm font-medium text-gray-700 mb-1.5">
+          <label htmlFor={inputId} className="block text-sm font-semibold text-slate-700 mb-1.5">
             {label}
           </label>
         )}
-        <div className="relative">
+        <div className="relative group">
           {LeftIcon && (
-            <LeftIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+            <LeftIcon className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-slate-700 transition-colors pointer-events-none" />
           )}
           <input
             ref={ref}
             id={inputId}
             className={cn(
-              "w-full rounded-lg border bg-white px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all",
-              LeftIcon && "pl-9",
-              RightIcon && "pr-9",
-              error ? "border-red-300 focus:border-red-500 focus:ring-red-500/20" : "border-gray-300",
+              "w-full rounded-xl border bg-slate-50/50 px-4 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:bg-white focus:outline-none focus:ring-4 focus:ring-slate-100 focus:border-slate-900 transition-all shadow-sm",
+              LeftIcon && "pl-10",
+              RightIcon && "pr-10",
+              error ? "border-red-300 bg-red-50/50 focus:border-red-500 focus:ring-red-100 text-red-900" : "border-slate-200",
               className
             )}
             aria-invalid={!!error}
@@ -43,15 +44,15 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
             {...props}
           />
           {RightIcon && (
-            <RightIcon className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+            <RightIcon className="absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
           )}
         </div>
         {error ? (
-          <p id={`${inputId}-error`} className="mt-1.5 text-xs text-red-600 flex items-center gap-1">
-            <AlertCircle className="w-3 h-3" /> {error}
+          <p id={`${inputId}-error`} className="mt-1.5 text-xs font-medium text-red-500 flex items-center gap-1.5">
+            <AlertCircle className="w-3.5 h-3.5" /> {error}
           </p>
         ) : helperText ? (
-          <p id={`${inputId}-helper`} className="mt-1.5 text-xs text-gray-500">{helperText}</p>
+          <p id={`${inputId}-helper`} className="mt-1.5 text-xs text-slate-500">{helperText}</p>
         ) : null}
       </div>
     );

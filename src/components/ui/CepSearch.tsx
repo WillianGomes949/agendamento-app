@@ -13,7 +13,6 @@ interface EnderecoData {
   city: string;
   neighborhood: string;
   state: string;
-  service?: string;
 }
 
 interface CepSearchProps {
@@ -29,7 +28,12 @@ interface CepSearchProps {
   className?: string;
 }
 
-export function CepSearch({ onEnderecoFound, onError, isLoading = false, className = "" }: CepSearchProps) {
+export function CepSearch({
+  onEnderecoFound,
+  onError,
+  isLoading = false,
+  className = "",
+}: CepSearchProps) {
   const [cep, setCep] = useState("");
   const [searching, setSearching] = useState(false);
   const [localError, setLocalError] = useState("");
@@ -37,7 +41,7 @@ export function CepSearch({ onEnderecoFound, onError, isLoading = false, classNa
 
   const buscarCep = useCallback(async () => {
     const cepLimpo = cep.replace(/\D/g, "");
-    
+
     if (cepLimpo.length !== 8) {
       setLocalError("CEP deve conter 8 dígitos");
       onError?.("CEP deve conter 8 dígitos");
@@ -49,34 +53,29 @@ export function CepSearch({ onEnderecoFound, onError, isLoading = false, classNa
     setSuccess(false);
 
     try {
-      const response = await fetch(`https://brasilapi.com.br/api/cep/v1/${cepLimpo}`);
-      
-      if (!response.ok) {
-        if (response.status === 404) {
-          throw new Error("CEP não encontrado");
-        }
-        throw new Error("Erro ao buscar CEP");
-      }
+      const response = await fetch(
+        `https://brasilapi.com.br/api/cep/v1/${cepLimpo}`,
+      );
+
+      if (!response.ok)
+        throw new Error(
+          response.status === 404 ? "CEP não encontrado" : "Erro ao buscar CEP",
+        );
 
       const data: EnderecoData = await response.json();
-      
-      // Mapear os dados da API para o formato do formulário
-      const endereco = {
+
+      onEnderecoFound({
         cep: data.cep,
         rua: data.street || "",
         bairro: data.neighborhood || "",
         cidade: data.city || "",
         estado: data.state || "",
-      };
-
-      onEnderecoFound(endereco);
+      });
       setSuccess(true);
-      
-      // Limpar mensagem de sucesso após 4 segundos
       setTimeout(() => setSuccess(false), 4000);
-      
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : "Erro ao buscar CEP";
+      const errorMessage =
+        error instanceof Error ? error.message : "Erro ao buscar CEP";
       setLocalError(errorMessage);
       onError?.(errorMessage);
     } finally {
@@ -93,11 +92,11 @@ export function CepSearch({ onEnderecoFound, onError, isLoading = false, classNa
 
   return (
     <div className={`space-y-3 ${className}`}>
-      <div className="flex gap-2 items-center justify-center bg-blue-100 p-3 rounded-lg">
-        <div className="flex-1">
+      <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-end bg-slate-50/50 border border-slate-200/60 p-4 rounded-2xl">
+        <div className="flex-1 w-full">
           <Input
             label="Buscar por CEP"
-            helperText="Digite o CEP para preencher automaticamente"
+            helperText="Digite o CEP para preencher os dados"
             placeholder="00000000"
             value={cep}
             onChange={(e) => {
@@ -114,17 +113,19 @@ export function CepSearch({ onEnderecoFound, onError, isLoading = false, classNa
           type="button"
           variant="secondary"
           onClick={buscarCep}
-          disabled={searching || isLoading || cep.replace(/\D/g, "").length !== 8}
-        
+          disabled={
+            searching || isLoading || cep.replace(/\D/g, "").length !== 8
+          }
+          className="w-full sm:w-auto h-10 mb-5" // Compensa o helperText no desktop
         >
-          {searching ? <Spinner size="sm" variant="primary" /> : "Buscar"}
+          {searching ? <Spinner size="sm" variant="slate" /> : "Buscar"}
         </Button>
       </div>
-      
+
       {success && (
-        <div className="text-sm text-green-600 bg-green-50 p-2 rounded-lg flex items-center gap-2">
-          <Check className="w-3 h-3" />
-          Endereço preenchido automaticamente! Coloque o numero da residencia.
+        <div className="text-sm font-medium text-emerald-700 bg-emerald-50 p-3 rounded-xl flex items-center gap-2 border border-emerald-100 shadow-sm">
+          <Check className="w-4 h-4" />
+          Endereço preenchido! Lembre-se de adicionar o número.
         </div>
       )}
     </div>

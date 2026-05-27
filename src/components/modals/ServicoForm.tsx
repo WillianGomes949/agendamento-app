@@ -11,6 +11,7 @@ import type { Servico } from "@/lib/types";
 import { formularioServicoSchema, type FormularioSchema } from "@/lib/schemas";
 import { useConfig } from "@/hooks/useConfig";
 import { AdvancedAddressSearch } from "@/components/ui/AdvancedAddressSearch";
+import { Car, Notebook, NotepadText, Pin, ToolCase, User } from "lucide-react";
 
 interface Props {
   isOpen: boolean;
@@ -40,35 +41,26 @@ const INITIAL_FORM: FormularioSchema & { status?: string } = {
   observacao: "",
 };
 
-// Componente para seções com título
-const FormSection = ({ 
-  title, 
-  icon, 
-  children 
-}: { 
-  title: string; 
-  icon?: string; 
+const FormSection = ({
+  title,
+  icon,
+  children,
+}: {
+  title: string;
+  icon?: React.ReactNode;
   children: React.ReactNode;
 }) => (
-  <div className="bg-gray-50/50 rounded-xl p-5 space-y-4 transition-all">
-    <div className="flex items-center gap-2 pb-2 border-b border-gray-200">
-      {icon && <span className="text-lg">{icon}</span>}
-      <h3 className="font-semibold text-gray-800">{title}</h3>
+  <div className="bg-slate-50/50 border border-slate-100 rounded-2xl p-5 sm:p-6 space-y-5 transition-all">
+    <div className="flex items-center gap-3 pb-3 border-b border-slate-200/60">
+      {icon && (
+        <div className="w-8 h-8 rounded-lg bg-slate-200/50 flex items-center justify-center text-slate-600">
+          {icon}
+        </div>
+      )}
+      <h3 className="font-bold text-slate-900 text-base">{title}</h3>
     </div>
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-      {children}
-    </div>
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-5">{children}</div>
   </div>
-);
-
-// Componente para helper text com tooltip visual
-const HelperText = ({ text }: { text: string }) => (
-  <p className="text-xs text-gray-400 mt-1 flex items-center gap-1">
-    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-    </svg>
-    {text}
-  </p>
 );
 
 export default function ServicoForm({
@@ -82,15 +74,19 @@ export default function ServicoForm({
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [touched, setTouched] = useState<Record<string, boolean>>({});
   const [manualAddress, setManualAddress] = useState(false);
-
   const { options: configOptions, loading: configLoading } = useConfig();
 
   useEffect(() => {
     if (initialData) {
+      const extrairHorario = (h?: string) => {
+        if (!h) return "";
+        const m = h.match(/(\d{2}):(\d{2})/);
+        return m ? `${m[1]}:${m[2]}` : h;
+      };
       setForm({
         tecnico: initialData.tecnico || "",
         data: initialData.data || "",
-        horario: initialData.horario || "",
+        horario: extrairHorario(initialData.horario),
         tipoServico: initialData.tipoServico || "",
         status: initialData.status || "PENDENTE",
         ordemServico: initialData.ordemServico || null,
@@ -123,7 +119,11 @@ export default function ServicoForm({
   const updateField = useCallback(
     (section: string, field: string, value: string) => {
       setForm((prev) => {
-        if (section === "cliente" || section === "veiculo" || section === "endereco") {
+        if (
+          section === "cliente" ||
+          section === "veiculo" ||
+          section === "endereco"
+        ) {
           return {
             ...prev,
             [section]: {
@@ -134,77 +134,63 @@ export default function ServicoForm({
         }
         return { ...prev, [section]: value };
       });
-
       const errorKey = field ? `${section}.${field}` : section;
-      if (touched[errorKey]) {
+      if (touched[errorKey])
         setErrors((prev) => {
           const next = { ...prev };
           delete next[errorKey];
           return next;
         });
-      }
     },
     [touched],
   );
 
   const handleBlur = (section: string, field?: string) => {
-    const errorKey = field ? `${section}.${field}` : section;
-    setTouched((prev) => ({ ...prev, [errorKey]: true }));
-  };
-
-  const handleCepFound = useCallback((enderecoData: {
-    rua: string;
-    bairro: string;
-    cidade: string;
-    estado: string;
-    cep: string;
-  }) => {
-    setForm((prev) => ({
+    setTouched((prev) => ({
       ...prev,
-      endereco: {
-        ...prev.endereco,
-        rua: enderecoData.rua,
-        bairro: enderecoData.bairro,
-        cidade: enderecoData.cidade,
-        estado: enderecoData.estado,
-        cep: enderecoData.cep,
-      },
+      [field ? `${section}.${field}` : section]: true,
     }));
-    setManualAddress(false);
-  }, []);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    // Marcar todos os campos como touched
     const allFields = [
-      "tecnico", "data", "horario", "tipoServico", "status",
-      "cliente.nome", "cliente.contato",
-      "veiculo.placa", "veiculo.marcaModelo",
-      "endereco.rua", "endereco.numero", "endereco.bairro",
-      "endereco.cidade", "endereco.estado", "endereco.cep"
+      "tecnico",
+      "data",
+      "horario",
+      "tipoServico",
+      "status",
+      "cliente.nome",
+      "cliente.contato",
+      "veiculo.placa",
+      "veiculo.marcaModelo",
+      "endereco.rua",
+      "endereco.numero",
+      "endereco.bairro",
+      "endereco.cidade",
+      "endereco.estado",
+      "endereco.cep",
     ];
     const newTouched: Record<string, boolean> = {};
-    allFields.forEach(field => { newTouched[field] = true; });
+    allFields.forEach((f) => {
+      newTouched[f] = true;
+    });
     setTouched(newTouched);
 
     const result = formularioServicoSchema.safeParse(form);
-
     if (!result.success) {
       const newErrors: Record<string, string> = {};
       result.error.issues.forEach((issue) => {
         newErrors[issue.path.join(".")] = issue.message;
       });
       setErrors(newErrors);
-      
       const firstErrorField = Object.keys(newErrors)[0];
-      if (firstErrorField) {
-        const element = document.querySelector(`[data-field="${firstErrorField}"]`);
-        element?.scrollIntoView({ behavior: "smooth", block: "center" });
-      }
+      if (firstErrorField)
+        document
+          .querySelector(`[data-field="${firstErrorField}"]`)
+          ?.scrollIntoView({ behavior: "smooth", block: "center" });
       return;
     }
-
     onSubmit({ ...result.data, status: form.status });
   };
 
@@ -220,29 +206,26 @@ export default function ServicoForm({
     return `${dia}/${mes}/${ano}`;
   };
 
-  const getFieldError = (field: string) => touched[field] ? errors[field] : undefined;
+  const getFieldError = (field: string) =>
+    touched[field] ? errors[field] : undefined;
 
-  // Preparar opções
   const tecnicosOptions = configLoading
-    ? [{ value: "", label: "Carregando técnicos..." }]
+    ? [{ value: "", label: "Carregando..." }]
     : configOptions.tecnicos.length > 0
-      ? [{ value: "", label: "Selecione um técnico" }, ...configOptions.tecnicos]
-      : [{ value: "", label: "Nenhum técnico disponível" }];
-  
+      ? [{ value: "", label: "Selecione..." }, ...configOptions.tecnicos]
+      : [{ value: "", label: "Nenhum técnico" }];
   const tiposOptions = configLoading
-    ? [{ value: "", label: "Carregando serviços..." }]
+    ? [{ value: "", label: "Carregando..." }]
     : configOptions.tiposServico.length > 0
-      ? [{ value: "", label: "Selecione um tipo de serviço" }, ...configOptions.tiposServico]
-      : [{ value: "", label: "Nenhum tipo disponível" }];
-  
+      ? [{ value: "", label: "Selecione..." }, ...configOptions.tiposServico]
+      : [{ value: "", label: "Nenhum tipo" }];
   const horariosOptions = configLoading
-    ? [{ value: "", label: "Carregando horários..." }]
+    ? [{ value: "", label: "Carregando..." }]
     : configOptions.horarios.length > 0
-      ? [{ value: "", label: "Selecione um horário" }, ...configOptions.horarios]
-      : [{ value: "", label: "Nenhum horário disponível" }];
-  
+      ? [{ value: "", label: "Selecione..." }, ...configOptions.horarios]
+      : [{ value: "", label: "Nenhum horário" }];
   const statusOptions = configLoading
-    ? [{ value: "", label: "Carregando status..." }]
+    ? [{ value: "", label: "Carregando..." }]
     : configOptions.status.length > 0
       ? configOptions.status
       : [{ value: "PENDENTE", label: "Pendente" }];
@@ -253,17 +236,17 @@ export default function ServicoForm({
       onClose={onClose}
       title={
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
-            <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-            </svg>
+          <div className="w-10 h-10 bg-slate-900 rounded-xl flex items-center justify-center shadow-sm">
+            <NotepadText className="w-4 h-4 text-slate-50"/>
           </div>
           <div>
-            <h2 className="text-xl font-semibold text-gray-900">
+            <h2 className="text-xl font-bold text-slate-900 tracking-tight">
               {initialData ? "Editar Serviço" : "Novo Agendamento"}
             </h2>
-            <p className="text-sm text-gray-500">
-              {initialData ? "Atualize as informações do serviço" : "Preencha os dados para criar um novo atendimento"}
+            <p className="text-xs font-medium text-slate-500 mt-0.5">
+              {initialData
+                ? "Atualize as informações do OS"
+                : "Preencha os dados do novo atendimento"}
             </p>
           </div>
         </div>
@@ -272,20 +255,22 @@ export default function ServicoForm({
       closeOnOverlayClick={!isLoading}
     >
       {configLoading && (
-        <div className="flex items-center justify-center py-8 bg-gray-50 rounded-lg">
-          <Spinner size="md" variant="primary" />
-          <span className="ml-3 text-gray-600">Carregando opções de configuração...</span>
+        <div className="flex items-center justify-center p-6 bg-slate-50 rounded-2xl border border-slate-100 mb-6">
+          <Spinner size="md" variant="slate" />
+          <span className="ml-3 text-sm font-medium text-slate-600">
+            Carregando configurações...
+          </span>
         </div>
       )}
 
       <form onSubmit={handleSubmit} className="space-y-6">
-        {/* Seção: Informações do Serviço */}
-        <FormSection title="Informações do Serviço" icon="🔧">
+        <FormSection
+          title="Informações Gerais"
+          icon={<span className="text-lg leading-none"><ToolCase className="w-4 h-4"/></span>}
+        >
           <div data-field="tecnico">
             <Select
               label="Técnico Responsável"
-              helperText="Selecione o profissional que executará o serviço"
-              placeholder="Selecione um técnico"
               value={form.tecnico}
               onChange={(e) => updateField("tecnico", "", e.target.value)}
               onBlur={() => handleBlur("tecnico")}
@@ -295,25 +280,22 @@ export default function ServicoForm({
               required
             />
           </div>
-
           <div data-field="data">
             <Input
               type="date"
               label="Data do Serviço"
-              helperText="Data prevista para realização"
               value={formatToInputDate(form.data)}
-              onChange={(e) => updateField("data", "", formatToBrazilianDate(e.target.value))}
+              onChange={(e) =>
+                updateField("data", "", formatToBrazilianDate(e.target.value))
+              }
               onBlur={() => handleBlur("data")}
               error={getFieldError("data")}
               required
             />
           </div>
-
           <div data-field="horario">
             <Select
-              label="Horário"
-              helperText="Horário de início do atendimento"
-              placeholder="Selecione um horário"
+              label="Horário Previsto"
               value={form.horario}
               onChange={(e) => updateField("horario", "", e.target.value)}
               onBlur={() => handleBlur("horario")}
@@ -323,12 +305,9 @@ export default function ServicoForm({
               required
             />
           </div>
-
           <div data-field="tipoServico">
             <Select
               label="Tipo de Serviço"
-              helperText="Categoria do serviço a ser executado"
-              placeholder="Selecione um tipo"
               value={form.tipoServico}
               onChange={(e) => updateField("tipoServico", "", e.target.value)}
               onBlur={() => handleBlur("tipoServico")}
@@ -338,11 +317,9 @@ export default function ServicoForm({
               required
             />
           </div>
-
           <div data-field="status">
             <Select
-              label="Status do Agendamento"
-              helperText="Situação atual do serviço"
+              label="Status Atual"
               value={form.status || "PENDENTE"}
               onChange={(e) => updateField("status", "", e.target.value)}
               onBlur={() => handleBlur("status")}
@@ -352,11 +329,9 @@ export default function ServicoForm({
               required
             />
           </div>
-
           <div data-field="ordemServico">
             <Input
-              label="Ordem de Serviço"
-              helperText="Número da OS interna (opcional)"
+              label="Ordem de Serviço (OS)"
               placeholder="Ex: OS-2024-001"
               value={form.ordemServico || ""}
               onChange={(e) => updateField("ordemServico", "", e.target.value)}
@@ -365,13 +340,14 @@ export default function ServicoForm({
           </div>
         </FormSection>
 
-        {/* Seção: Cliente */}
-        <FormSection title="Dados do Cliente" icon="👤">
+        <FormSection
+          title="Dados do Cliente"
+          icon={<span className="text-lg leading-none"><User className="w-4 h-4"/></span>}
+        >
           <div data-field="cliente.nome" className="md:col-span-2">
             <Input
               label="Nome Completo"
-              helperText="Nome do cliente para identificação"
-              placeholder="Digite o nome completo"
+              placeholder="Digite o nome do cliente"
               value={form.cliente.nome}
               onChange={(e) => updateField("cliente", "nome", e.target.value)}
               onBlur={() => handleBlur("cliente", "nome")}
@@ -379,44 +355,58 @@ export default function ServicoForm({
               required
             />
           </div>
-
           <div data-field="cliente.contato">
             <Input
               label="Telefone / WhatsApp"
-              helperText="DDD + número (apenas números)"
-              placeholder="11999999999"
+              placeholder="(00) 00000-0000"
               value={form.cliente.contato}
-              onChange={(e) => updateField("cliente", "contato", e.target.value.replace(/\D/g, ""))}
+              onChange={(e) =>
+                updateField(
+                  "cliente",
+                  "contato",
+                  e.target.value.replace(/\D/g, ""),
+                )
+              }
               onBlur={() => handleBlur("cliente", "contato")}
               error={getFieldError("cliente.contato")}
               required
+              helperText="Apenas números com DDD"
             />
-            <HelperText text="10 ou 11 dígitos com DDD" />
           </div>
         </FormSection>
 
-        {/* Seção: Veículo */}
-        <FormSection title="Dados do Veículo" icon="🚗">
+        <FormSection
+          title="Veículo"
+          icon={<span className="text-lg leading-none"><Car className="w-4 h-4"/></span>}
+        >
           <div data-field="veiculo.placa">
             <Input
               label="Placa"
-              helperText="Sem traços ou espaços"
               placeholder="ABC1D23"
               value={form.veiculo.placa}
-              onChange={(e) => updateField("veiculo", "placa", e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 7))}
+              onChange={(e) =>
+                updateField(
+                  "veiculo",
+                  "placa",
+                  e.target.value
+                    .toUpperCase()
+                    .replace(/[^A-Z0-9]/g, "")
+                    .slice(0, 7),
+                )
+              }
               onBlur={() => handleBlur("veiculo", "placa")}
               error={getFieldError("veiculo.placa")}
               required
             />
           </div>
-
           <div data-field="veiculo.marcaModelo">
             <Input
-              label="Marca e Modelo"
-              helperText="Ex: Honda Civic, Fiat Strada"
-              placeholder="Marca / Modelo"
+              label="Marca / Modelo"
+              placeholder="Ex: Honda Civic"
               value={form.veiculo.marcaModelo}
-              onChange={(e) => updateField("veiculo", "marcaModelo", e.target.value)}
+              onChange={(e) =>
+                updateField("veiculo", "marcaModelo", e.target.value)
+              }
               onBlur={() => handleBlur("veiculo", "marcaModelo")}
               error={getFieldError("veiculo.marcaModelo")}
               required
@@ -424,70 +414,74 @@ export default function ServicoForm({
           </div>
         </FormSection>
 
-        {/* Seção: Endereço com Busca de CEP */}
-        <div className="bg-gray-50/50 rounded-xl p-5 space-y-4 transition-all">
-          <div className="flex items-center justify-between pb-2 border-b border-gray-200">
-            <div className="flex items-center gap-2">
-              <span className="text-lg">📍</span>
-              <h3 className="font-semibold text-gray-800">Endereço de Atendimento</h3>
+        <div className="bg-slate-50/50 border border-slate-100 rounded-2xl p-5 sm:p-6 space-y-5 transition-all">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-200/60">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-lg bg-slate-200/50 flex items-center justify-center text-slate-600">
+                <span className="text-lg leading-none"><Pin className="w-4 h-4"/></span>
+              </div>
+              <h3 className="font-bold text-slate-900 text-base">
+                Localização
+              </h3>
             </div>
             <Button
               type="button"
               variant="ghost"
               size="sm"
               onClick={() => setManualAddress(!manualAddress)}
-              className="text-sm"
+              className="text-sm font-semibold self-start sm:self-auto"
             >
-              {manualAddress ? "Buscar por CEP" : "Preencher manualmente"}
+              {manualAddress
+                ? "Buscar por CEP automático"
+                : "Digitar endereço manual"}
             </Button>
           </div>
 
           {!manualAddress ? (
             <AdvancedAddressSearch
-  onAddressSelect={(address) => {
-    setForm((prev) => ({
-      ...prev,
-      endereco: {
-        ...prev.endereco,
-        cep: address.cep,
-        rua: address.rua,
-        bairro: address.bairro,
-        cidade: address.cidade,
-        estado: address.estado,
-      },
-    }));
-  }}
-/>
+              onAddressSelect={(a) => {
+                setForm((p) => ({
+                  ...p,
+                  endereco: {
+                    ...p.endereco,
+                    cep: a.cep,
+                    rua: a.rua,
+                    bairro: a.bairro,
+                    cidade: a.cidade,
+                    estado: a.estado,
+                  },
+                }));
+              }}
+            />
           ) : (
-            <div className="space-y-4">
-              <div className="text-sm text-gray-500 mb-2 flex items-center gap-2">
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                </svg>
-                Preenchendo endereço manualmente
-              </div>
-            </div>
+            <p className="text-sm font-medium text-slate-500">
+              Modo de preenchimento manual ativado.
+            </p>
           )}
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5 pt-2">
             <div data-field="endereco.cep" className="md:col-span-2">
               <Input
                 label="CEP"
-                helperText="Apenas números"
                 placeholder="00000000"
                 value={form.endereco.cep}
-                onChange={(e) => updateField("endereco", "cep", e.target.value.replace(/\D/g, "").slice(0, 8))}
+                onChange={(e) =>
+                  updateField(
+                    "endereco",
+                    "cep",
+                    e.target.value.replace(/\D/g, "").slice(0, 8),
+                  )
+                }
                 onBlur={() => handleBlur("endereco", "cep")}
                 error={getFieldError("endereco.cep")}
                 required
                 disabled={!manualAddress}
               />
             </div>
-
             <div data-field="endereco.rua" className="md:col-span-2">
               <Input
                 label="Logradouro"
-                placeholder="Rua, Avenida, Alameda..."
+                placeholder="Ex: Av. Paulista"
                 value={form.endereco.rua}
                 onChange={(e) => updateField("endereco", "rua", e.target.value)}
                 onBlur={() => handleBlur("endereco", "rua")}
@@ -496,52 +490,60 @@ export default function ServicoForm({
                 disabled={!manualAddress && form.endereco.cep.length === 8}
               />
             </div>
-
             <div data-field="endereco.numero">
               <Input
                 label="Número"
                 placeholder="123 ou S/N"
                 value={form.endereco.numero}
-                onChange={(e) => updateField("endereco", "numero", e.target.value)}
+                onChange={(e) =>
+                  updateField("endereco", "numero", e.target.value)
+                }
                 onBlur={() => handleBlur("endereco", "numero")}
                 error={getFieldError("endereco.numero")}
                 required
               />
             </div>
-
             <div data-field="endereco.bairro">
               <Input
                 label="Bairro"
-                placeholder="Centro, Jardins..."
+                placeholder="Centro"
                 value={form.endereco.bairro}
-                onChange={(e) => updateField("endereco", "bairro", e.target.value)}
+                onChange={(e) =>
+                  updateField("endereco", "bairro", e.target.value)
+                }
                 onBlur={() => handleBlur("endereco", "bairro")}
                 error={getFieldError("endereco.bairro")}
                 required
                 disabled={!manualAddress && form.endereco.cep.length === 8}
               />
             </div>
-
             <div data-field="endereco.cidade">
               <Input
                 label="Cidade"
-                placeholder="São Paulo"
+                placeholder="Fortaleza"
                 value={form.endereco.cidade}
-                onChange={(e) => updateField("endereco", "cidade", e.target.value)}
+                onChange={(e) =>
+                  updateField("endereco", "cidade", e.target.value)
+                }
                 onBlur={() => handleBlur("endereco", "cidade")}
                 error={getFieldError("endereco.cidade")}
                 required
                 disabled={!manualAddress && form.endereco.cep.length === 8}
               />
             </div>
-
             <div data-field="endereco.estado">
               <Input
                 label="UF"
-                placeholder="SP"
+                placeholder="CE"
                 maxLength={2}
                 value={form.endereco.estado}
-                onChange={(e) => updateField("endereco", "estado", e.target.value.toUpperCase().slice(0, 2))}
+                onChange={(e) =>
+                  updateField(
+                    "endereco",
+                    "estado",
+                    e.target.value.toUpperCase().slice(0, 2),
+                  )
+                }
                 onBlur={() => handleBlur("endereco", "estado")}
                 error={getFieldError("endereco.estado")}
                 required
@@ -551,34 +553,34 @@ export default function ServicoForm({
           </div>
         </div>
 
-        {/* Seção: Observações */}
-        <div className="bg-gray-50/50 rounded-xl p-5">
-          <div className="flex items-center gap-2 pb-3">
-            <span className="text-lg">📝</span>
-            <h3 className="font-semibold text-gray-800">Informações Adicionais</h3>
+        <div className="bg-slate-50/50 border border-slate-100 rounded-2xl p-5 sm:p-6 space-y-4">
+          <div className="flex items-center gap-3 pb-3 border-b border-slate-200/60">
+            <div className="w-8 h-8 rounded-lg bg-slate-200/50 flex items-center justify-center text-slate-600">
+              <span className="text-lg leading-none"><Notebook className="w-4 h-4"/></span>
+            </div>
+            <h3 className="font-bold text-slate-900 text-base">Observações</h3>
           </div>
-          <div>
-            <textarea
-              className={`w-full p-3 border rounded-lg text-sm outline-none transition-all focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none ${
-                errors.observacao ? "border-red-300" : "border-gray-300"
-              }`}
-              placeholder="Digite observações relevantes sobre o serviço..."
-              value={form.observacao || ""}
-              onChange={(e) => updateField("observacao", "", e.target.value)}
-              rows={4}
-            />
-            <HelperText text="Informações adicionais que possam auxiliar no atendimento (opcional)" />
-          </div>
+          <textarea
+            className={`w-full p-4 rounded-xl text-sm outline-none transition-all focus:ring-4 focus:ring-slate-100 focus:border-slate-900 resize-none shadow-sm ${
+              errors.observacao
+                ? "border-red-300 bg-red-50"
+                : "border-slate-200 bg-white"
+            }`}
+            placeholder="Detalhes adicionais, referências de endereço ou instruções específicas..."
+            value={form.observacao || ""}
+            onChange={(e) => updateField("observacao", "", e.target.value)}
+            rows={4}
+          />
         </div>
 
-        {/* Ações do Formulário */}
-        <div className="flex justify-end gap-3 pt-6 border-t border-gray-200">
+        {/* Footers em modais no Mobile devem empilhar os botões */}
+        <div className="flex flex-col-reverse sm:flex-row justify-end gap-3 pt-6 border-t border-slate-200">
           <Button
             type="button"
             variant="outline"
             onClick={onClose}
             disabled={isLoading}
-            className="px-6"
+            className="w-full sm:w-auto"
           >
             Cancelar
           </Button>
@@ -587,9 +589,13 @@ export default function ServicoForm({
             variant="primary"
             isLoading={isLoading}
             disabled={configLoading}
-            className="px-6"
+            className="w-full sm:w-auto"
           >
-            {isLoading ? "Salvando..." : initialData ? "Salvar Alterações" : "Criar Serviço"}
+            {isLoading
+              ? "Salvando..."
+              : initialData
+                ? "Salvar Alterações"
+                : "Criar Serviço"}
           </Button>
         </div>
       </form>

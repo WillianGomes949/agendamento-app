@@ -11,9 +11,9 @@ interface CardProps extends HTMLMotionProps<"div"> {
 
 const paddingClasses = {
   none: "p-0",
-  sm: "p-3",
-  md: "p-4 md:p-5",
-  lg: "p-6 md:p-8",
+  sm: "p-3 sm:p-4",
+  md: "p-4 sm:p-5 md:p-6",
+  lg: "p-6 sm:p-8 md:p-10",
 };
 
 export function Card({ 
@@ -21,13 +21,18 @@ export function Card({
   className, 
   hoverable = false, 
   padding = "md", 
-  ...props // <- Recebe e repassa variants, initial, animate, etc.
+  ...props 
 }: CardProps) {
   return (
     <motion.div
-      whileHover={hoverable ? { y: -2, boxShadow: "0 8px 16px -4px rgba(0,0,0,0.1)" } : undefined}
+      whileHover={
+        hoverable 
+          ? { y: -2, boxShadow: "0 12px 24px -8px rgba(15, 23, 42, 0.08)" } 
+          : undefined
+      }
+      transition={{ duration: 0.2, ease: "easeOut" }}
       className={cn(
-        "bg-white rounded-xl border border-gray-200 shadow-sm",
+        "bg-white rounded-2xl border border-slate-200/60 shadow-sm transition-colors",
         paddingClasses[padding],
         className
       )}

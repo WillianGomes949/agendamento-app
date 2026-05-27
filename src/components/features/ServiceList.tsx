@@ -17,13 +17,13 @@ export function ServiceList({ servicos, onEdit, onDelete }: ServiceListProps) {
     return (
       <EmptyState 
         title="Nenhum serviço encontrado" 
-        description="Tente ajustar os filtros ou verifique se há agendamentos para a data selecionada." 
+        description="Tente ajustar os filtros ou verifique se há agendamentos para as datas selecionadas." 
       />
     );
   }
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6">
       <AnimatePresence mode="popLayout">
         {servicos.map((servico, index) => (
           <ServiceCard

@@ -1,20 +1,18 @@
 // src/components/ui/AdvancedAddressSearch.tsx
 "use client";
 
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback } from "react";
 import {
   Search,
   MapPin,
   Home,
   Building,
-  Navigation,
   Loader2,
   AlertCircle,
 } from "lucide-react";
 import { Input } from "./Input";
 import { Button } from "./Button";
 import { addressService, EnderecoResponse } from "@/services/addressService";
-import { useGeolocation } from "@/hooks/useGeolocation";
 
 interface AdvancedAddressSearchProps {
   onAddressSelect: (address: {
@@ -27,7 +25,7 @@ interface AdvancedAddressSearchProps {
   className?: string;
 }
 
-type SearchType = "cep" | "address" | "geolocation";
+type SearchType = "cep" | "address";
 
 export function AdvancedAddressSearch({
   onAddressSelect,
@@ -43,26 +41,15 @@ export function AdvancedAddressSearch({
   const [error, setError] = useState<string | null>(null);
   const [showResults, setShowResults] = useState(false);
 
-  const {
-    location,
-    loading: geoLoading,
-    error: geoError,
-    getLocation,
-  } = useGeolocation();
-
-  // Buscar por CEP
   const buscarPorCep = useCallback(async () => {
     if (cep.replace(/\D/g, "").length !== 8) {
       setError("Digite um CEP válido com 8 dígitos");
       return;
     }
-
     setLoading(true);
     setError(null);
-
     try {
       const result = await addressService.buscarPorCep(cep);
-
       if (result) {
         onAddressSelect({
           cep: result.cep,
@@ -83,23 +70,19 @@ export function AdvancedAddressSearch({
     }
   }, [cep, onAddressSelect]);
 
-  // Buscar por endereço
   const buscarPorEndereco = useCallback(async () => {
     if (!uf || !city || !street) {
       setError("Preencha UF, Cidade e Rua para buscar");
       return;
     }
-
     setLoading(true);
     setError(null);
-
     try {
       const enderecos = await addressService.buscarPorEndereco({
         uf,
         city,
         street,
       });
-
       if (enderecos.length > 0) {
         setResults(enderecos);
         setShowResults(true);
@@ -114,40 +97,7 @@ export function AdvancedAddressSearch({
     }
   }, [uf, city, street]);
 
-  // Buscar por geolocalização
-  const buscarPorGeolocalizacao = useCallback(async () => {
-    try {
-      const position = await getLocation();
-      setLoading(true);
-      setError(null);
-
-      const endereco = await addressService.buscarPorCoordenadas(
-        position.latitude,
-        position.longitude,
-      );
-
-      if (endereco) {
-        onAddressSelect({
-          cep: endereco.cep,
-          rua: endereco.street,
-          bairro: endereco.neighborhood,
-          cidade: endereco.city,
-          estado: endereco.state,
-        });
-      } else {
-        setError("Não foi possível obter o endereço da sua localização");
-      }
-    } catch (err) {
-      setError(
-        err instanceof Error ? err.message : "Erro ao obter localização",
-      );
-    } finally {
-      setLoading(false);
-    }
-  }, [getLocation, onAddressSelect]);
-
-  // Selecionar resultado da busca
-  const selecionarEndereco = (endereco: EnderecoResponse) => {
+  const selecionarEndereco = useCallback((endereco: EnderecoResponse) => {
     onAddressSelect({
       cep: endereco.cep,
       rua: endereco.street,
@@ -155,62 +105,49 @@ export function AdvancedAddressSearch({
       cidade: endereco.city,
       estado: endereco.state,
     });
-    setShowResults(false);
     setResults([]);
-  };
-
-  // Efeito para geolocalização
-  useEffect(() => {
-    if (location && searchType === "geolocation") {
-      buscarPorGeolocalizacao();
-    }
-  }, [location, searchType, buscarPorGeolocalizacao]);
+    setShowResults(false);
+    setError(null);
+  }, [onAddressSelect]);
 
   return (
-    <div className={`space-y-4 ${className}`}>
-      {/* Tipo de Busca Tabs */}
-      <div className="flex gap-2 border-b border-gray-200">
+    <div className={`space-y-5 ${className}`}>
+      {/* Abas (Tabs) Modernas */}
+      <div className="flex gap-4 border-b border-slate-200">
         <button
           type="button"
           onClick={() => setSearchType("cep")}
-          className={`px-4 py-2 text-sm font-medium transition-all relative ${
+          className={`pb-3 text-sm font-semibold transition-all relative flex items-center gap-2 ${
             searchType === "cep"
-              ? "text-blue-600"
-              : "text-gray-500 hover:text-gray-700"
+              ? "text-slate-900"
+              : "text-slate-500 hover:text-slate-700"
           }`}
         >
-          <div className="flex items-center gap-2">
-            <Home size={16} />
-            Buscar por CEP
-          </div>
+          <Home size={14} /> Buscar por CEP
           {searchType === "cep" && (
-            <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-600" />
+            <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-slate-900 rounded-t-full" />
           )}
         </button>
-
         <button
           type="button"
           onClick={() => setSearchType("address")}
-          className={`px-4 py-2 text-sm font-medium transition-all relative ${
+          className={`pb-3 text-sm font-semibold transition-all relative flex items-center gap-2 ${
             searchType === "address"
-              ? "text-blue-600"
-              : "text-gray-500 hover:text-gray-700"
+              ? "text-slate-900"
+              : "text-slate-500 hover:text-slate-700"
           }`}
         >
-          <div className="flex items-center gap-2">
-            <Building size={16} />
-            Buscar por Endereço
-          </div>
+          <Building size={14} /> Buscar por Endereço
           {searchType === "address" && (
-            <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-600" />
+            <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-slate-900 rounded-t-full" />
           )}
         </button>
       </div>
 
-      {/* Formulário de Busca */}
-      <div className="space-y-4">
+      {/* Área do Formulário */}
+      <div className="bg-slate-50/50 border border-slate-200/60 p-5 rounded-2xl">
         {searchType === "cep" && (
-          <div className="flex gap-2 bg-blue-100 p-4 rounded-lg justify-center items-center">
+          <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-end">
             <Input
               label="CEP"
               placeholder="00000000"
@@ -221,8 +158,14 @@ export function AdvancedAddressSearch({
               onKeyPress={(e) => e.key === "Enter" && buscarPorCep()}
               helperText="Digite o CEP com 8 dígitos"
               error={error}
+              className="flex-1 w-full"
             />
-            <Button type="button" onClick={buscarPorCep} disabled={loading}>
+            <Button
+              type="button"
+              onClick={buscarPorCep}
+              disabled={loading}
+              className="w-full sm:w-auto mb-5"
+            >
               {loading ? (
                 <Loader2 size={16} className="animate-spin" />
               ) : (
@@ -234,8 +177,8 @@ export function AdvancedAddressSearch({
         )}
 
         {searchType === "address" && (
-          <div className="space-y-3 bg-blue-100 p-4 rounded-lg">
-            <div className="grid grid-cols-2 gap-3">
+          <div className="space-y-4">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <Input
                 label="UF"
                 placeholder="SP"
@@ -244,29 +187,30 @@ export function AdvancedAddressSearch({
                 onChange={(e) =>
                   setUf(e.target.value.toUpperCase().slice(0, 2))
                 }
-                helperText="Sigla do estado"
               />
-              <Input
-                label="Cidade"
-                placeholder="São Paulo"
-                value={city}
-                onChange={(e) => setCity(e.target.value)}
-              />
+              <div className="sm:col-span-2">
+                <Input
+                  label="Cidade"
+                  placeholder="São Paulo"
+                  value={city}
+                  onChange={(e) => setCity(e.target.value)}
+                />
+              </div>
             </div>
-            <div className="flex gap-2">
+            <div className="flex flex-col sm:flex-row gap-3 items-end">
               <Input
                 label="Rua / Logradouro"
-                placeholder="Av. Paulista"
+                placeholder="Ex: Av. Paulista"
                 value={street}
                 onChange={(e) => setStreet(e.target.value)}
                 onKeyPress={(e) => e.key === "Enter" && buscarPorEndereco()}
-                className="flex-1"
+                className="flex-1 w-full"
               />
               <Button
                 type="button"
                 onClick={buscarPorEndereco}
                 disabled={loading}
-                className="self-end"
+                className="w-full sm:w-auto"
               >
                 {loading ? (
                   <Loader2 size={16} className="animate-spin" />
@@ -277,66 +221,45 @@ export function AdvancedAddressSearch({
               </Button>
             </div>
             {error && (
-              <div className="flex items-center gap-2 text-sm text-red-600 bg-red-50 p-2 rounded-lg">
-                <AlertCircle size={16} />
-                {error}
+              <div className="flex items-center gap-2 text-sm font-medium text-red-600 bg-red-50 p-3 rounded-xl border border-red-100">
+                <AlertCircle size={16} /> {error}
               </div>
-            )}
-          </div>
-        )}
-
-        {searchType === "geolocation" && (
-          <div className="text-center py-4">
-            <Button
-              type="button"
-              onClick={buscarPorGeolocalizacao}
-              disabled={loading || geoLoading}
-              variant="secondary"
-              className="w-full"
-            >
-              {loading || geoLoading ? (
-                <Loader2 size={16} className="animate-spin mr-2" />
-              ) : (
-                <Navigation size={16} className="mr-2" />
-              )}
-              Usar minha localização atual
-            </Button>
-            {(error || geoError) && (
-              <p className="text-sm text-red-600 mt-2">{error || geoError}</p>
             )}
           </div>
         )}
       </div>
 
-      {/* Resultados da Busca */}
+      {/* Resultados da Busca (Endereços) */}
       {showResults && results.length > 0 && (
-        <div className="border border-gray-200 rounded-lg overflow-hidden">
-          <div className="bg-gray-50 px-4 py-2 border-b border-gray-200">
-            <p className="text-sm font-medium text-gray-700">
+        <div className="border border-slate-200 rounded-2xl overflow-hidden shadow-sm">
+          <div className="bg-slate-50 px-5 py-3 border-b border-slate-200">
+            <p className="text-sm font-bold text-slate-700">
               {results.length} endereço(s) encontrado(s)
             </p>
           </div>
-          <div className="max-h-64 overflow-y-auto">
+          <div className="max-h-64 overflow-y-auto scrollbar-thin">
             {results.map((result, index) => (
               <button
                 key={index}
                 type="button"
                 onClick={() => selecionarEndereco(result)}
-                className="w-full text-left px-4 py-3 hover:bg-gray-50 transition-colors border-b border-gray-100 last:border-0"
+                className="w-full text-left px-5 py-3.5 hover:bg-slate-50 transition-colors border-b border-slate-100 last:border-0 group"
               >
                 <div className="flex items-start gap-3">
-                  <MapPin
-                    size={18}
-                    className="text-gray-400 flex-shrink-0 mt-0.5"
-                  />
+                  <div className="p-2 bg-slate-100 rounded-lg group-hover:bg-slate-200 transition-colors">
+                    <MapPin
+                      size={16}
+                      className="text-slate-500 group-hover:text-slate-700"
+                    />
+                  </div>
                   <div>
-                    <p className="text-sm font-medium text-gray-900">
+                    <p className="text-sm font-bold text-slate-900">
                       {result.street}
                     </p>
-                    <p className="text-xs text-gray-500 mt-1">
+                    <p className="text-xs font-medium text-slate-500 mt-0.5">
                       {result.neighborhood} - {result.city}/{result.state}
                     </p>
-                    <p className="text-xs text-gray-400 mt-0.5">
+                    <p className="text-xs font-semibold text-slate-400 mt-1 uppercase tracking-wider">
                       CEP: {result.cep}
                     </p>
                   </div>

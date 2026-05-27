@@ -1,12 +1,20 @@
 // src/components/features/FilterBar.tsx
 "use client";
 
-import { Search, Filter, X, Calendar, User, Tag, ChevronDown, Clock, RefreshCw, SlidersHorizontal } from "lucide-react";
+import {
+  Search,
+  Filter,
+  X,
+  Calendar,
+  Clock,
+  RefreshCw,
+  SlidersHorizontal,
+} from "lucide-react";
 import { Input } from "@/components/ui/Input";
 import type { FiltrosServicos } from "@/lib/types";
 import { Select } from "@/components/ui/Select";
 import { useConfig } from "@/hooks/useConfig";
-import { useState, useCallback, useEffect, useRef } from "react";
+import { useState, useCallback, useEffect, useRef, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
 interface FilterBarProps {
@@ -26,244 +34,467 @@ interface ActiveFilter {
   onRemove: () => void;
 }
 
-export function FilterBar({ 
-  filters, 
-  onChange, 
-  datas, 
-  tecnicos, 
+// === FUNÇÕES AUXILIARES DE DATA REFATORADAS ===
+
+/**
+ * Converte data do formato ISO (YYYY-MM-DD) para formato BR (DD/MM/YYYY)
+ */
+const isoToBrDate = (isoDate: string): string => {
+  if (!isoDate) return "";
+  const [year, month, day] = isoDate.split("-");
+  if (!year || !month || !day) return "";
+  return `${day}/${month}/${year}`;
+};
+
+/**
+ * Converte data do formato BR (DD/MM/YYYY) para formato ISO (YYYY-MM-DD)
+ */
+const brToIsoDate = (brDate?: string): string => {
+  if (!brDate) return "";
+  const parts = brDate.split("/");
+  if (parts.length !== 3) return "";
+  const [day, month, year] = parts;
+  if (!day || !month || !year) return "";
+  return `${year}-${month.padStart(2, "0")}-${day.padStart(2, "0")}`;
+};
+
+/**
+ * Valida se uma string está no formato DD/MM/YYYY
+ */
+const isValidBrDate = (date: string): boolean => {
+  if (!date) return false;
+  const regex = /^(0[1-9]|[12][0-9]|3[01])\/(0[1-9]|1[0-2])\/\d{4}$/;
+  if (!regex.test(date)) return false;
+  
+  const [day, month, year] = date.split("/").map(Number);
+  const jsDate = new Date(year, month - 1, day);
+  return jsDate.getFullYear() === year && 
+         jsDate.getMonth() === month - 1 && 
+         jsDate.getDate() === day;
+};
+
+/**
+ * Formata uma data Date para string BR (DD/MM/YYYY)
+ */
+const formatDateToBr = (date: Date): string => {
+  const day = String(date.getDate()).padStart(2, "0");
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const year = date.getFullYear();
+  return `${day}/${month}/${year}`;
+};
+
+/**
+ * Calcula o primeiro dia da semana (domingo)
+ */
+const getStartOfWeek = (date: Date): Date => {
+  const d = new Date(date);
+  const day = d.getDay();
+  d.setDate(d.getDate() - day);
+  return d;
+};
+
+/**
+ * Calcula o último dia da semana (sábado)
+ */
+const getEndOfWeek = (date: Date): Date => {
+  const d = new Date(date);
+  const day = d.getDay();
+  d.setDate(d.getDate() + (6 - day));
+  return d;
+};
+
+/**
+ * Calcula o primeiro dia do mês
+ */
+const getStartOfMonth = (date: Date): Date => {
+  return new Date(date.getFullYear(), date.getMonth(), 1);
+};
+
+/**
+ * Calcula o último dia do mês
+ */
+const getEndOfMonth = (date: Date): Date => {
+  return new Date(date.getFullYear(), date.getMonth() + 1, 0);
+};
+
+export function FilterBar({
+  filters,
+  onChange,
+  datas,
+  tecnicos,
   totalResults = 0,
   onClear,
-  isLoading = false 
+  isLoading = false,
 }: FilterBarProps) {
   const [isAdvancedOpen, setIsAdvancedOpen] = useState(false);
-  const [searchFocused, setSearchFocused] = useState(false);
-  const [tempDateRange, setTempDateRange] = useState({ start: "", end: "" });
   const searchInputRef = useRef<HTMLInputElement>(null);
-  
   const { options: configOptions, loading: configLoading } = useConfig();
 
-  const hasFilters = filters.data || filters.status || filters.tecnico || filters.busca || 
-                     filters.dataInicio || filters.dataFim;
+  // Estados locais para os campos de data (formato ISO para o input)
+  const [localDataInicio, setLocalDataInicio] = useState<string>(
+    brToIsoDate(filters.dataInicio)
+  );
+  const [localDataFim, setLocalDataFim] = useState<string>(
+    brToIsoDate(filters.dataFim)
+  );
 
-  // Contar filtros ativos
-  const activeFiltersCount = [
-    filters.busca, filters.data, filters.status, filters.tecnico,
-    filters.dataInicio, filters.dataFim
-  ].filter(Boolean).length;
+  // Sincroniza os estados locais quando os filtros mudam externamente
+  useEffect(() => {
+    setLocalDataInicio(brToIsoDate(filters.dataInicio));
+  }, [filters.dataInicio]);
+
+  useEffect(() => {
+    setLocalDataFim(brToIsoDate(filters.dataFim));
+  }, [filters.dataFim]);
+
+  // Conta filtros ativos (exceto o campo de busca que é sempre visível)
+  const activeFiltersCount = useMemo(() => {
+    return [
+      filters.data,
+      filters.status,
+      filters.tecnico,
+      filters.dataInicio,
+      filters.dataFim,
+    ].filter(Boolean).length;
+  }, [filters.data, filters.status, filters.tecnico, filters.dataInicio, filters.dataFim]);
 
   // Limpar todos os filtros
   const handleClearAll = useCallback(() => {
-    onChange({});
-    setTempDateRange({ start: "", end: "" });
+    onChange({
+      busca: undefined,
+      data: undefined,
+      status: undefined,
+      tecnico: undefined,
+      dataInicio: undefined,
+      dataFim: undefined,
+    });
+    setLocalDataInicio("");
+    setLocalDataFim("");
     if (onClear) onClear();
   }, [onChange, onClear]);
 
-  // Remover filtro específico
-  const removeFilter = (type: keyof FiltrosServicos) => {
+  // Remover um filtro específico
+  const removeFilter = useCallback((type: keyof FiltrosServicos) => {
     const newFilters: Partial<FiltrosServicos> = {};
-    if (type === 'busca') newFilters.busca = undefined;
-    if (type === 'data') newFilters.data = undefined;
-    if (type === 'status') newFilters.status = undefined;
-    if (type === 'tecnico') newFilters.tecnico = undefined;
-    if (type === 'dataInicio') newFilters.dataInicio = undefined;
-    if (type === 'dataFim') newFilters.dataFim = undefined;
+    
+    switch (type) {
+      case "busca":
+        newFilters.busca = undefined;
+        break;
+      case "data":
+        newFilters.data = undefined;
+        break;
+      case "status":
+        newFilters.status = undefined;
+        break;
+      case "tecnico":
+        newFilters.tecnico = undefined;
+        break;
+      case "dataInicio":
+        newFilters.dataInicio = undefined;
+        setLocalDataInicio("");
+        break;
+      case "dataFim":
+        newFilters.dataFim = undefined;
+        setLocalDataFim("");
+        break;
+    }
+    
     onChange(newFilters);
-  };
+  }, [onChange]);
 
-  // Preparar opções
+  // Handler para mudança de data inicial
+  const handleDataInicioChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const isoValue = e.target.value;
+    setLocalDataInicio(isoValue);
+    
+    const brValue = isoValue ? isoToBrDate(isoValue) : undefined;
+    onChange({ 
+      dataInicio: brValue, 
+      data: undefined // Remove filtro de data única quando usa intervalo
+    });
+  }, [onChange]);
+
+  // Handler para mudança de data final
+  const handleDataFimChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const isoValue = e.target.value;
+    setLocalDataFim(isoValue);
+    
+    const brValue = isoValue ? isoToBrDate(isoValue) : undefined;
+    onChange({ 
+      dataFim: brValue, 
+      data: undefined // Remove filtro de data única quando usa intervalo
+    });
+  }, [onChange]);
+
+  // Ações de períodos rápidos
+  const quickActions = useMemo(() => [
+    {
+      label: "Hoje",
+      action: () => {
+        const today = formatDateToBr(new Date());
+        onChange({
+          data: today,
+          dataInicio: undefined,
+          dataFim: undefined,
+        });
+        setLocalDataInicio("");
+        setLocalDataFim("");
+        setIsAdvancedOpen(false);
+      },
+    },
+    {
+      label: "Esta Semana",
+      action: () => {
+        const now = new Date();
+        const startOfWeek = getStartOfWeek(now);
+        const endOfWeek = getEndOfWeek(now);
+        
+        onChange({
+          data: undefined,
+          dataInicio: formatDateToBr(startOfWeek),
+          dataFim: formatDateToBr(endOfWeek),
+        });
+        setLocalDataInicio(brToIsoDate(formatDateToBr(startOfWeek)));
+        setLocalDataFim(brToIsoDate(formatDateToBr(endOfWeek)));
+        setIsAdvancedOpen(false);
+      },
+    },
+    {
+      label: "Este Mês",
+      action: () => {
+        const now = new Date();
+        const startOfMonth = getStartOfMonth(now);
+        const endOfMonth = getEndOfMonth(now);
+        
+        onChange({
+          data: undefined,
+          dataInicio: formatDateToBr(startOfMonth),
+          dataFim: formatDateToBr(endOfMonth),
+        });
+        setLocalDataInicio(brToIsoDate(formatDateToBr(startOfMonth)));
+        setLocalDataFim(brToIsoDate(formatDateToBr(endOfMonth)));
+        setIsAdvancedOpen(false);
+      },
+    },
+    {
+      label: "Próximos 7 dias",
+      action: () => {
+        const today = new Date();
+        const nextWeek = new Date(today);
+        nextWeek.setDate(nextWeek.getDate() + 7);
+        
+        onChange({
+          data: undefined,
+          dataInicio: formatDateToBr(today),
+          dataFim: formatDateToBr(nextWeek),
+        });
+        setLocalDataInicio(brToIsoDate(formatDateToBr(today)));
+        setLocalDataFim(brToIsoDate(formatDateToBr(nextWeek)));
+        setIsAdvancedOpen(false);
+      },
+    },
+  ], [onChange]);
+
+  // Opções dos selects
   const statusOptions = configLoading
-    ? [{ value: "", label: "Carregando status..." }]
-    : [
-        { value: "", label: "Todos os status" },
-        ...configOptions.status
-      ];
+    ? [{ value: "", label: "Carregando..." }]
+    : [{ value: "", label: "Todos os status" }, ...configOptions.status];
 
   const dataOptions = [
     { value: "", label: "Todas as datas" },
-    ...datas.map(d => ({ value: d, label: d }))
+    ...datas.filter(isValidBrDate).map((d) => ({ value: d, label: d })),
   ];
-
+  
   const tecnicoOptions = [
     { value: "", label: "Todos os técnicos" },
-    ...tecnicos.map(t => ({ value: t, label: t }))
+    ...tecnicos.map((t) => ({ value: t, label: t })),
   ];
 
   // Lista de filtros ativos para exibição
-  const activeFiltersList: ActiveFilter[] = [
-    filters.busca && {
-      label: "Busca",
-      value: filters.busca,
-      type: "busca",
-      onRemove: () => removeFilter("busca")
-    },
-    filters.data && {
-      label: "Data",
-      value: filters.data,
-      type: "data",
-      onRemove: () => removeFilter("data")
-    },
-    filters.status && {
-      label: "Status",
-      value: configOptions.status.find(s => s.value === filters.status)?.label || filters.status,
-      type: "status",
-      onRemove: () => removeFilter("status")
-    },
-    filters.tecnico && {
-      label: "Técnico",
-      value: filters.tecnico,
-      type: "tecnico",
-      onRemove: () => removeFilter("tecnico")
-    },
-    filters.dataInicio && {
-      label: "Data Início",
-      value: filters.dataInicio,
-      type: "dataInicio",
-      onRemove: () => removeFilter("dataInicio")
-    },
-    filters.dataFim && {
-      label: "Data Fim",
-      value: filters.dataFim,
-      type: "dataFim",
-      onRemove: () => removeFilter("dataFim")
+  const activeFiltersList: ActiveFilter[] = useMemo(() => {
+    const list: ActiveFilter[] = [];
+    
+    if (filters.busca) {
+      list.push({
+        label: "Busca",
+        value: filters.busca,
+        type: "busca",
+        onRemove: () => removeFilter("busca"),
+      });
     }
-  ].filter(Boolean) as ActiveFilter[];
+    
+    if (filters.data && isValidBrDate(filters.data)) {
+      list.push({
+        label: "Data",
+        value: filters.data,
+        type: "data",
+        onRemove: () => removeFilter("data"),
+      });
+    }
+    
+    if (filters.status) {
+      const statusLabel = configOptions.status.find((s) => s.value === filters.status)?.label || filters.status;
+      list.push({
+        label: "Status",
+        value: statusLabel,
+        type: "status",
+        onRemove: () => removeFilter("status"),
+      });
+    }
+    
+    if (filters.tecnico) {
+      list.push({
+        label: "Técnico",
+        value: filters.tecnico,
+        type: "tecnico",
+        onRemove: () => removeFilter("tecnico"),
+      });
+    }
+    
+    if (filters.dataInicio && isValidBrDate(filters.dataInicio)) {
+      list.push({
+        label: "Início",
+        value: filters.dataInicio,
+        type: "dataInicio",
+        onRemove: () => removeFilter("dataInicio"),
+      });
+    }
+    
+    if (filters.dataFim && isValidBrDate(filters.dataFim)) {
+      list.push({
+        label: "Fim",
+        value: filters.dataFim,
+        type: "dataFim",
+        onRemove: () => removeFilter("dataFim"),
+      });
+    }
+    
+    return list;
+  }, [filters, configOptions.status, removeFilter]);
 
-  // Atalho de teclado para focar na busca (Ctrl+K)
+  // Keyboard shortcut para focus na busca
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+      if ((e.ctrlKey || e.metaKey) && e.key === "k") {
         e.preventDefault();
         searchInputRef.current?.focus();
       }
     };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
   }, []);
 
   return (
     <div className="space-y-4">
-      {/* Main Filter Bar */}
-      <div className="bg-white rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200">
-        <div className="p-4">
-          {/* Primary Filters Row */}
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-3">
-            {/* Search Field - Ocupa mais espaço */}
-            <div className="lg:col-span-5 relative">
-              <div className={`relative transition-all duration-200 ${searchFocused ? 'scale-[1.01]' : ''}`}>
-                <Search className={`absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 transition-colors ${searchFocused ? 'text-blue-500' : 'text-gray-400'}`} />
-                <Input
-                label="Buscar serviços"
-                  ref={searchInputRef}
-                  placeholder="Buscar por nome, placa, cidade ou OS..."
-                  value={filters.busca || ""}
-                  onChange={(e) => onChange({ busca: e.target.value || undefined })}
-                  onFocus={() => setSearchFocused(true)}
-                  onBlur={() => setSearchFocused(false)}
-                  className={`pl-9 transition-all ${searchFocused ? 'border-blue-300 ring-2 ring-blue-100' : ''}`}
-                  aria-label="Buscar serviços"
-                  disabled={isLoading}
-                />
-             
-              </div>
+      <div className="bg-white rounded-2xl border border-slate-200/60 shadow-sm transition-shadow duration-200">
+        <div className="p-4 sm:p-5">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
+            {/* Campo de Busca */}
+            <div className="lg:col-span-5">
+              <Input
+                ref={searchInputRef}
+                placeholder="Buscar por nome, placa, cidade ou OS..."
+                value={filters.busca || ""}
+                onChange={(e) => onChange({ busca: e.target.value || undefined })}
+                leftIcon={Search}
+                aria-label="Buscar serviços"
+                disabled={isLoading}
+              />
             </div>
 
-            {/* Date Filter */}
+            {/* Selects Rápidos */}
             <div className="lg:col-span-2">
               <Select
-                label="Data"
                 value={filters.data || ""}
                 onChange={(e) => onChange({ data: e.target.value || undefined })}
                 options={dataOptions}
-                icon={<Calendar size={14} />}
                 disabled={isLoading || configLoading}
-                className="bg-gray-50 hover:bg-white transition-colors"
               />
             </div>
 
-            {/* Status Filter */}
             <div className="lg:col-span-2">
               <Select
-                label="Status"
                 value={filters.status || ""}
-                onChange={(e) => onChange({ status: e.target.value as any || undefined })}
+                onChange={(e) => onChange({ status: (e.target.value as any) || undefined })}
                 options={statusOptions}
-                icon={<Tag size={14} />}
                 disabled={isLoading || configLoading}
-                className="bg-gray-50 hover:bg-white transition-colors"
               />
             </div>
 
-            {/* Technician Filter */}
             <div className="lg:col-span-2">
               <Select
-                label="Técnico"
                 value={filters.tecnico || ""}
                 onChange={(e) => onChange({ tecnico: e.target.value || undefined })}
                 options={tecnicoOptions}
-                icon={<User size={14} />}
                 disabled={isLoading}
-                className="bg-gray-50 hover:bg-white transition-colors"
               />
             </div>
 
-            {/* Advanced Filters Button */}
+            {/* Botão Filtros Avançados */}
             <div className="lg:col-span-1 flex items-end">
               <button
                 onClick={() => setIsAdvancedOpen(!isAdvancedOpen)}
-                className={`w-full flex items-center justify-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all ${
-                  isAdvancedOpen || activeFiltersCount > 1
-                    ? 'bg-blue-50 text-blue-600 border border-blue-200'
-                    : 'bg-gray-50 text-gray-600 hover:bg-gray-100 border border-gray-200'
+                className={`w-full h-10 flex items-center justify-center gap-2 px-3 rounded-xl text-sm font-semibold transition-all ${
+                  isAdvancedOpen || activeFiltersCount > 0
+                    ? "bg-slate-900 text-white shadow-sm"
+                    : "bg-slate-50 text-slate-700 hover:bg-slate-100 border border-slate-200/60"
                 }`}
-                aria-label="Filtros avançados"
               >
                 <SlidersHorizontal size={16} />
-                <span className="hidden sm:inline">Filtros</span>
-                {activeFiltersCount > 1 && (
-                  <span className="bg-blue-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
-                    {activeFiltersCount - 1}
+                <span className="hidden lg:hidden xl:inline">Filtros</span>
+                {activeFiltersCount > 0 && (
+                  <span
+                    className={`text-[10px] rounded-full w-5 h-5 flex items-center justify-center ${
+                      isAdvancedOpen ? "bg-white/20 text-white" : "bg-slate-200 text-slate-800"
+                    }`}
+                  >
+                    {activeFiltersCount}
                   </span>
                 )}
-                <ChevronDown size={14} className={`transition-transform duration-200 ${isAdvancedOpen ? 'rotate-180' : ''}`} />
               </button>
             </div>
           </div>
 
-          {/* Active Filters Chips */}
+          {/* Chips de Filtros Ativos */}
           <AnimatePresence>
             {activeFiltersList.length > 0 && (
               <motion.div
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -10 }}
-                className="mt-3 pt-3 border-t border-gray-100"
+                className="mt-4 pt-4 border-t border-slate-100"
               >
                 <div className="flex flex-wrap items-center gap-2">
-                  <span className="text-xs text-gray-500 font-medium">Filtros ativos:</span>
+                  <span className="text-xs text-slate-400 font-bold uppercase tracking-wider mr-1">
+                    Ativos:
+                  </span>
                   {activeFiltersList.map((filter) => (
                     <motion.span
                       key={filter.type}
                       initial={{ scale: 0.9, opacity: 0 }}
                       animate={{ scale: 1, opacity: 1 }}
                       exit={{ scale: 0.9, opacity: 0 }}
-                      className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-blue-50 text-blue-700 rounded-lg text-xs font-medium group hover:bg-blue-100 transition-colors"
+                      className="inline-flex items-center gap-2 px-3 py-1.5 bg-slate-100 text-slate-700 rounded-lg text-xs font-medium group hover:bg-slate-200 transition-colors border border-slate-200/60"
                     >
-                      <span className="text-blue-500 text-[10px] font-semibold uppercase">{filter.label}:</span>
-                      <span className="max-w-[200px] truncate">{filter.value}</span>
+                      <span className="text-slate-500 font-bold uppercase tracking-wide text-[10px]">
+                        {filter.label}:
+                      </span>
+                      <span className="max-w-37 truncate">{filter.value}</span>
                       <button
                         onClick={filter.onRemove}
-                        className="ml-0.5 hover:bg-blue-200 rounded-full p-0.5 transition-colors"
+                        className="p-0.5 hover:bg-slate-300 rounded-md transition-colors text-slate-500 hover:text-slate-900"
                         aria-label={`Remover filtro ${filter.label}`}
                       >
-                        <X size={12} />
+                        <X size={14} />
                       </button>
                     </motion.span>
                   ))}
-                  
+
                   {activeFiltersList.length > 1 && (
                     <button
                       onClick={handleClearAll}
-                      className="ml-2 text-xs text-gray-400 hover:text-red-500 transition-colors flex items-center gap-1"
+                      className="ml-2 px-3 py-1.5 text-xs font-semibold text-rose-600 hover:bg-rose-50 rounded-lg transition-colors flex items-center gap-1.5"
                     >
                       <RefreshCw size={12} />
                       Limpar todos
@@ -275,7 +506,7 @@ export function FilterBar({
           </AnimatePresence>
         </div>
 
-        {/* Advanced Filters Panel */}
+        {/* Painel Avançado */}
         <AnimatePresence>
           {isAdvancedOpen && (
             <motion.div
@@ -283,76 +514,61 @@ export function FilterBar({
               animate={{ height: "auto", opacity: 1 }}
               exit={{ height: 0, opacity: 0 }}
               transition={{ duration: 0.2 }}
-              className="overflow-hidden border-t border-gray-100 bg-gray-50/50"
+              className="overflow-hidden border-t border-slate-100 bg-slate-50/50 rounded-b-2xl"
             >
-              <div className="p-4 space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {/* Date Range */}
-                  <div className="space-y-2">
-                    <label className="text-xs font-semibold text-gray-600 uppercase tracking-wider flex items-center gap-2">
-                      <Calendar size={14} />
-                      Intervalo de Datas
+              <div className="p-4 sm:p-5 space-y-5">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {/* Intervalo de Datas - Usando input nativo */}
+                  <div className="space-y-3">
+                    <label className="text-xs font-bold text-slate-500 uppercase tracking-wider flex items-center gap-2">
+                      <Calendar size={14} /> Intervalo Personalizado
                     </label>
+
                     <div className="grid grid-cols-2 gap-3">
-                      <Input
-                        type="date"
-                        label="Data Inicial"
-                        value={tempDateRange.start || filters.dataInicio || ""}
-                        onChange={(e) => {
-                          setTempDateRange(prev => ({ ...prev, start: e.target.value }));
-                          onChange({ dataInicio: e.target.value || undefined });
-                        }}
-                        className="bg-white"
-                      />
-                      <Input
-                        type="date"
-                        label="Data Final"
-                        value={tempDateRange.end || filters.dataFim || ""}
-                        onChange={(e) => {
-                          setTempDateRange(prev => ({ ...prev, end: e.target.value }));
-                          onChange({ dataFim: e.target.value || undefined });
-                        }}
-                        className="bg-white"
-                      />
+                      <div className="space-y-1">
+                        <label className="text-xs text-slate-500 font-medium">Data Inicial</label>
+                        <input
+                          type="date"
+                          className="w-full px-3 py-2 text-sm border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-slate-400 focus:border-transparent transition-all bg-white"
+                          value={localDataInicio}
+                          onChange={handleDataInicioChange}
+                          disabled={isLoading}
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <label className="text-xs text-slate-500 font-medium">Data Final</label>
+                        <input
+                          type="date"
+                          className="w-full px-3 py-2 text-sm border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-slate-400 focus:border-transparent transition-all bg-white"
+                          value={localDataFim}
+                          onChange={handleDataFimChange}
+                          disabled={isLoading}
+                          min={localDataInicio}
+                        />
+                      </div>
                     </div>
+                    
+                    {/* Indicador de intervalo ativo */}
+                    {(filters.dataInicio || filters.dataFim) && (
+                      <div className="text-xs text-slate-400 bg-white rounded-lg px-2 py-1 inline-block">
+                        {filters.dataInicio && `De ${filters.dataInicio}`} 
+                        {filters.dataInicio && filters.dataFim && " até "}
+                        {filters.dataFim && filters.dataFim}
+                      </div>
+                    )}
                   </div>
 
-                  {/* Quick Filters */}
-                  <div className="space-y-2">
-                    <label className="text-xs font-semibold text-gray-600 uppercase tracking-wider flex items-center gap-2">
-                      <Clock size={14} />
-                      Período Rápido
+                  {/* Períodos Rápidos */}
+                  <div className="space-y-3">
+                    <label className="text-xs font-bold text-slate-500 uppercase tracking-wider flex items-center gap-2">
+                      <Clock size={14} /> Períodos Rápidos
                     </label>
                     <div className="flex flex-wrap gap-2">
-                      {[
-                        { label: "Hoje", action: () => {
-                          const today = new Date().toISOString().split('T')[0];
-                          onChange({ data: today });
-                          setIsAdvancedOpen(false);
-                        }},
-                        { label: "Esta Semana", action: () => {
-                          const today = new Date();
-                          const weekStart = new Date(today.setDate(today.getDate() - today.getDay())).toISOString().split('T')[0];
-                          onChange({ dataInicio: weekStart });
-                          setIsAdvancedOpen(false);
-                        }},
-                        { label: "Este Mês", action: () => {
-                          const today = new Date();
-                          const monthStart = new Date(today.getFullYear(), today.getMonth(), 1).toISOString().split('T')[0];
-                          onChange({ dataInicio: monthStart });
-                          setIsAdvancedOpen(false);
-                        }},
-                        { label: "Próximos 7 dias", action: () => {
-                          const today = new Date();
-                          const nextWeek = new Date(today.setDate(today.getDate() + 7)).toISOString().split('T')[0];
-                          onChange({ dataFim: nextWeek });
-                          setIsAdvancedOpen(false);
-                        }},
-                      ].map(quick => (
+                      {quickActions.map((quick) => (
                         <button
                           key={quick.label}
                           onClick={quick.action}
-                          className="px-3 py-1.5 text-xs bg-white border border-gray-200 rounded-lg hover:border-blue-300 hover:bg-blue-50 transition-colors"
+                          className="px-4 py-2 text-sm font-medium bg-white border border-slate-200/60 rounded-xl hover:border-slate-400 hover:bg-slate-50 transition-colors shadow-sm"
                         >
                           {quick.label}
                         </button>
@@ -360,49 +576,29 @@ export function FilterBar({
                     </div>
                   </div>
                 </div>
-
-                {/* Clear Advanced Filters */}
-                {(filters.dataInicio || filters.dataFim) && (
-                  <div className="flex justify-end">
-                    <button
-                      onClick={() => {
-                        setTempDateRange({ start: "", end: "" });
-                        onChange({ dataInicio: undefined, dataFim: undefined });
-                      }}
-                      className="text-xs text-red-500 hover:text-red-600 flex items-center gap-1"
-                    >
-                      <X size={12} />
-                      Limpar intervalo de datas
-                    </button>
-                  </div>
-                )}
               </div>
             </motion.div>
           )}
         </AnimatePresence>
       </div>
 
-      {/* Results Info Bar */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2 text-sm">
-          <div className="flex items-center gap-2 px-3 py-1.5 bg-gray-100 rounded-full">
-            <Filter size={14} className="text-gray-500" />
-            <span className="font-medium text-gray-700">{totalResults}</span>
-            <span className="text-gray-500">
-              {totalResults === 1 ? 'resultado' : 'resultados'}
+      {/* Info Bar */}
+      <div className="flex items-center justify-between px-1">
+        <div className="flex items-center gap-3 text-sm">
+          <div className="flex items-center gap-2 px-3 py-1.5 bg-slate-100 rounded-lg">
+            <Filter size={14} className="text-slate-500" />
+            <span className="font-bold text-slate-800">{totalResults}</span>
+            <span className="text-slate-500 font-medium">
+              {totalResults === 1 ? "resultado" : "resultados"}
             </span>
           </div>
-          
+
           {isLoading && (
-            <div className="flex items-center gap-2 text-gray-400">
+            <div className="flex items-center gap-2 text-slate-500">
               <RefreshCw size={14} className="animate-spin" />
-              <span className="text-xs">Atualizando...</span>
+              <span className="text-xs font-medium">Atualizando...</span>
             </div>
           )}
-        </div>
-
-        <div className="text-xs text-gray-400 hidden md:block">
-          Dica: Use <kbd className="px-1.5 py-0.5 bg-gray-100 rounded text-[10px]">Ctrl+K</kbd> para focar na busca
         </div>
       </div>
     </div>

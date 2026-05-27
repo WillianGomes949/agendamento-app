@@ -1,3 +1,4 @@
+// src/components/modals/Modal.tsx
 "use client";
 
 import { useEffect } from "react";
@@ -10,7 +11,7 @@ type ModalSize = "sm" | "md" | "lg" | "xl";
 interface ModalProps {
   isOpen: boolean;
   onClose: () => void;
-  title?: string;
+  title?: React.ReactNode;
   children: React.ReactNode;
   size?: ModalSize;
   className?: string;
@@ -24,7 +25,15 @@ const sizeClasses: Record<ModalSize, string> = {
   xl: "max-w-4xl",
 };
 
-export function Modal({ isOpen, onClose, title, children, size = "md", className, closeOnOverlayClick = true }: ModalProps) {
+export function Modal({
+  isOpen,
+  onClose,
+  title,
+  children,
+  size = "md",
+  className,
+  closeOnOverlayClick = true,
+}: ModalProps) {
   useEffect(() => {
     const handleEsc = (e: KeyboardEvent) => {
       if (e.key === "Escape") onClose();
@@ -47,34 +56,36 @@ export function Modal({ isOpen, onClose, title, children, size = "md", className
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           transition={{ duration: 0.2 }}
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-sm p-4 sm:p-6"
           onClick={closeOnOverlayClick ? onClose : undefined}
         >
           <motion.div
-            initial={{ scale: 0.95, opacity: 0, y: 10 }}
+            initial={{ scale: 0.95, opacity: 0, y: 20 }}
             animate={{ scale: 1, opacity: 1, y: 0 }}
-            exit={{ scale: 0.95, opacity: 0, y: 10 }}
+            exit={{ scale: 0.95, opacity: 0, y: 20 }}
             transition={{ type: "spring", stiffness: 300, damping: 25 }}
             onClick={(e) => e.stopPropagation()}
             className={cn(
-              "w-full bg-white rounded-2xl shadow-xl border border-gray-200 overflow-hidden max-h-[90vh] overflow-y-auto",
+              "w-full bg-white rounded-2xl shadow-2xl border border-slate-200/60 overflow-hidden max-h-[90vh] flex flex-col",
               sizeClasses[size],
-              className
+              className,
             )}
           >
             {title && (
-              <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 sticky top-0 bg-white z-10">
-                <h3 className="text-lg font-semibold text-gray-900">{title}</h3>
-                <button 
-                  onClick={onClose} 
-                  className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors"
+              <div className="flex items-center justify-between px-5 sm:px-6 py-4 border-b border-slate-100 bg-white/80 backdrop-blur-md z-10 shrink-0">
+                <div className="font-semibold text-slate-900">{title}</div>
+                <button
+                  onClick={onClose}
+                  className="p-2 hover:bg-slate-100 rounded-xl transition-colors text-slate-500 hover:text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-900"
                   aria-label="Fechar"
                 >
-                  <X className="w-5 h-5 text-gray-500" aria-hidden="true" />
+                  <X className="w-5 h-5" aria-hidden="true" />
                 </button>
               </div>
             )}
-            <div className="p-6">{children}</div>
+            <div className="p-5 sm:p-6 overflow-y-auto custom-scrollbar flex-1">
+              {children}
+            </div>
           </motion.div>
         </motion.div>
       )}

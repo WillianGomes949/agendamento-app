@@ -10,51 +10,47 @@ interface StatusConfig {
   classes: string;
 }
 
-// ✅ Usamos string genérica ao invés de forçar o type restrito
 const STATUS_CONFIG: Record<string, StatusConfig> = {
   pendente: { 
     label: "Pendente", 
     icon: Clock, 
-    classes: "bg-yellow-50 text-yellow-700 border-yellow-200" 
+    classes: "bg-amber-50 text-amber-700 ring-amber-600/20" 
   },
   em_andamento: { 
     label: "Em Andamento", 
     icon: Hourglass, 
-    classes: "bg-blue-50 text-blue-700 border-blue-200" 
+    classes: "bg-blue-50 text-blue-700 ring-blue-600/20" 
   },
   concluido: { 
     label: "Concluído", 
     icon: CheckCircle, 
-    classes: "bg-green-50 text-green-700 border-green-200" 
+    classes: "bg-emerald-50 text-emerald-700 ring-emerald-600/20" 
   },
   cancelado: { 
     label: "Cancelado", 
     icon: XCircle, 
-    classes: "bg-red-50 text-red-700 border-red-200" 
+    classes: "bg-rose-50 text-rose-700 ring-rose-600/20" 
   },
   deletado: { 
     label: "Deletado", 
     icon: Trash2, 
-    classes: "bg-gray-100 text-gray-500 border-gray-300 line-through opacity-75" 
+    classes: "bg-slate-50 text-slate-500 ring-slate-500/20 line-through opacity-75" 
   },
 };
 
 export function StatusBadge({ status, className }: { status: string; className?: string }) {
-  // ✅ Normaliza o status que vem da planilha
-  // Ex: "EM ANDAMENTO" -> "em_andamento" | "CONCLUÍDO" -> "concluido"
   const normalizedKey = (status || "pendente")
     .toLowerCase()
-    .normalize("NFD") // Separa os acentos
-    .replace(/[\u0300-\u036f]/g, "") // Remove os acentos
-    .replace(/\s+/g, "_"); // Troca espaços por underline
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/\s+/g, "_");
 
   const config = STATUS_CONFIG[normalizedKey];
 
   if (!config) {
-    // Fallback para status novo/desconhecido criado na planilha
     return (
       <span className={cn(
-        "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border bg-gray-50 text-gray-600 border-gray-200 uppercase",
+        "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-bold uppercase tracking-wider ring-1 ring-inset bg-slate-50 text-slate-600 ring-slate-200",
         className
       )}>
         {status}
@@ -66,7 +62,7 @@ export function StatusBadge({ status, className }: { status: string; className?:
 
   return (
     <span className={cn(
-      "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border",
+      "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-bold uppercase tracking-wider ring-1 ring-inset",
       config.classes,
       className
     )}>

@@ -13,7 +13,6 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const [isMobile, setIsMobile] = useState(false);
   const [isHoveringSidebar, setIsHoveringSidebar] = useState(false);
 
-  // Verificar mobile e preferências salvas
   useEffect(() => {
     setMounted(true);
     
@@ -25,7 +24,6 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         setMobileMenuOpen(false);
         setSidebarCollapsed(true);
       } else {
-        // Recuperar preferência do usuário
         const savedPref = localStorage.getItem("sidebar-collapsed");
         if (savedPref !== null) {
           setSidebarCollapsed(savedPref === "true");
@@ -38,24 +36,18 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     return () => window.removeEventListener("resize", checkMobile);
   }, []);
 
-  // Salvar preferência da sidebar
   useEffect(() => {
     if (mounted && !isMobile) {
       localStorage.setItem("sidebar-collapsed", String(sidebarCollapsed));
     }
   }, [sidebarCollapsed, mounted, isMobile]);
 
-  // Atalhos de teclado
   const toggleSidebar = useCallback(() => {
-    if (!isMobile) {
-      setSidebarCollapsed(prev => !prev);
-    }
+    if (!isMobile) setSidebarCollapsed((prev) => !prev);
   }, [isMobile]);
 
   const toggleMobileMenu = useCallback(() => {
-    if (isMobile) {
-      setMobileMenuOpen(prev => !prev);
-    }
+    if (isMobile) setMobileMenuOpen((prev) => !prev);
   }, [isMobile]);
 
   useKeyboardShortcuts([
@@ -65,13 +57,13 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
   if (!mounted) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex">
+      <div className="min-h-screen bg-slate-50 flex">
         <div className="flex-1 flex flex-col">
-          <div className="h-16 bg-white/80 backdrop-blur-md border-b border-gray-200" />
-          <main className="flex-1 p-4 md:p-6 lg:p-8">
-            <div className="animate-pulse">
-              <div className="h-32 bg-gray-200 rounded-xl mb-6" />
-              <div className="h-64 bg-gray-200 rounded-xl" />
+          <div className="h-16 bg-white/80 backdrop-blur-md border-b border-slate-200/60" />
+          <main className="flex-1 p-4 lg:p-8">
+            <div className="animate-pulse space-y-6 max-w-7xl mx-auto">
+              <div className="h-32 bg-slate-200/60 rounded-2xl" />
+              <div className="h-64 bg-slate-200/60 rounded-2xl" />
             </div>
           </main>
         </div>
@@ -79,11 +71,11 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     );
   }
 
-  const sidebarWidth = sidebarCollapsed ? "5rem" : "16rem";
-  const effectiveSidebarWidth = isMobile ? "0" : sidebarWidth;
+  // Largura dinâmica tratada via variável de estilo apenas no Desktop
+  const effectiveSidebarWidth = isMobile ? "0px" : (sidebarCollapsed ? "5rem" : "16rem");
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex">
+    <div className="min-h-screen bg-slate-50 flex font-sans">
       <Sidebar
         isOpen={mobileMenuOpen}
         isCollapsed={sidebarCollapsed && !isMobile}
@@ -93,10 +85,8 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       />
 
       <div
-        className="flex-1 flex flex-col min-w-0 transition-all duration-300 ease-in-out"
-        style={{ 
-          marginLeft: effectiveSidebarWidth,
-        }}
+        className="flex-1 flex flex-col min-w-0 transition-[margin] duration-300 ease-in-out"
+        style={{ marginLeft: effectiveSidebarWidth }}
       >
         <Header
           onToggleSidebar={toggleSidebar}
@@ -105,8 +95,8 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           isMobile={isMobile}
         />
         
-        <main className="flex-1 p-4 md:p-6 lg:p-8 overflow-y-auto">
-          <div className="max-w-[1600px] mx-auto">
+        <main className="flex-1 p-4 sm:p-6 lg:p-8 overflow-y-auto">
+          <div className="max-w-7xl mx-auto pb-20 lg:pb-0">
             {children}
           </div>
         </main>
