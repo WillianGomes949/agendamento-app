@@ -8,8 +8,8 @@ import { ServicoCard } from "./ServiceCard";
 
 interface ServiceListProps {
   servicos: Servico[];
-  onEdit?: (servico: Servico) => void;
-  onDelete?: (servico: Servico) => void;
+  onEdit: (servico: Servico) => void;   // remova o ?
+  onDelete: (servico: Servico) => void; // remova o ?
 }
 
 export function ServiceList({ servicos, onEdit, onDelete }: ServiceListProps) {
