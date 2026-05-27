@@ -214,11 +214,11 @@ export default function DashboardPage() {
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
         {/* Próximos Agendamentos (Ocupa 2 colunas) */}
         <motion.div variants={itemVariants} className="xl:col-span-2 space-y-4">
-          <div className="flex items-center justify-between">
-            <h2 className="text-xl font-bold text-slate-900">
+          <div className="flex flex-col md:flex-row gap-3 items-start md:items-center justify-between w-full">
+            <h2 className="text-xl font-bold text-slate-900 mb-3">
               Próximos Agendamentos
             </h2>
-            <div className="flex gap-3">
+            <div className="flex gap-3 w-full md:w-1/2 items-end justify-end">
               <Link
                 href="/agendamentos"
                 className="w-full sm:w-auto focus:outline-none"
@@ -287,7 +287,10 @@ export default function DashboardPage() {
         </motion.div>
 
         {/* Painel Lateral Rápido (Ocupa 1 coluna) */}
-        <motion.div variants={itemVariants} className="space-y-4 bg-slate-200 rounded-2xl p-5">
+        <motion.div
+          variants={itemVariants}
+          className="space-y-4 bg-slate-200 rounded-2xl p-5"
+        >
           <h2 className="text-xl font-bold text-slate-900">Acesso Rápido</h2>
 
           <div className="grid grid-cols-1 gap-4 ">
@@ -324,15 +327,14 @@ export default function DashboardPage() {
               hoverable
               className="p-5 flex flex-col justify-center gap-2 group cursor-pointer border-transparent bg-linear-to-br from-slate-900 to-slate-800 text-white"
             >
-              <TrendingUp className="w-8 h-8 text-blue-400 mb-2 group-hover:-translate-y-1 transition-transform duration-300" />
-              <h3 className="text-lg font-bold">Relatório Mensal</h3>
-              <p className="text-slate-400 text-sm">
-                Visualize o desempenho e as métricas financeiras deste mês.
-              </p>
-              <div className="mt-4 flex items-center text-sm font-semibold text-blue-400 group-hover:text-blue-300 transition-colors">
-                Gerar Relatório{" "}
-                <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
-              </div>
+              <Link href="/relatorios">
+                <TrendingUp className="w-8 h-8 text-blue-400 mb-2 group-hover:-translate-y-1 transition-transform duration-300" />
+                <h3 className="text-lg font-bold">Relatório Mensal</h3>
+                <p className="text-slate-400 text-sm">
+                  Visualize o desempenho e as métricas deste mês.
+                </p>
+               
+              </Link>
             </Card>
           </div>
         </motion.div>

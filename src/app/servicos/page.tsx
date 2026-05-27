@@ -24,11 +24,11 @@ import {
   ArrowUpDown,
   Eye,
   File,
+  Filter,
 } from "lucide-react";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { StatusBadge } from "@/components/features/StatusBadge";
-import Link from "next/link";
 import {
   formatarDataExibicao,
   formatarHorarioExibicao,
@@ -36,7 +36,9 @@ import {
 import type { Servico, FormularioServico } from "@/lib/types";
 import ServicoForm from "@/components/modals/ServicoForm";
 import { DeleteConfirmModal } from "@/components/modals/DeleteConfirmModal";
+import ServicoDetalhesModal from "@/components/modals/ServicoDetalhesModal";
 import { Toaster, toast } from "react-hot-toast";
+import { ServicoCard } from "@/components/features/ServiceCard";
 
 const containerVariants: Variants = {
   hidden: { opacity: 0 },
@@ -72,8 +74,6 @@ export default function ServicosPage() {
     isCreating,
     isUpdating,
     isDeleting,
-    filters,
-    setFilters,
   } = useServicos();
 
   const [buscaLocal, setBuscaLocal] = useState("");
@@ -82,19 +82,18 @@ export default function ServicosPage() {
   const [filtroStatus, setFiltroStatus] = useState<string>("todos");
   const [filtroTecnico, setFiltroTecnico] = useState<string>("todos");
   const [filtroData, setFiltroData] = useState<string>("todas");
-  const [servicoSelecionado, setServicoSelecionado] = useState<Servico | null>(
-    null,
-  );
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingServico, setEditingServico] = useState<Servico | null>(null);
   const [deletingServico, setDeletingServico] = useState<Servico | null>(null);
-  const [visualizacao, setVisualizacao] = useState<"cards" | "lista">("lista");
+  const [detalhesServicoId, setDetalhesServicoId] = useState<string | null>(
+    null,
+  );
+  const [visualizacao, setVisualizacao] = useState<"cards" | "lista">("cards");
 
   // Filtros combinados
   const servicosFiltrados = useMemo(() => {
     let resultado = [...servicos];
 
-    // Busca textual local
     if (buscaLocal.trim()) {
       const termo = buscaLocal.toLowerCase().trim();
       resultado = resultado.filter((s) => {
@@ -109,22 +108,18 @@ export default function ServicosPage() {
       });
     }
 
-    // Filtro status
     if (filtroStatus !== "todos") {
       resultado = resultado.filter((s) => s.status === filtroStatus);
     }
 
-    // Filtro técnico
     if (filtroTecnico !== "todos") {
       resultado = resultado.filter((s) => s.tecnico === filtroTecnico);
     }
 
-    // Filtro data
     if (filtroData !== "todas") {
       resultado = resultado.filter((s) => s.data === filtroData);
     }
 
-    // Ordenação
     resultado.sort((a, b) => {
       let comparacao = 0;
       switch (ordenarPor) {
@@ -181,23 +176,19 @@ export default function ServicosPage() {
     return { total, pendentes, emAndamento, concluidos };
   }, [servicos]);
 
-  // Toggle direção
   const toggleDirecao = useCallback(() => {
     setDirecao((prev) => (prev === "asc" ? "desc" : "asc"));
   }, []);
 
-  // Abrir form de edição
   const openEditForm = useCallback((servico: Servico) => {
     setEditingServico(servico);
     setIsFormOpen(true);
   }, []);
 
-  // Abrir confirmação de delete
   const openDeleteConfirm = useCallback((servico: Servico) => {
     setDeletingServico(servico);
   }, []);
 
-  // Criar serviço
   const handleCreate = useCallback(
     async (data: FormularioServico) => {
       const result = await create(data);
@@ -211,7 +202,6 @@ export default function ServicosPage() {
     [create],
   );
 
-  // Atualizar serviço
   const handleUpdate = useCallback(
     async (id: string, data: Partial<Servico>) => {
       const result = await update(id, data);
@@ -226,7 +216,6 @@ export default function ServicosPage() {
     [update],
   );
 
-  // Deletar serviço
   const handleDelete = useCallback(async () => {
     if (!deletingServico) return;
     const result = await remove(deletingServico.id);
@@ -238,7 +227,6 @@ export default function ServicosPage() {
     }
   }, [remove, deletingServico]);
 
-  // Limpar todos os filtros
   const limparFiltros = useCallback(() => {
     setBuscaLocal("");
     setFiltroStatus("todos");
@@ -258,11 +246,11 @@ export default function ServicosPage() {
     return (
       <div className="min-h-[80vh] flex flex-col items-center justify-center">
         <div className="relative">
-          <div className="absolute inset-0 rounded-full blur-xl bg-slate-300/50 animate-pulse" />
-          <Loader2 className="animate-spin text-slate-900 w-10 h-10 relative z-10 mb-4" />
+          <div className="absolute inset-0 rounded-full blur-2xl bg-blue-500/20 animate-pulse" />
+          <Loader2 className="animate-spin text-blue-600 w-12 h-12 relative z-10 mb-4" />
         </div>
-        <p className="text-slate-500 font-medium animate-pulse">
-          Carregando serviços...
+        <p className="text-slate-500 font-medium animate-pulse text-lg">
+          Carregando seus serviços...
         </p>
       </div>
     );
@@ -271,14 +259,20 @@ export default function ServicosPage() {
   if (error) {
     return (
       <div className="min-h-[80vh] flex flex-col items-center justify-center p-6 text-center">
-        <div className="w-20 h-20 bg-rose-50 rounded-3xl flex items-center justify-center border border-rose-100 mb-6 shadow-sm">
-          <AlertCircle className="w-10 h-10 text-rose-500" />
+        <div className="w-24 h-24 bg-rose-50 rounded-[2rem] flex items-center justify-center border border-rose-100 mb-6 shadow-sm">
+          <AlertCircle className="w-12 h-12 text-rose-500" />
         </div>
-        <h2 className="text-2xl font-extrabold text-slate-900 tracking-tight">
-          Não foi possível carregar os serviços
+        <h2 className="text-2xl md:text-3xl font-extrabold text-slate-900 tracking-tight">
+          Oops! Algo deu errado.
         </h2>
-        <p className="text-slate-500 mt-2 max-w-md leading-relaxed">{error}</p>
-        <Button variant="outline" className="mt-8" onClick={() => refresh()}>
+        <p className="text-slate-500 mt-3 max-w-md leading-relaxed text-lg">
+          {error}
+        </p>
+        <Button
+          variant="outline"
+          className="mt-8 px-8 py-6 text-base"
+          onClick={() => refresh()}
+        >
           Tentar Novamente
         </Button>
       </div>
@@ -290,12 +284,13 @@ export default function ServicosPage() {
       variants={containerVariants}
       initial="hidden"
       animate="show"
-      className="space-y-6"
+      className="space-y-8 max-w-7xl mx-auto pb-12"
     >
       <Toaster
         position="top-right"
         toastOptions={{
-          className: "shadow-lg rounded-xl font-medium text-sm",
+          className:
+            "shadow-xl rounded-2xl font-medium text-sm border border-slate-100",
           duration: 4000,
         }}
       />
@@ -303,14 +298,15 @@ export default function ServicosPage() {
       {/* Cabeçalho */}
       <motion.div
         variants={itemVariants}
-        className="flex flex-col lg:flex-row lg:items-end justify-between gap-4"
+        className="flex flex-col md:flex-row md:items-end justify-between gap-6"
       >
         <div>
           <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight text-slate-900 mb-2">
             Serviços
           </h1>
-          <p className="text-slate-500 text-sm md:text-base">
-            Gerencie todos os serviços de rastreamento e manutenção.
+          <p className="text-slate-500 text-sm md:text-base max-w-xl">
+            Visão geral e gerenciamento completo de todos os serviços de
+            rastreamento e manutenção.
           </p>
         </div>
         <Button
@@ -319,79 +315,121 @@ export default function ServicosPage() {
             setEditingServico(null);
             setIsFormOpen(true);
           }}
-          className="flex items-center gap-2 self-start"
+          className="flex items-center gap-2 w-full md:w-auto justify-center py-2.5 shadow-md hover:shadow-lg transition-all"
         >
-          <Plus className="w-4 h-4" />
+          <Plus className="w-5 h-5" />
           Novo Serviço
         </Button>
       </motion.div>
 
-      {/* KPIs */}
+      {/* KPIs com Feedback Visual (Active State) */}
       <motion.div
         variants={itemVariants}
         className="grid grid-cols-2 lg:grid-cols-4 gap-4"
       >
         <Card
-          className="p-4 flex items-center gap-3 hoverable group cursor-pointer"
+          className={`p-5 flex items-center gap-4 hoverable group cursor-pointer border-2 transition-all duration-300 ${
+            filtroStatus === "todos"
+              ? "border-blue-500 bg-blue-50/30 shadow-md"
+              : "border-transparent hover:border-slate-200"
+          }`}
           onClick={() => setFiltroStatus("todos")}
         >
-          <div className="p-2.5 bg-blue-50 text-blue-600 rounded-xl group-hover:scale-110 transition-transform">
-            <Wrench className="w-5 h-5" />
+          <div
+            className={`p-3 rounded-2xl transition-transform duration-300 group-hover:scale-110 ${
+              filtroStatus === "todos"
+                ? "bg-blue-500 text-white shadow-lg shadow-blue-500/30"
+                : "bg-slate-100 text-slate-600"
+            }`}
+          >
+            <Wrench className="w-6 h-6" />
           </div>
           <div>
-            <p className="text-xs font-bold text-slate-500 uppercase">Total</p>
-            <p className="text-xl font-extrabold text-slate-900">
+            <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+              Total
+            </p>
+            <p className="text-2xl font-extrabold text-slate-900">
               {metricas.total}
             </p>
           </div>
         </Card>
 
         <Card
-          className="p-4 flex items-center gap-3 hoverable group cursor-pointer"
+          className={`p-5 flex items-center gap-4 hoverable group cursor-pointer border-2 transition-all duration-300 ${
+            filtroStatus === "PENDENTE"
+              ? "border-amber-500 bg-amber-50/30 shadow-md"
+              : "border-transparent hover:border-slate-200"
+          }`}
           onClick={() => setFiltroStatus("PENDENTE")}
         >
-          <div className="p-2.5 bg-amber-50 text-amber-600 rounded-xl group-hover:scale-110 transition-transform">
-            <Clock className="w-5 h-5" />
+          <div
+            className={`p-3 rounded-2xl transition-transform duration-300 group-hover:scale-110 ${
+              filtroStatus === "PENDENTE"
+                ? "bg-amber-500 text-white shadow-lg shadow-amber-500/30"
+                : "bg-amber-50 text-amber-600"
+            }`}
+          >
+            <Clock className="w-6 h-6" />
           </div>
           <div>
-            <p className="text-xs font-bold text-slate-500 uppercase">
+            <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">
               Pendentes
             </p>
-            <p className="text-xl font-extrabold text-slate-900">
+            <p className="text-2xl font-extrabold text-slate-900">
               {metricas.pendentes}
             </p>
           </div>
         </Card>
 
         <Card
-          className="p-4 flex items-center gap-3 hoverable group cursor-pointer"
+          className={`p-5 flex items-center gap-4 hoverable group cursor-pointer border-2 transition-all duration-300 ${
+            filtroStatus === "EM ANDAMENTO"
+              ? "border-indigo-500 bg-indigo-50/30 shadow-md"
+              : "border-transparent hover:border-slate-200"
+          }`}
           onClick={() => setFiltroStatus("EM ANDAMENTO")}
         >
-          <div className="p-2.5 bg-indigo-50 text-indigo-600 rounded-xl group-hover:scale-110 transition-transform">
-            <Wrench className="w-5 h-5" />
+          <div
+            className={`p-3 rounded-2xl transition-transform duration-300 group-hover:scale-110 ${
+              filtroStatus === "EM ANDAMENTO"
+                ? "bg-indigo-500 text-white shadow-lg shadow-indigo-500/30"
+                : "bg-indigo-50 text-indigo-600"
+            }`}
+          >
+            <Wrench className="w-6 h-6" />
           </div>
           <div>
-            <p className="text-xs font-bold text-slate-500 uppercase">
+            <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">
               Em Andamento
             </p>
-            <p className="text-xl font-extrabold text-slate-900">
+            <p className="text-2xl font-extrabold text-slate-900">
               {metricas.emAndamento}
             </p>
           </div>
         </Card>
 
         <Card
-          className="p-4 flex items-center gap-3 hoverable group cursor-pointer"
+          className={`p-5 flex items-center gap-4 hoverable group cursor-pointer border-2 transition-all duration-300 ${
+            filtroStatus === "CONCLUIDO"
+              ? "border-emerald-500 bg-emerald-50/30 shadow-md"
+              : "border-transparent hover:border-slate-200"
+          }`}
           onClick={() => setFiltroStatus("CONCLUIDO")}
         >
-          <div className="p-2.5 bg-emerald-50 text-emerald-600 rounded-xl group-hover:scale-110 transition-transform">
-            <CheckCircle className="w-5 h-5" />
+          <div
+            className={`p-3 rounded-2xl transition-transform duration-300 group-hover:scale-110 ${
+              filtroStatus === "CONCLUIDO"
+                ? "bg-emerald-500 text-white shadow-lg shadow-emerald-500/30"
+                : "bg-emerald-50 text-emerald-600"
+            }`}
+          >
+            <CheckCircle className="w-6 h-6" />
           </div>
           <div>
-            <p className="text-xs font-bold text-slate-500 uppercase">
+            <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">
               Concluídos
             </p>
-            <p className="text-xl font-extrabold text-slate-900">
+            <p className="text-2xl font-extrabold text-slate-900">
               {metricas.concluidos}
             </p>
           </div>
@@ -401,109 +439,118 @@ export default function ServicosPage() {
       {/* Barra de Filtros e Busca */}
       <motion.div
         variants={itemVariants}
-        className="bg-white rounded-2xl border border-slate-200/60 shadow-sm p-4 space-y-4"
+        className="bg-white rounded-2xl border border-slate-200/60 shadow-sm p-5 space-y-5"
       >
-        <div className="flex flex-col lg:flex-row gap-3">
-          {/* Busca */}
-          <div className="flex-1 relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+        <div className="flex flex-col lg:flex-row gap-4">
+          <div className="flex-1 relative group">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 group-focus-within:text-blue-500 transition-colors" />
             <input
               type="text"
-              placeholder="Buscar por cliente, placa, cidade, técnico ou OS..."
+              placeholder="Pesquisar por cliente, placa, OS..."
               value={buscaLocal}
               onChange={(e) => setBuscaLocal(e.target.value)}
-              className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-700 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-400 focus:border-transparent transition-all"
+              className="w-full pl-12 pr-10 py-3 bg-slate-50/50 border border-slate-200 rounded-xl text-sm font-medium text-slate-700 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all shadow-sm"
             />
             {buscaLocal && (
               <button
                 onClick={() => setBuscaLocal("")}
-                className="absolute right-3 top-1/2 -translate-y-1/2 p-0.5 hover:bg-slate-200 rounded transition-colors"
+                className="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-200/50 rounded-lg transition-colors"
               >
-                <X className="w-4 h-4 text-slate-400" />
+                <X className="w-4 h-4" />
               </button>
             )}
           </div>
 
-          {/* Filtros */}
-          <div className="flex flex-wrap gap-2">
-            <select
-              value={filtroStatus}
-              onChange={(e) => setFiltroStatus(e.target.value)}
-              className="px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold text-slate-700 focus:outline-none focus:ring-2 focus:ring-slate-400 cursor-pointer"
-            >
-              <option value="todos">Todos os status</option>
-              <option value="PENDENTE">Pendente</option>
-              <option value="EM ANDAMENTO">Em Andamento</option>
-              <option value="CONCLUIDO">Concluído</option>
-              <option value="CANCELADO">Cancelado</option>
-            </select>
+          <div className="flex flex-wrap lg:flex-nowrap gap-3">
+            <div className="relative flex-1 min-w-[140px]">
+              <select
+                value={filtroStatus}
+                onChange={(e) => setFiltroStatus(e.target.value)}
+                className="w-full appearance-none pl-4 pr-10 py-3 bg-slate-50/50 border border-slate-200 rounded-xl text-sm font-semibold text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 cursor-pointer transition-all shadow-sm"
+              >
+                <option value="todos">Status: Todos</option>
+                <option value="PENDENTE">Pendente</option>
+                <option value="EM ANDAMENTO">Em Andamento</option>
+                <option value="CONCLUIDO">Concluído</option>
+                <option value="CANCELADO">Cancelado</option>
+              </select>
+              <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
+            </div>
 
-            <select
-              value={filtroTecnico}
-              onChange={(e) => setFiltroTecnico(e.target.value)}
-              className="px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold text-slate-700 focus:outline-none focus:ring-2 focus:ring-slate-400 cursor-pointer"
-            >
-              <option value="todos">Todos os técnicos</option>
-              {tecnicos.map((t) => (
-                <option key={t} value={t}>
-                  {t}
-                </option>
-              ))}
-            </select>
+            <div className="relative flex-1 min-w-[140px]">
+              <select
+                value={filtroTecnico}
+                onChange={(e) => setFiltroTecnico(e.target.value)}
+                className="w-full appearance-none pl-4 pr-10 py-3 bg-slate-50/50 border border-slate-200 rounded-xl text-sm font-semibold text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 cursor-pointer transition-all shadow-sm"
+              >
+                <option value="todos">Técnico: Todos</option>
+                {tecnicos.map((t) => (
+                  <option key={t} value={t}>
+                    {t}
+                  </option>
+                ))}
+              </select>
+              <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
+            </div>
 
-            <select
-              value={filtroData}
-              onChange={(e) => setFiltroData(e.target.value)}
-              className="px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold text-slate-700 focus:outline-none focus:ring-2 focus:ring-slate-400 cursor-pointer"
-            >
-              <option value="todas">Todas as datas</option>
-              {datasDisponiveis.map((d) => (
-                <option key={d} value={d}>
-                  {d}
-                </option>
-              ))}
-            </select>
+            <div className="relative flex-1 min-w-[140px]">
+              <select
+                value={filtroData}
+                onChange={(e) => setFiltroData(e.target.value)}
+                className="w-full appearance-none pl-4 pr-10 py-3 bg-slate-50/50 border border-slate-200 rounded-xl text-sm font-semibold text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 cursor-pointer transition-all shadow-sm"
+              >
+                <option value="todas">Data: Todas</option>
+                {datasDisponiveis.map((d) => (
+                  <option key={d} value={d}>
+                    {d}
+                  </option>
+                ))}
+              </select>
+              <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
+            </div>
 
             <button
               onClick={toggleDirecao}
-              className="flex items-center gap-1.5 px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold text-slate-700 hover:bg-slate-100 transition-colors"
-              title={direcao === "asc" ? "Crescente" : "Decrescente"}
+              className="flex items-center justify-center gap-2 px-4 py-3 bg-slate-50/50 border border-slate-200 rounded-xl text-sm font-semibold text-slate-700 hover:bg-slate-100 transition-colors shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+              title={
+                direcao === "asc"
+                  ? "Ordenação Crescente"
+                  : "Ordenação Decrescente"
+              }
             >
-              <ArrowUpDown className="w-4 h-4" />
-              <ChevronDown
-                className={`w-3 h-3 transition-transform ${direcao === "asc" ? "rotate-180" : ""}`}
-              />
+              <ArrowUpDown className="w-4 h-4 text-slate-500" />
+              <span className="hidden sm:inline lg:hidden xl:inline">
+                Ordem
+              </span>
             </button>
           </div>
         </div>
 
-        {/* Filtros ativos e contagem */}
-        <div className="flex items-center justify-between pt-3 border-t border-slate-100">
-          <div className="flex items-center gap-2">
-            <span className="text-sm text-slate-500">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between pt-4 border-t border-slate-100 gap-4">
+          <div className="flex items-center gap-3">
+            <span className="text-sm text-slate-500 bg-slate-50 px-3 py-1 rounded-full border border-slate-100">
               <span className="font-bold text-slate-800">
                 {servicosFiltrados.length}
               </span>{" "}
-              serviço{servicosFiltrados.length !== 1 ? "s" : ""} encontrado
-              {servicosFiltrados.length !== 1 ? "s" : ""}
+              resultados
             </span>
             {filtrosAtivos && (
               <button
                 onClick={limparFiltros}
-                className="text-xs font-semibold text-rose-600 hover:text-rose-700 hover:bg-rose-50 px-2 py-1 rounded-lg transition-colors"
+                className="text-sm font-medium text-rose-600 hover:text-rose-700 flex items-center gap-1.5 transition-colors"
               >
+                <Filter className="w-3.5 h-3.5" />
                 Limpar filtros
               </button>
             )}
           </div>
 
-          {/* Toggle visualização */}
-          <div className="flex items-center gap-1 bg-slate-100 rounded-lg p-1">
+          <div className="flex items-center p-1 bg-slate-100/80 rounded-xl border border-slate-200/50 self-start sm:self-auto">
             <button
               onClick={() => setVisualizacao("lista")}
-              className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${
+              className={`flex items-center gap-2 px-4 py-1.5 rounded-lg text-sm font-semibold transition-all duration-200 ${
                 visualizacao === "lista"
-                  ? "bg-white text-slate-900 shadow-sm"
+                  ? "bg-white text-slate-900 shadow-sm border border-slate-200/50"
                   : "text-slate-500 hover:text-slate-700"
               }`}
             >
@@ -511,9 +558,9 @@ export default function ServicosPage() {
             </button>
             <button
               onClick={() => setVisualizacao("cards")}
-              className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${
+              className={`flex items-center gap-2 px-4 py-1.5 rounded-lg text-sm font-semibold transition-all duration-200 ${
                 visualizacao === "cards"
-                  ? "bg-white text-slate-900 shadow-sm"
+                  ? "bg-white text-slate-900 shadow-sm border border-slate-200/50"
                   : "text-slate-500 hover:text-slate-700"
               }`}
             >
@@ -523,7 +570,7 @@ export default function ServicosPage() {
         </div>
       </motion.div>
 
-      {/* Lista de Serviços */}
+      {/* Lista/Cards de Serviços */}
       <AnimatePresence mode="wait">
         {servicosFiltrados.length === 0 ? (
           <motion.div
@@ -531,26 +578,27 @@ export default function ServicosPage() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
-            className="flex flex-col items-center justify-center py-16 px-4 bg-white rounded-2xl border-2 border-dashed border-slate-200 text-center"
+            className="flex flex-col items-center justify-center py-20 px-4 bg-white rounded-3xl border-2 border-dashed border-slate-200 text-center shadow-sm"
           >
-            <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mb-4">
-              <Wrench className="w-8 h-8 text-slate-400" />
+            <div className="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center mb-5 border border-slate-100 shadow-inner">
+              <Wrench className="w-10 h-10 text-slate-400" />
             </div>
-            <h3 className="text-lg font-semibold text-slate-900 mb-1">
+            <h3 className="text-xl font-bold text-slate-900 mb-2">
               Nenhum serviço encontrado
             </h3>
-            <p className="text-slate-500 max-w-sm mb-6">
+            <p className="text-slate-500 max-w-md mb-8 text-base">
               {filtrosAtivos
-                ? "Não encontramos resultados para os filtros aplicados. Tente ajustar sua busca."
-                : "Você ainda não possui serviços cadastrados. Comece adicionando um novo serviço."}
+                ? "Não encontramos resultados para a sua pesquisa. Tente ajustar os filtros ou remover termos da busca."
+                : "Você ainda não possui serviços cadastrados. Comece adicionando um novo serviço para gerenciar suas atividades."}
             </p>
             {filtrosAtivos ? (
-              <button
+              <Button
                 onClick={limparFiltros}
-                className="px-5 py-2.5 bg-slate-100 text-slate-700 font-medium rounded-xl hover:bg-slate-200 transition-colors"
+                variant="outline"
+                className="px-6 py-2.5"
               >
-                Limpar filtros
-              </button>
+                Limpar Todos os Filtros
+              </Button>
             ) : (
               <Button
                 variant="primary"
@@ -558,8 +606,9 @@ export default function ServicosPage() {
                   setEditingServico(null);
                   setIsFormOpen(true);
                 }}
+                className="px-6 py-2.5 shadow-md"
               >
-                <Plus className="w-4 h-4 mr-2" />
+                <Plus className="w-5 h-5 mr-2" />
                 Criar Primeiro Serviço
               </Button>
             )}
@@ -571,120 +620,17 @@ export default function ServicosPage() {
             initial="hidden"
             animate="show"
             exit={{ opacity: 0 }}
-            className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4"
+            className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5"
           >
             {servicosFiltrados.map((servico) => (
-              <motion.div
+              <ServicoCard
                 key={servico.id}
+                servico={servico}
                 variants={itemVariants}
-                layout
-                className="group"
-              >
-                <Card className="p-5 h-full hoverable hover:shadow-md transition-all duration-300 relative overflow-hidden">
-                  {/* Status indicator line */}
-                  <div
-                    className={`absolute top-0 left-0 w-full h-1 ${
-                      servico.status?.toLowerCase() === "concluido"
-                        ? "bg-emerald-500"
-                        : servico.status?.toLowerCase() === "em andamento"
-                          ? "bg-indigo-500"
-                          : servico.status?.toLowerCase() === "pendente"
-                            ? "bg-amber-500"
-                            : "bg-slate-300"
-                    }`}
-                  />
-
-                  <div className="flex items-start justify-between mb-4">
-                    <div className="flex items-center gap-3">
-                      <div className="p-2.5 bg-slate-100 rounded-xl group-hover:bg-slate-900 group-hover:text-white transition-colors">
-                        <Car className="w-5 h-5" />
-                      </div>
-                      <div>
-                        <h3 className="font-bold text-slate-900 text-sm">
-                          {servico.cliente?.nome || "Cliente não informado"}
-                        </h3>
-                        <p className="text-xs text-slate-500 font-mono uppercase">
-                          {servico.veiculo?.placa || "S/ Placa"}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <StatusBadge status={servico.status || "pendente"} />
-                      <div className="relative group/menu">
-                        <button className="p-1.5 hover:bg-slate-100 rounded-lg transition-colors">
-                          <MoreHorizontal className="w-4 h-4 text-slate-400" />
-                        </button>
-                        <div className="absolute right-0 top-full mt-1 w-36 bg-white border border-slate-200 rounded-xl shadow-lg opacity-0 invisible group-hover/menu:opacity-100 group-hover/menu:visible transition-all z-20">
-                          <button
-                            onClick={() => openEditForm(servico)}
-                            className="w-full flex items-center gap-2 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 first:rounded-t-xl"
-                          >
-                            <Edit3 className="w-3.5 h-3.5" />
-                            Editar
-                          </button>
-                          <button
-                            onClick={() => openDeleteConfirm(servico)}
-                            className="w-full flex items-center gap-2 px-3 py-2 text-sm font-medium text-rose-600 hover:bg-rose-50 last:rounded-b-xl"
-                          >
-                            <Trash2 className="w-3.5 h-3.5" />
-                            Excluir
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="space-y-2.5">
-                    <div className="flex items-center gap-2 text-sm text-slate-600">
-                      <Calendar className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-                      <span className="font-medium">
-                        {formatarDataExibicao(servico.data)}
-                      </span>
-                      <span className="text-slate-300">•</span>
-                      <Clock className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-                      <span className="font-medium">
-                        {formatarHorarioExibicao(servico.horario)}
-                      </span>
-                    </div>
-
-                    <div className="flex items-center gap-2 text-sm text-slate-600">
-                      <User className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-                      <span className="font-medium">
-                        {servico.tecnico || "Não atribuído"}
-                      </span>
-                    </div>
-
-                    <div className="flex items-center gap-2 text-sm text-slate-600">
-                      <MapPin className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-                      <span className="truncate">
-                        {servico.endereco?.cidade || "Cidade não informada"}
-                      </span>
-                    </div>
-
-                    {servico.ordemServico && (
-                      <div className="flex items-center gap-2 text-sm text-slate-500">
-                        <File className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-                        <span className="font-mono text-xs">
-                          OS: {servico.ordemServico}
-                        </span>
-                      </div>
-                    )}
-                  </div>
-
-                  <div className="mt-4 pt-4 border-t border-slate-100 flex items-center justify-between">
-                    <span className="text-xs font-semibold text-slate-400 uppercase">
-                      {servico.tipoServico || "Tipo não especificado"}
-                    </span>
-                    <Link
-                      href={`/agendamentos/${servico.id}`}
-                      className="text-xs font-semibold text-blue-600 hover:text-blue-700 flex items-center gap-1"
-                    >
-                      <Eye className="w-3.5 h-3.5" />
-                      Detalhes
-                    </Link>
-                  </div>
-                </Card>
-              </motion.div>
+                onEdit={openEditForm}
+                onDelete={openDeleteConfirm}
+                onViewDetails={setDetalhesServicoId}
+              />
             ))}
           </motion.div>
         ) : (
@@ -694,101 +640,122 @@ export default function ServicosPage() {
             initial="hidden"
             animate="show"
             exit={{ opacity: 0 }}
-            className="bg-white rounded-2xl border border-slate-200/60 shadow-sm overflow-hidden"
+            className="space-y-3" // Espaçamento entre os cards alongados
           >
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead>
-                  <tr className="bg-slate-50 border-b border-slate-100">
-                    <th className="text-left text-xs font-bold text-slate-500 uppercase tracking-wider px-5 py-3">
-                      Cliente / Veículo
-                    </th>
-                    <th className="text-left text-xs font-bold text-slate-500 uppercase tracking-wider px-5 py-3">
-                      Data / Horário
-                    </th>
-                    <th className="text-left text-xs font-bold text-slate-500 uppercase tracking-wider px-5 py-3">
-                      Técnico
-                    </th>
-                    <th className="text-left text-xs font-bold text-slate-500 uppercase tracking-wider px-5 py-3">
-                      Status
-                    </th>
-                    <th className="text-left text-xs font-bold text-slate-500 uppercase tracking-wider px-5 py-3">
-                      Cidade
-                    </th>
-                    <th className="text-right text-xs font-bold text-slate-500 uppercase tracking-wider px-5 py-3">
-                      Ações
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100">
-                  {servicosFiltrados.map((servico) => (
-                    <motion.tr
-                      key={servico.id}
-                      variants={itemVariants}
-                      className="hover:bg-slate-50/50 transition-colors group"
+            {servicosFiltrados.map((servico) => (
+              <motion.div
+                key={servico.id}
+                variants={itemVariants}
+                layout
+                onClick={() => setDetalhesServicoId(String(servico.id))}
+                className="group bg-white border border-slate-200/80 rounded-2xl p-4 sm:p-5 hover:shadow-md hover:border-blue-300 transition-all duration-300 cursor-pointer flex flex-col lg:flex-row lg:items-center gap-4 relative overflow-hidden"
+              >
+                {/* Indicador de status lateral (opcional, bem sutil) */}
+                <div
+                  className={`absolute left-0 top-0 bottom-0 w-1 ${
+                    servico.status?.toLowerCase() === "concluido"
+                      ? "bg-emerald-500"
+                      : servico.status?.toLowerCase() === "em andamento"
+                        ? "bg-blue-500"
+                        : servico.status?.toLowerCase() === "cancelado"
+                          ? "bg-rose-500"
+                          : "bg-orange-400"
+                  }`}
+                />
+
+                {/* 1. Cliente e Veículo (Ocupa mais espaço) */}
+                <div className="flex items-center gap-4 flex-[1.5] min-w-0 pl-2">
+                  <div className="w-10 h-10 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-center shrink-0 group-hover:bg-blue-50 group-hover:text-blue-600 transition-colors">
+                    <Car className="w-5 h-5 text-slate-400 group-hover:text-blue-500" />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="font-bold text-[15px] text-slate-900 truncate">
+                      {servico.cliente?.nome || "Cliente não informado"}
+                    </p>
+                    <div className="flex items-center gap-2 mt-0.5">
+                      <span className="text-[11px] font-mono uppercase bg-slate-100 text-slate-600 px-2 py-0.5 rounded font-medium tracking-wide">
+                        {servico.veiculo?.placa || "S/ PLACA"}
+                      </span>
+                      <span className="text-[12px] text-slate-400 truncate">
+                        OS: {servico.ordemServico || "N/A"}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Grid interno para alinhar os outros dados no desktop */}
+                <div className="hidden flex-1 md:grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 items-center pl-2 lg:pl-0 border-t border-slate-100 lg:border-t-0 pt-3 lg:pt-0">
+                  {/* 2. Data e Horário */}
+                  <div className="flex flex-col">
+                    <p className="text-sm font-semibold text-slate-700 flex items-center gap-1.5">
+                      <Calendar
+                        className="w-4 h-4 text-slate-400"
+                        strokeWidth={2}
+                      />
+                      {formatarDataExibicao(servico.data)}
+                    </p>
+                    <p className="text-xs text-slate-500 mt-1 flex items-center gap-1.5 font-medium">
+                      <Clock className="w-3.5 h-3.5 text-slate-400" />
+                      {formatarHorarioExibicao(servico.horario)}
+                    </p>
+                  </div>
+                 
+                    {/* 3. Técnico */}
+                    <div className="flex items-center gap-2">
+                      <div className="w-7 h-7 rounded-full bg-slate-100 flex items-center justify-center shrink-0">
+                        <User className="w-3.5 h-3.5 text-slate-500" />
+                      </div>
+                      <span className="text-sm font-medium text-slate-700 truncate uppercase">
+                        {servico.tecnico || "—"}
+                      </span>
+                    </div>
+
+                    {/* 4. Localização */}
+                    <div
+                      className="flex items-center gap-1.5 text-sm font-medium text-slate-600 truncate"
+                      title={servico.endereco?.cidade}
                     >
-                      <td className="px-5 py-4">
-                        <div className="flex items-center gap-3">
-                          <div className="p-2 bg-slate-100 rounded-lg group-hover:bg-slate-200 transition-colors">
-                            <Car className="w-4 h-4 text-slate-600" />
-                          </div>
-                          <div>
-                            <p className="font-semibold text-sm text-slate-900">
-                              {servico.cliente?.nome || "—"}
-                            </p>
-                            <p className="text-xs text-slate-500 font-mono uppercase">
-                              {servico.veiculo?.placa || "S/ Placa"}
-                            </p>
-                          </div>
-                        </div>
-                      </td>
-                      <td className="px-5 py-4">
-                        <div className="text-sm text-slate-700">
-                          <p className="font-medium">
-                            {formatarDataExibicao(servico.data)}
-                          </p>
-                          <p className="text-xs text-slate-500">
-                            {formatarHorarioExibicao(servico.horario)}
-                          </p>
-                        </div>
-                      </td>
-                      <td className="px-5 py-4">
-                        <span className="text-sm font-medium text-slate-700">
-                          {servico.tecnico || "—"}
-                        </span>
-                      </td>
-                      <td className="px-5 py-4">
-                        <StatusBadge status={servico.status || "pendente"} />
-                      </td>
-                      <td className="px-5 py-4">
-                        <div className="flex items-center gap-1.5 text-sm text-slate-600">
-                          <MapPin className="w-3.5 h-3.5 text-slate-400" />
-                          {servico.endereco?.cidade || "—"}
-                        </div>
-                      </td>
-                      <td className="px-5 py-4">
-                        <div className="flex items-center justify-end gap-1">
-                          <button
-                            onClick={() => openEditForm(servico)}
-                            className="p-2 hover:bg-slate-100 rounded-lg transition-colors text-slate-500 hover:text-slate-900"
-                            title="Editar"
-                          >
-                            <Edit3 className="w-4 h-4" />
-                          </button>
-                          <button
-                            onClick={() => openDeleteConfirm(servico)}
-                            className="p-2 hover:bg-rose-50 rounded-lg transition-colors text-slate-500 hover:text-rose-600"
-                            title="Excluir"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
-                        </div>
-                      </td>
-                    </motion.tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                      <MapPin className="w-4 h-4 text-slate-400 shrink-0" />
+                      <span className="truncate">
+                        {servico.endereco?.cidade || "Não informado"}
+                      </span>
+                    </div>
+
+                    {/* 5. Status */}
+                    <div className="flex lg:justify-center">
+                      <StatusBadge
+                        status={servico.status || "pendente"}
+                        className="text-[11px] px-2.5 py-1"
+                      />
+                    </div>
+                  </div>
+
+                  {/* 6. Ações (Fixo à direita) */}
+                  <div
+                    className="flex items-center justify-end gap-2 lg:pl-4 content"
+                     // Impede que os botões abram o modal
+                  >
+                    <div className="flex" onClick={(e) => e.stopPropagation()}>
+ <button
+                      onClick={() => openEditForm(servico)}
+                      className="w-10 h-10 flex items-center justify-center text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-colors border border-transparent hover:border-blue-100"
+                      title="Editar"
+                    >
+                      <Edit3 className="w-4.5 h-4.5" strokeWidth={2} />
+                    </button>
+                    <button
+                      onClick={() => openDeleteConfirm(servico)}
+                      className="w-10 h-10 flex items-center justify-center text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition-colors border border-transparent hover:border-rose-100"
+                      title="Excluir"
+                    >
+                      <Trash2 className="w-4.5 h-4.5" strokeWidth={2} />
+                    </button>
+                    </div>
+                   
+                  </div>
+                
+              </motion.div>
+            ))}
           </motion.div>
         )}
       </AnimatePresence>
@@ -817,6 +784,15 @@ export default function ServicosPage() {
         message="Tem certeza que deseja excluir este serviço? Esta ação não pode ser desfeita."
         itemName={deletingServico?.cliente?.nome || "este serviço"}
         isLoading={isDeleting}
+      />
+
+      {/* Integração do Modal de Detalhes */}
+      <ServicoDetalhesModal
+        id={detalhesServicoId || ""}
+        isOpen={!!detalhesServicoId}
+        onClose={() => setDetalhesServicoId(null)}
+        onEdit={openEditForm}
+        onDelete={openDeleteConfirm}
       />
     </motion.div>
   );

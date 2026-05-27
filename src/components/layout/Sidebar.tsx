@@ -28,15 +28,17 @@ interface SidebarProps {
 }
 
 const baseNavItems = [
+  { label: "Dashboard", href: "/dashboard", icon: Home },
   {
     label: "Agendamentos",
     href: "/agendamentos",
     icon: CalendarDays,
     badgeKey: "agendamentos" as const,
   },
-  { label: "Dashboard", href: "/dashboard", icon: Home },
-  { label: "Relatórios", href: "/relatorios", icon: BarChart3 },
   { label: "Serviços", href: "/servicos", icon: Wrench },
+
+  { label: "Relatórios", href: "/relatorios", icon: BarChart3 },
+
   { label: "Técnicos", href: "/tecnicos", icon: Users },
   {
     label: "Configurações",
@@ -116,16 +118,16 @@ export default function Sidebar({
               animate={{ opacity: 1 }}
               className="flex items-center gap-3"
             >
-              <div className="w-8 h-8 bg-slate-900 rounded-xl flex items-center justify-center">
+              <div className="md:hidden w-8 h-8 bg-slate-900 rounded-xl flex items-center justify-center">
                 <span className="text-white font-bold text-sm">TA</span>
               </div>
-              <span className="font-extrabold text-lg tracking-tight text-slate-900">
+              <span className="md:hidden font-extrabold text-lg tracking-tight text-slate-900">
                 TrackApp
               </span>
             </motion.div>
           )}
           {isCollapsed && !isHovered && (
-            <div className="w-8 h-8 bg-slate-900 rounded-xl flex items-center justify-center mx-auto">
+            <div className="md:hidden w-8 h-8 bg-slate-900 rounded-xl flex items-center justify-center mx-auto">
               <span className="text-white font-bold text-sm">TA</span>
             </div>
           )}
