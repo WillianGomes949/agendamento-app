@@ -81,40 +81,43 @@ export function useServicos(initialFilters?: FiltrosServicos) {
         }
 
         const sanitizedData = (result.data || []).map((servico: any) => {
-          // ✅ Sanitiza uma vez só — já converte Date → string
-          const limpo = sanitizarDadosGAS(servico as Record<string, unknown>);
+  const limpo = sanitizarDadosGAS(servico as Record<string, unknown>);
+  
+  // Garantir que cliente e veiculo sejam objetos
+  const cliente = limpo.cliente as Record<string, unknown> | undefined;
+  const veiculo = limpo.veiculo as Record<string, unknown> | undefined;
+  const endereco = limpo.endereco as Record<string, unknown> | undefined;
 
-          return {
-            id: String(limpo.id ?? ""),
-            tecnico: String(limpo.tecnico ?? ""),
-            data: String(limpo.data ?? ""),
-            diaSemana: String(limpo.diaSemana ?? ""),
-            horario: String(limpo.horario ?? ""), 
-            tipoServico: String(limpo.tipoServico ?? ""),
-            ordemServico: limpo.ordemServico || null,
-            observacao: limpo.observacao || null,
-            cliente: {
-              nome: String(limpo.cliente?.nome ?? ""),
-              contato: String(limpo.cliente?.contato ?? ""),
-            },
-            veiculo: {
-              placa: String(limpo.veiculo?.placa ?? ""),
-              marcaModelo: String(limpo.veiculo?.marcaModelo ?? ""),
-            },
-            endereco: {
-              rua: String(limpo.endereco?.rua ?? ""),
-              numero: String(limpo.endereco?.numero ?? ""),
-              bairro: String(limpo.endereco?.bairro ?? ""),
-              cidade: String(limpo.endereco?.cidade ?? ""),
-              estado: String(limpo.endereco?.estado ?? ""),
-              cep: String(limpo.endereco?.cep ?? ""),
-            },
-            status: String(limpo.status || "PENDENTE"),
-            criadoEm: String(limpo.criadoEm ?? ""),
-            atualizadoEm: String(limpo.atualizadoEm ?? ""),
-          };
-        });
-
+  return {
+    id: String(limpo.id ?? ""),
+    tecnico: String(limpo.tecnico ?? ""),
+    data: String(limpo.data ?? ""),
+    diaSemana: String(limpo.diaSemana ?? ""),
+    horario: String(limpo.horario ?? ""),
+    tipoServico: String(limpo.tipoServico ?? ""),
+    ordemServico: limpo.ordemServico || null,
+    observacao: limpo.observacao || null,
+    cliente: {
+      nome: String(cliente?.nome ?? ""),
+      contato: String(cliente?.contato ?? ""),
+    },
+    veiculo: {
+      placa: String(veiculo?.placa ?? ""),
+      marcaModelo: String(veiculo?.marcaModelo ?? ""),
+    },
+    endereco: {
+      rua: String(endereco?.rua ?? ""),
+      numero: String(endereco?.numero ?? ""),
+      bairro: String(endereco?.bairro ?? ""),
+      cidade: String(endereco?.cidade ?? ""),
+      estado: String(endereco?.estado ?? ""),
+      cep: String(endereco?.cep ?? ""),
+    },
+    status: String(limpo.status || "PENDENTE"),
+    criadoEm: String(limpo.criadoEm ?? ""),
+    atualizadoEm: String(limpo.atualizadoEm ?? ""),
+  };
+});
         setServicos(sanitizedData);
 
         // 3. Guardar no SessionStorage
