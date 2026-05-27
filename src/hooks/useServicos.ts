@@ -298,6 +298,7 @@ export function useServicos(initialFilters?: FiltrosServicos) {
       totalPages: Math.ceil(servicosFiltrados.length / DEFAULT_PAGE_SIZE) || 1,
     },
     filters,
+     loading,
     setFilters,
     setPage,
     create,
