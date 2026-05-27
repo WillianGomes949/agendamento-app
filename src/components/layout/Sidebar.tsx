@@ -2,9 +2,15 @@
 "use client";
 
 import { motion, AnimatePresence } from "framer-motion";
-import { 
-  Home, CalendarDays, Wrench, Users, Settings, BarChart3,
-  X, HelpCircle, Star, Clock
+import {
+  Home,
+  CalendarDays,
+  Wrench,
+  Users,
+  Settings,
+  BarChart3,
+  X,
+  HelpCircle,
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -19,20 +25,42 @@ interface SidebarProps {
 }
 
 const navItems = [
-  { label: "Dashboard", href: "/", icon: Home, badge: null },
-  { label: "Agendamentos", href: "/agendamentos", icon: CalendarDays, badge: "12" },
+  {
+    label: "Agendamentos",
+    href: "/agendamentos",
+    icon: CalendarDays,
+    badge: null,
+  },
+  { label: "Dashboard", href: "/dashboard", icon: Home, badge: null },
   { label: "Serviços", href: "/servicos", icon: Wrench, badge: null },
   { label: "Relatórios", href: "/relatorios", icon: BarChart3, badge: null },
   { label: "Técnicos", href: "/tecnicos", icon: Users, badge: null },
-  { label: "Configurações", href: "/configuracoes", icon: Settings, badge: null },
+  {
+    label: "Configurações",
+    href: "/configuracoes",
+    icon: Settings,
+    badge: null,
+  },
 ];
 
-export default function Sidebar({ isOpen, isCollapsed, onCloseMobile, onHoverStart, onHoverEnd }: SidebarProps) {
+export default function Sidebar({
+  isOpen,
+  isCollapsed,
+  onCloseMobile,
+  onHoverStart,
+  onHoverEnd,
+}: SidebarProps) {
   const pathname = usePathname();
   const [isHovered, setIsHovered] = useState(false);
 
-  const handleMouseEnter = () => { setIsHovered(true); onHoverStart?.(); };
-  const handleMouseLeave = () => { setIsHovered(false); onHoverEnd?.(); };
+  const handleMouseEnter = () => {
+    setIsHovered(true);
+    onHoverStart?.();
+  };
+  const handleMouseLeave = () => {
+    setIsHovered(false);
+    onHoverEnd?.();
+  };
 
   const sidebarWidth = isCollapsed && !isHovered ? "5rem" : "16rem";
 
@@ -57,7 +85,7 @@ export default function Sidebar({ isOpen, isCollapsed, onCloseMobile, onHoverSta
         initial={false}
         animate={{
           width: sidebarWidth,
-          x: isOpen ? 0 : (window.innerWidth < 1024 ? "-100%" : 0),
+          x: isOpen ? 0 : window.innerWidth < 1024 ? "-100%" : 0,
         }}
         transition={{ type: "spring", stiffness: 400, damping: 35 }}
         onMouseEnter={handleMouseEnter}
@@ -67,7 +95,11 @@ export default function Sidebar({ isOpen, isCollapsed, onCloseMobile, onHoverSta
         {/* Logo Section */}
         <div className="flex items-center justify-between p-4 border-b border-slate-100 h-16">
           {(!isCollapsed || isHovered) && (
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="md:hidden flex items-center gap-3">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="md:hidden flex items-center gap-3"
+            >
               <div className="w-8 h-8 bg-slate-900 rounded-xl flex items-center justify-center">
                 <span className="text-white font-bold text-sm">TA</span>
               </div>
@@ -81,7 +113,7 @@ export default function Sidebar({ isOpen, isCollapsed, onCloseMobile, onHoverSta
               <span className="text-white font-bold text-sm">TA</span>
             </div>
           )}
-          <button 
+          <button
             onClick={onCloseMobile}
             className="lg:hidden p-2 hover:bg-slate-100 rounded-xl text-slate-500 ml-auto"
             aria-label="Fechar menu"
@@ -92,10 +124,11 @@ export default function Sidebar({ isOpen, isCollapsed, onCloseMobile, onHoverSta
 
         {/* Navegação */}
         <nav className="flex-1 py-6 px-3 space-y-1 overflow-y-auto scrollbar-none">
-          
           <div className="mb-6 space-y-1">
             {navItems.map((item) => {
-              const isActive = pathname === item.href || (item.href !== "/" && pathname.startsWith(item.href));
+              const isActive =
+                pathname === item.href ||
+                (item.href !== "/" && pathname.startsWith(item.href));
               const Icon = item.icon;
               return (
                 <Link
@@ -111,9 +144,13 @@ export default function Sidebar({ isOpen, isCollapsed, onCloseMobile, onHoverSta
                   <Icon size={20} className="shrink-0" />
                   {(!isCollapsed || isHovered) && (
                     <>
-                      <span className="font-semibold text-sm whitespace-nowrap">{item.label}</span>
+                      <span className="font-semibold text-sm whitespace-nowrap">
+                        {item.label}
+                      </span>
                       {item.badge && (
-                        <span className={`ml-auto text-xs px-2 py-0.5 rounded-full font-bold ${isActive ? "bg-white/20 text-white" : "bg-blue-100 text-blue-700"}`}>
+                        <span
+                          className={`ml-auto text-xs px-2 py-0.5 rounded-full font-bold ${isActive ? "bg-white/20 text-white" : "bg-blue-100 text-blue-700"}`}
+                        >
                           {item.badge}
                         </span>
                       )}
@@ -127,7 +164,7 @@ export default function Sidebar({ isOpen, isCollapsed, onCloseMobile, onHoverSta
 
         {/* Footer Sidebar */}
         <div className="p-4 border-t border-slate-100">
-          {(!isCollapsed || isHovered) ? (
+          {!isCollapsed || isHovered ? (
             <Link
               href="/ajuda"
               onClick={() => onCloseMobile()}
