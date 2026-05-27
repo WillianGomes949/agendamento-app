@@ -117,33 +117,38 @@ export default function ServicoForm({
   }, [initialData, isOpen]);
 
   const updateField = useCallback(
-    (section: string, field: string, value: string) => {
-      setForm((prev) => {
-        if (
-          section === "cliente" ||
-          section === "veiculo" ||
-          section === "endereco"
-        ) {
+  (section: string, field: string, value: string) => {
+    setForm((prev) => {
+      // Verifica se é uma seção aninhada (cliente, veiculo, endereco)
+      if (section === "cliente" || section === "veiculo" || section === "endereco") {
+        const sectionData = prev[section as keyof typeof prev];
+        
+        // Garante que sectionData é um objeto antes de fazer spread
+        if (sectionData && typeof sectionData === 'object' && !Array.isArray(sectionData)) {
           return {
             ...prev,
             [section]: {
-              ...prev[section as keyof typeof prev],
+              ...sectionData,
               [field]: value,
             },
           };
         }
-        return { ...prev, [section]: value };
+      }
+      
+      // Para campos normais (não aninhados)
+      return { ...prev, [section]: value };
+    });
+    
+    const errorKey = field ? `${section}.${field}` : section;
+    if (touched[errorKey])
+      setErrors((prev) => {
+        const next = { ...prev };
+        delete next[errorKey];
+        return next;
       });
-      const errorKey = field ? `${section}.${field}` : section;
-      if (touched[errorKey])
-        setErrors((prev) => {
-          const next = { ...prev };
-          delete next[errorKey];
-          return next;
-        });
-    },
-    [touched],
-  );
+  },
+  [touched],
+);
 
   const handleBlur = (section: string, field?: string) => {
     setTouched((prev) => ({
