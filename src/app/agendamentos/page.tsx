@@ -270,12 +270,12 @@ export default function AgendamentosPage() {
   }
 
   const views: View[] = ["month", "week", "day", "agenda"];
-  const viewLabels: Record<View, string> = {
-    month: "Mês",
-    week: "Semana",
-    day: "Dia",
-    agenda: "Lista",
-  };
+const viewLabels: Record<typeof views[number], string> = {
+  month: "Mês",
+  week: "Semana",
+  day: "Dia",
+  agenda: "Lista",
+};
 
   return (
     <motion.div

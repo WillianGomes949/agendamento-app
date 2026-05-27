@@ -3,8 +3,8 @@
 
 import { AnimatePresence } from "framer-motion";
 import type { Servico } from "@/lib/types";
-import { ServiceCard } from "./ServiceCard";
 import { EmptyState } from "./EmptyState";
+import { ServicoCard } from "./ServiceCard";
 
 interface ServiceListProps {
   servicos: Servico[];
@@ -26,7 +26,7 @@ export function ServiceList({ servicos, onEdit, onDelete }: ServiceListProps) {
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6">
       <AnimatePresence mode="popLayout">
         {servicos.map((servico, index) => (
-          <ServiceCard
+          <ServicoCard
             key={servico?.id || `fallback-${index}`}
             servico={servico}
             onEdit={onEdit}
