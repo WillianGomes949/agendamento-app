@@ -94,7 +94,7 @@ export default function AgendamentosPage() {
     setFilters,
   } = useServicos();
 
-  const [view, setView] = useState<View>("month");
+  const [view, setView] = useState<ViewType>("month");
   const [date, setDate] = useState(new Date());
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingServico, setEditingServico] = useState<Servico | null>(null);
@@ -269,13 +269,15 @@ export default function AgendamentosPage() {
     );
   }
 
-  const views: View[] = ["month", "week", "day", "agenda"];
-const viewLabels: Record<typeof views[number], string> = {
-  month: "Mês",
-  week: "Semana",
-  day: "Dia",
-  agenda: "Lista",
-};
+  const views = ["month", "week", "day", "agenda"] as const;
+  type ViewType = (typeof views)[number];
+
+  const viewLabels: Record<ViewType, string> = {
+    month: "Mês",
+    week: "Semana",
+    day: "Dia",
+    agenda: "Lista",
+  };
 
   return (
     <motion.div
@@ -454,7 +456,7 @@ const viewLabels: Record<typeof views[number], string> = {
               startAccessor="start"
               endAccessor="end"
               view={view}
-              onView={setView}
+              onView={(newView) => setView(newView as ViewType)}
               date={date}
               onNavigate={handleNavigate}
               eventPropGetter={eventStyleGetter}
