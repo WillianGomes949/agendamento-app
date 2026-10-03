@@ -150,6 +150,16 @@ const ABAS_CONFIG = Object.freeze({
   HORARIOS: 'Horarios',
 });
 
+/** Colunas opcionais da aba "Tecnicos" (além de "nome" e "ativo"). */
+const COLUNAS_TECNICO_OPCIONAIS = Object.freeze([
+  'cpf', 'cnpj', 'whatsapp', 'vinculo',
+]);
+
+/** Vínculos aceitos (whitelist). Deixe vazio para aceitar qualquer valor. */
+const VINCULOS_PERMITIDOS = Object.freeze([
+  'clt', 'pj', 'terceirizado', 'autonomo', 'estagio',
+]);
+
 // ══════════════════════════════════════════════════════════════════════════════
 //  PONTOS DE ENTRADA HTTP
 // ══════════════════════════════════════════════════════════════════════════════
@@ -187,6 +197,14 @@ function doPost(e) {
         registrarLog('AUTH_FALHA', { requestId, erro: erroAuth });
         return respostaErro('Não autorizado', erroAuth, 401, requestId);
       }
+
+      // ✅ Rate limit agora é efetivamente aplicado.
+      const chaveApi =
+        (body && body.apiKey) ||
+        (e.parameter && e.parameter.key) ||
+        '';
+      const erroRate = verificarRateLimit(chaveApi, requestId);
+      if (erroRate) return erroRate;
     }
 
     const acao = String(body.action || '').trim().toUpperCase();
@@ -299,15 +317,17 @@ function comparacaoConstante(a, b) {
 // ══════════════════════════════════════════════════════════════════════════════
 //  RATE-LIMIT
 // ══════════════════════════════════════════════════════════════════════════════
-function verificarRateLimit(requestId) {
+function verificarRateLimit(chaveApi, requestId) {
   const cache = CacheService.getScriptCache();
-  const chave = `rl:${requestId.substring(0, 20)}`; // por IP/user-agent
+  const identidade = Utilities.base64EncodeWebSafe(
+    Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256, chaveApi || 'anon')
+  ).substring(0, 16);
+  const chave = `rl:${identidade}`;
   const atual = parseInt(cache.get(chave) || '0', 10);
 
-  if (atual > 100) { // 100 req/minuto
-    return respostaErro('Rate limit excedido', 'Muitas requisições.', 429, requestId);
+  if (atual >= 100) {
+    return respostaErro('Rate limit excedido', 'Muitas requisições. Tente novamente em 1 minuto.', 429, requestId);
   }
-
   cache.put(chave, String(atual + 1), 60);
   return null;
 }
@@ -327,9 +347,10 @@ function processarAcao(acao, dados, requestId) {
   // 1) Ações de leitura de configuração — não dependem da aba de dados.
   switch (acao) {
     case 'GET_STATUS': return acaoObterStatus(requestId);
-    case 'GET_TECNICOS': return acaoObterTecnicos(requestId);
     case 'GET_TIPOS': return acaoObterTiposServico(requestId);
     case 'GET_HORARIOS': return acaoObterHorarios(requestId);
+    case 'GET_TECNICOS': return acaoObterTecnicos(requestId);
+    case 'GET_TECNICOS_COM_STATS': return acaoObterTecnicosComStats(requestId);
     case 'CREATE_TECNICO': return acaoCriarTecnico(dados, requestId);
     case 'UPDATE_TECNICO': return acaoAtualizarTecnico(dados, requestId);
     case 'DELETE_TECNICO': return acaoExcluirTecnico(dados, requestId);
@@ -376,22 +397,102 @@ function acaoObterTecnicos(requestId) {
   if (!aba || aba.getLastRow() < 2) {
     return montarResposta({ success: true, requestId, data: [] }, 200);
   }
+
   const valores = aba.getDataRange().getDisplayValues();
   const cabecalhos = valores[0].map(normalizarTexto);
-  const idxNome = cabecalhos.indexOf('nome');
-  const idxAtivo = cabecalhos.indexOf('ativo');
+
+  // Índices das colunas — sempre por nome, nunca por posição fixa.
+  const idx = (nome) => cabecalhos.indexOf(normalizarTexto(nome));
+  const idxNome = idx('nome');
+  const idxAtivo = idx('ativo');
+  const idxCpf = idx('cpf');
+  const idxCnpj = idx('cnpj');
+  const idxWhats = idx('whatsapp');
+  const idxVinculo = idx('vinculo');
 
   const itens = [];
   for (let i = 1; i < valores.length; i++) {
-    const nome = String(valores[i][idxNome] || '').trim();
+    const linha = valores[i];
+    const nome = String(linha[idxNome] || '').trim();
     if (!nome) continue;
+
     const ativo = idxAtivo === -1 ||
-      ['true', 'sim', 'yes', '1', 'x'].includes(
-        normalizarTexto(valores[i][idxAtivo])
-      );
-    itens.push({ nome, ativo });
+      ['true', 'sim', 'yes', '1', 'x'].includes(normalizarTexto(linha[idxAtivo]));
+
+    // Campos opcionais: só inclui no objeto se a coluna existir.
+    const item = { nome, ativo };
+    if (idxCpf !== -1) item.cpf = sanitizarTexto(linha[idxCpf]).replace(/\D/g, '');
+    if (idxCnpj !== -1) item.cnpj = sanitizarTexto(linha[idxCnpj]).replace(/\D/g, '');
+    if (idxWhats !== -1) item.whatsapp = sanitizarTexto(linha[idxWhats]).replace(/\D/g, '');
+    if (idxVinculo !== -1) item.vinculo = normalizarTexto(linha[idxVinculo]);
+
+    itens.push(item);
   }
   return montarResposta({ success: true, requestId, data: itens }, 200);
+}
+
+/**
+ * Retorna técnicos já com estatísticas de serviços em uma única leitura
+ * da planilha — evita o cliente fazer duas chamadas (tecnicos + STATS).
+ */
+function acaoObterTecnicosComStats(requestId) {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const abaTec = ss.getSheetByName(ABAS_CONFIG.TECNICOS);
+
+  const tecnicos = [];
+  if (abaTec && abaTec.getLastRow() >= 2) {
+    const valores = abaTec.getDataRange().getDisplayValues();
+    const cab = valores[0].map(normalizarTexto);
+    const idx = (nome) => cab.indexOf(normalizarTexto(nome));
+    const idxNome = idx('nome');
+    const idxAtivo = idx('ativo');
+    const idxCpf = idx('cpf');
+    const idxCnpj = idx('cnpj');
+    const idxWhats = idx('whatsapp');
+    const idxVinculo = idx('vinculo');
+
+    for (let i = 1; i < valores.length; i++) {
+      const linha = valores[i];
+      const nome = String(linha[idxNome] || '').trim();
+      if (!nome) continue;
+
+      const ativo = idxAtivo === -1 ||
+        ['true', 'sim', 'yes', '1', 'x'].includes(normalizarTexto(linha[idxAtivo]));
+
+      const item = {
+        nome, ativo,
+        totalServicos: 0,
+        servicosConcluidos: 0,
+        servicosPendentes: 0,
+      };
+      if (idxCpf !== -1) item.cpf = sanitizarTexto(linha[idxCpf]).replace(/\D/g, '');
+      if (idxCnpj !== -1) item.cnpj = sanitizarTexto(linha[idxCnpj]).replace(/\D/g, '');
+      if (idxWhats !== -1) item.whatsapp = sanitizarTexto(linha[idxWhats]).replace(/\D/g, '');
+      if (idxVinculo !== -1) item.vinculo = normalizarTexto(linha[idxVinculo]);
+
+      tecnicos.push(item);
+    }
+  }
+
+  // Uma única passada na planilha de serviços, agregando por técnico.
+  const { headers, linhas } = obterDadosPlanilha();
+  const idxId = headers.indexOf('ID');
+  const idxTec = headers.indexOf('tecnico');
+  const idxSt = headers.indexOf('status');
+  const mapa = new Map(tecnicos.map((t) => [normalizarTexto(t.nome), t]));
+
+  for (let i = 0; i < linhas.length; i++) {
+    if (!String(linhas[i][idxId] || '').trim()) continue;
+    const statusNorm = normalizarStatus(linhas[i][idxSt]);
+    if (statusNorm === STATUS.DELETADO) continue;
+    const tecnico = mapa.get(normalizarTexto(linhas[i][idxTec]));
+    if (!tecnico) continue;
+    tecnico.totalServicos++;
+    if (statusNorm === 'concluido') tecnico.servicosConcluidos++;
+    if (statusNorm === 'pendente' || statusNorm === 'em andamento') tecnico.servicosPendentes++;
+  }
+
+  return montarResposta({ success: true, requestId, data: tecnicos }, 200);
 }
 
 function acaoObterTiposServico(requestId) {
@@ -760,25 +861,58 @@ function acaoCriarTecnico(dados, requestId) {
       return respostaErro('Validação falhou', 'Nome do técnico é obrigatório.', 422, requestId);
     }
 
+    // Valida vínculo, se informado.
+    const vinculo = dados.vinculo !== undefined ? normalizarTexto(dados.vinculo) : '';
+    if (vinculo && VINCULOS_PERMITIDOS.length > 0 && !VINCULOS_PERMITIDOS.includes(vinculo)) {
+      return respostaErro('Validação falhou',
+        `Vínculo inválido: "${dados.vinculo}". Permitidos: ${VINCULOS_PERMITIDOS.join(', ')}.`,
+        422, requestId);
+    }
+
     const ss = SpreadsheetApp.getActiveSpreadsheet();
     let aba = ss.getSheetByName(ABAS_CONFIG.TECNICOS);
     if (!aba) {
       aba = ss.insertSheet(ABAS_CONFIG.TECNICOS);
-      aba.appendRow(['nome', 'ativo']);
-      aba.getRange(1, 1, 1, 2).setFontWeight('bold').setBackground('#4285F4').setFontColor('#FFFFFF');
+      // Cabeçalho completo com as novas colunas.
+      aba.appendRow(['nome', 'ativo', 'cpf', 'cnpj', 'whatsapp', 'vinculo']);
+      aba.getRange(1, 1, 1, 6)
+        .setFontWeight('bold').setBackground('#4285F4').setFontColor('#FFFFFF');
       aba.setFrozenRows(1);
     }
 
-    // Verifica duplicidade
+    // Duplicidade por nome normalizado.
     const existentes = obterItensConfig(ABAS_CONFIG.TECNICOS, 'nome');
     if (existentes.some((t) => normalizarTexto(t) === normalizarTexto(nome))) {
       return respostaErro('Técnico já existe', `Já existe um técnico com o nome "${nome}".`, 409, requestId);
     }
 
-    aba.appendRow([nome, 'true']);
+    // Grava respeitando a ordem REAL do cabeçalho da aba.
+    const headers = obterHeaders(aba);
+    const registro = {
+      nome,
+      ativo: 'true',
+      cpf: dados.cpf ? sanitizarTexto(dados.cpf).replace(/\D/g, '') : '',
+      cnpj: dados.cnpj ? sanitizarTexto(dados.cnpj).replace(/\D/g, '') : '',
+      whatsapp: dados.whatsapp ? sanitizarTexto(dados.whatsapp).replace(/\D/g, '') : '',
+      vinculo: vinculo,
+    };
+    aba.appendRow(headers.map((h) => registro[normalizarTexto(h)] ?? ''));
+
     limparCacheConfig();
     registrarLog('CREATE_TECNICO', { requestId, nome });
-    return montarResposta({ success: true, requestId, data: { nome, ativo: true } }, 201);
+
+    return montarResposta({
+      success: true,
+      requestId,
+      data: {
+        nome,
+        ativo: true,
+        cpf: registro.cpf,
+        cnpj: registro.cnpj,
+        whatsapp: registro.whatsapp,
+        vinculo: registro.vinculo,
+      },
+    }, 201);
   });
 }
 
@@ -801,6 +935,7 @@ function acaoAtualizarTecnico(dados, requestId) {
     }
 
     const valores = aba.getDataRange().getDisplayValues();
+    const cabecalhos = valores[0].map(normalizarTexto);
     let linhaEncontrada = -1;
 
     for (let i = 1; i < valores.length; i++) {
@@ -809,26 +944,70 @@ function acaoAtualizarTecnico(dados, requestId) {
         break;
       }
     }
-
     if (linhaEncontrada === -1) {
       return respostaErro('Não encontrado', `Técnico "${nomeAntigo}" não encontrado.`, 404, requestId);
     }
 
+    // Validação de vínculo.
+    if (dados.vinculo !== undefined && VINCULOS_PERMITIDOS.length > 0) {
+      const v = normalizarTexto(dados.vinculo);
+      if (v && !VINCULOS_PERMITIDOS.includes(v)) {
+        return respostaErro('Validação falhou',
+          `Vínculo inválido: "${dados.vinculo}". Permitidos: ${VINCULOS_PERMITIDOS.join(', ')}.`,
+          422, requestId);
+      }
+    }
+
+    // Linha atual (por cabeçalho).
+    const atual = {};
+    cabecalhos.forEach((h, i) => { atual[h] = valores[linhaEncontrada - 1][i]; });
+
+    // Aplica atualizações — só campos presentes em `dados`.
     const camposAlterados = [];
-    const novoNome = dados.nome !== undefined ? sanitizarTexto(dados.nome) : valores[linhaEncontrada - 1][0];
-    const novoAtivo = dados.ativo !== undefined ? (dados.ativo ? 'true' : 'false') : valores[linhaEncontrada - 1][1];
+    const normalizarParaTexto = (v) => String(v ?? '').trim();
 
-    if (dados.nome !== undefined && novoNome !== valores[linhaEncontrada - 1][0]) {
-      camposAlterados.push('nome');
+    if (dados.nome !== undefined) {
+      const novoNome = sanitizarTexto(dados.nome);
+      if (novoNome !== atual.nome) { atual.nome = novoNome; camposAlterados.push('nome'); }
     }
-    if (dados.ativo !== undefined && novoAtivo !== valores[linhaEncontrada - 1][1]) {
-      camposAlterados.push('ativo');
+    if (dados.ativo !== undefined) {
+      const novoAtivo = dados.ativo ? 'true' : 'false';
+      if (novoAtivo !== normalizarTexto(atual.ativo)) { atual.ativo = novoAtivo; camposAlterados.push('ativo'); }
+    }
+    if (dados.cpf !== undefined) {
+      const novoCpf = sanitizarTexto(dados.cpf).replace(/\D/g, '');
+      if (novoCpf !== atual.cpf) { atual.cpf = novoCpf; camposAlterados.push('cpf'); }
+    }
+    if (dados.cnpj !== undefined) {
+      const novoCnpj = sanitizarTexto(dados.cnpj).replace(/\D/g, '');
+      if (novoCnpj !== atual.cnpj) { atual.cnpj = novoCnpj; camposAlterados.push('cnpj'); }
+    }
+    if (dados.whatsapp !== undefined) {
+      const novoWhats = sanitizarTexto(dados.whatsapp).replace(/\D/g, '');
+      if (novoWhats !== atual.whatsapp) { atual.whatsapp = novoWhats; camposAlterados.push('whatsapp'); }
+    }
+    if (dados.vinculo !== undefined) {
+      const novoVinculo = normalizarTexto(dados.vinculo);
+      if (novoVinculo !== normalizarTexto(atual.vinculo)) {
+        atual.vinculo = novoVinculo;
+        camposAlterados.push('vinculo');
+      }
     }
 
-    aba.getRange(linhaEncontrada, 1, 1, 2).setValues([[novoNome, novoAtivo]]);
+    // Regrava a linha inteira preservando a ordem do cabeçalho.
+    const novaLinha = cabecalhos.map((h) => atual[h] ?? '');
+    aba.getRange(linhaEncontrada, 1, 1, novaLinha.length).setValues([novaLinha]);
+
     limparCacheConfig();
     registrarLog('UPDATE_TECNICO', { requestId, nomeAntigo, camposAlterados });
-    return montarResposta({ success: true, requestId, data: { nome: novoNome, ativo: novoAtivo === 'true' } }, 200);
+
+    const resposta = { nome: atual.nome, ativo: normalizarTexto(atual.ativo) === 'true' };
+    if ('cpf' in atual) resposta.cpf = atual.cpf;
+    if ('cnpj' in atual) resposta.cnpj = atual.cnpj;
+    if ('whatsapp' in atual) resposta.whatsapp = atual.whatsapp;
+    if ('vinculo' in atual) resposta.vinculo = atual.vinculo;
+
+    return montarResposta({ success: true, requestId, data: resposta }, 200);
   });
 }
 
@@ -1582,4 +1761,46 @@ function migrarParaTexto() {
 function limparCacheConfig() {
   const cache = CacheService.getScriptCache();
   cache.removeAll(Object.keys(ABAS_CONFIG).map((k) => `cfg:${ABAS_CONFIG[k]}`));
+}
+
+/**
+ * [USO MANUAL] Adiciona as colunas cpf, cnpj, whatsapp e vinculo na aba
+ * "Tecnicos" se ainda não existirem. Idempotente e não destrutivo.
+ */
+function inicializarColunasTecnicos() {
+  const ui = SpreadsheetApp.getUi();
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const aba = ss.getSheetByName(ABAS_CONFIG.TECNICOS);
+  if (!aba) {
+    ui.alert('A aba "Tecnicos" não existe. Execute inicializarAbasConfig() primeiro.');
+    return;
+  }
+
+  const ultimaColuna = Math.max(aba.getLastColumn(), 1);
+  const headers = aba.getRange(1, 1, 1, ultimaColuna).getDisplayValues()[0]
+    .map((h) => String(h).trim());
+
+  const faltantes = COLUNAS_TECNICO_OPCIONAIS
+    .filter((c) => !headers.map(normalizarTexto).includes(normalizarTexto(c)));
+
+  if (faltantes.length === 0) {
+    ui.alert('✅ A aba já possui todas as colunas opcionais.');
+    return;
+  }
+
+  // Adiciona ao final, preservando os dados existentes.
+  const inicio = ultimaColuna + 1;
+  const linhaCabecalho = aba.getRange(1, inicio, 1, faltantes.length);
+  // Texto puro para CPF/CNPJ/WhatsApp não virarem número.
+  aba.getRange(1, inicio, aba.getMaxRows(), faltantes.length).setNumberFormat('@');
+  linhaCabecalho.setValues([faltantes]);
+  linhaCabecalho.setFontWeight('bold').setBackground('#4285F4').setFontColor('#FFFFFF');
+
+  // Larguras amigáveis.
+  faltantes.forEach((col, i) => {
+    const largura = col === 'whatsapp' ? 130 : col === 'vinculo' ? 130 : 140;
+    aba.setColumnWidth(inicio + i, largura);
+  });
+
+  ui.alert(`✅ Colunas adicionadas: ${faltantes.join(', ')}.`);
 }

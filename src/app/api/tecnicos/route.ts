@@ -1,165 +1,137 @@
 // src/app/api/tecnicos/route.ts
-// Cliente HTTP para CRUD de técnicos — todas as chamadas via POST
+// Route Handler HTTP para CRUD de técnicos.
 
-const API_BASE = "/api/config";
+import { NextRequest, NextResponse } from "next/server";
 
-export interface Tecnico {
-  nome: string;
-  ativo: boolean;
+import {
+  createTecnico,
+  deleteTecnico,
+  getTecnicos,
+  getTecnicosComStats,
+  updateTecnico,
+} from "@/lib/api/tecnicos.server";
+import { gasErrorToResponse } from "@/lib/gas/client";
+
+export const dynamic = "force-dynamic";
+
+function respondError(err: unknown) {
+  const { body, status } = gasErrorToResponse(err);
+  return NextResponse.json(body, { status });
 }
 
-export interface TecnicoStats {
-  nome: string;
-  ativo: boolean;
-  totalServicos: number;
-  servicosConcluidos: number;
-  servicosPendentes: number;
-}
-
-/**
- * Cliente genérico para o Apps Script.
- * Todas as ações usam POST com { action, data }.
- */
-async function apiFetch<T>(
-  action: string,
-  data?: Record<string, unknown>,
-): Promise<T> {
-  const response = await fetch(API_BASE, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ action, data }),
-    cache: "no-store",
-  });
-
-  if (!response.ok) {
-    const text = await response.text().catch(() => "Erro desconhecido");
-    throw new Error(`HTTP ${response.status}: ${text.substring(0, 200)}`);
+// GET — lista técnicos. `?stats=1` inclui estatísticas.
+export async function GET(request: NextRequest) {
+  const { searchParams } = new URL(request.url);
+  const comStats = searchParams.get("stats") === "1";
+  try {
+    const data = comStats ? await getTecnicosComStats() : await getTecnicos();
+    return NextResponse.json({ success: true, data });
+  } catch (err) {
+    return respondError(err);
   }
-
-  const result = await response.json();
-
-  // Apps Script sempre retorna 200, mas o status lógico vem no body
-  if (result?._httpStatus && result._httpStatus >= 400) {
-    throw new Error(
-      result.details
-        ? `${result.error || "Erro"} (${result.details})`
-        : result.error || "Erro desconhecido do servidor",
+}
+// POST — cria técnico. Body: { nome: string }.
+export async function POST(request: NextRequest) {
+  let body: Record<string, unknown>;
+  try {
+    body = await request.json();
+  } catch {
+    return NextResponse.json(
+      { success: false, error: "JSON inválido" },
+      { status: 400 },
     );
   }
 
-  if (!result || result.success !== true) {
-    const errorMsg = result?.error || "Erro desconhecido do servidor";
-    const details = result?.details;
-    throw new Error(details ? `${errorMsg} (${details})` : errorMsg);
+  const nome = typeof body.nome === "string" ? body.nome.trim() : "";
+  if (!nome) {
+    return NextResponse.json(
+      { success: false, error: "Campo 'nome' é obrigatório" },
+      { status: 400 },
+    );
   }
 
-  return result;
-}
-
-/**
- * Normaliza um item bruto da API em { nome, ativo }.
- * Suporta tanto string[] (legado) quanto { nome, ativo }[] (novo).
- */
-function normalizarTecnico(
-  item: unknown,
-): { nome: string; ativo: boolean } | null {
-  if (typeof item === "string") {
-    const nome = item.trim();
-    return nome ? { nome, ativo: true } : null;
-  }
-  if (item && typeof item === "object") {
-    const obj = item as Record<string, unknown>;
-    const nome = String(obj?.nome ?? "").trim();
-    if (!nome) return null;
-    const ativoRaw = obj?.ativo;
-    const ativo =
-      ativoRaw === undefined ||
-      ativoRaw === true ||
-      ["true", "sim", "yes", "1", "x"].includes(String(ativoRaw).toLowerCase());
-    return { nome, ativo };
-  }
-  return null;
-}
-
-/**
- * Lista todos os técnicos (ativos e inativos).
- * Usa GET_TECNICOS via POST — o endpoint /api/config só aceita POST.
- */
-export async function getTecnicos(): Promise<Tecnico[]> {
-  const result = await apiFetch<{ data: unknown[] }>('GET_TECNICOS', {});
-  return (result.data || []).map((item: unknown) => {
-    if (typeof item === 'string') {
-      return { nome: item.trim(), ativo: true };
-    }
-    if (item && typeof item === 'object') {
-      const obj = item as Record<string, unknown>;
-      return {
-        nome: String(obj?.nome ?? '').trim(),
-        ativo: obj?.ativo !== false,
-      };
-    }
-    return null;
-  }).filter((t): t is Tecnico => t !== null);
-}
-
-/**
- * Lista técnicos com estatísticas de serviços.
- */
-export async function getTecnicosComStats(): Promise<TecnicoStats[]> {
-  // 1) Busca técnicos via POST
-  const tecnicosResult = await apiFetch<{ data: unknown[] }>('GET_TECNICOS', {});
-
-  // 2) Busca estatísticas
-  let porTecnico: Record<string, number> = {};
   try {
-    const statsResult = await apiFetch<{
-      data: { porTecnico?: Record<string, number> };
-    }>('STATS', {});
-    porTecnico = statsResult.data?.porTecnico || {};
+    const data = await createTecnico({
+      nome,
+      cpf: typeof body.cpf === "string" ? body.cpf : undefined,
+      cnpj: typeof body.cnpj === "string" ? body.cnpj : undefined,
+      whatsapp: typeof body.whatsapp === "string" ? body.whatsapp : undefined,
+      vinculo: typeof body.vinculo === "string" ? body.vinculo : undefined,
+    });
+    return NextResponse.json({ success: true, data }, { status: 201 });
+  } catch (err) {
+    return respondError(err);
+  }
+}
+
+// PATCH — atualiza técnico. Body: { nomeAntigo, nome?, ativo? }.
+export async function PATCH(request: NextRequest) {
+  let body: Record<string, unknown>;
+  try {
+    body = await request.json();
   } catch {
-    // stats opcional
+    return NextResponse.json(
+      { success: false, error: "JSON inválido" },
+      { status: 400 },
+    );
   }
 
-  // 3) Normaliza e mapeia
-  return (tecnicosResult.data || [])
-    .map((item: unknown) => {
-      if (typeof item === 'string') {
-        return { nome: item.trim(), ativo: true };
-      }
-      if (item && typeof item === 'object') {
-        const obj = item as Record<string, unknown>;
-        const nome = String(obj?.nome ?? '').trim();
-        const ativo = obj?.ativo !== false;
-        return nome ? { nome, ativo } : null;
-      }
-      return null;
-    })
-    .filter((t): t is { nome: string; ativo: boolean } => t !== null)
-    .map((t) => ({
-      nome: t.nome,
-      ativo: t.ativo,
-      totalServicos: porTecnico[t.nome] ?? 0,
-      servicosConcluidos: 0,
-      servicosPendentes: 0,
-    }));
+  const nomeAntigo =
+    typeof body.nomeAntigo === "string" ? body.nomeAntigo.trim() : "";
+  if (!nomeAntigo) {
+    return NextResponse.json(
+      { success: false, error: "Campo 'nomeAntigo' é obrigatório" },
+      { status: 400 },
+    );
+  }
+
+  const updates: Record<string, string | boolean> = {};
+  if (typeof body.nome === "string") updates.nome = body.nome.trim();
+  if (typeof body.ativo === "boolean") updates.ativo = body.ativo;
+  if (typeof body.cpf === "string") updates.cpf = body.cpf;
+  if (typeof body.cnpj === "string") updates.cnpj = body.cnpj;
+  if (typeof body.whatsapp === "string") updates.whatsapp = body.whatsapp;
+  if (typeof body.vinculo === "string") updates.vinculo = body.vinculo;
+
+  if (Object.keys(updates).length === 0) {
+    return NextResponse.json(
+      { success: false, error: "Nenhum campo para atualizar" },
+      { status: 400 },
+    );
+  }
+
+  try {
+    const data = await updateTecnico(nomeAntigo, updates);
+    return NextResponse.json({ success: true, data });
+  } catch (err) {
+    return respondError(err);
+  }
 }
 
-export async function createTecnico(nome: string): Promise<Tecnico> {
-  const result = await apiFetch<{ data: Tecnico }>("CREATE_TECNICO", { nome });
-  return result.data;
-}
+// DELETE — remove técnico. Body: { nome: string }.
+export async function DELETE(request: NextRequest) {
+  let body: { nome?: unknown };
+  try {
+    body = await request.json();
+  } catch {
+    return NextResponse.json(
+      { success: false, error: "JSON inválido" },
+      { status: 400 },
+    );
+  }
 
-export async function updateTecnico(
-  nomeAntigo: string,
-  updates: { nome?: string; ativo?: boolean },
-): Promise<Tecnico> {
-  const result = await apiFetch<{ data: Tecnico }>("UPDATE_TECNICO", {
-    nomeAntigo,
-    ...updates,
-  });
-  return result.data;
-}
+  const nome = typeof body.nome === "string" ? body.nome.trim() : "";
+  if (!nome) {
+    return NextResponse.json(
+      { success: false, error: "Campo 'nome' é obrigatório" },
+      { status: 400 },
+    );
+  }
 
-export async function deleteTecnico(nome: string): Promise<void> {
-  await apiFetch("DELETE_TECNICO", { nome });
+  try {
+    await deleteTecnico(nome);
+    return NextResponse.json({ success: true });
+  } catch (err) {
+    return respondError(err);
+  }
 }

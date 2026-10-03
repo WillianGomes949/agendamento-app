@@ -23,27 +23,115 @@ import { Input } from "@/components/ui/Input";
 import { Modal } from "@/components/modals/Modal";
 import { DeleteConfirmModal } from "@/components/modals/DeleteConfirmModal";
 import { Toaster, toast } from "react-hot-toast";
-import {
-  getTecnicosComStats,
-  createTecnico,
-  updateTecnico,
-  deleteTecnico,
-} from "@/app/api/tecnicos/route";
+import type { TecnicoStats } from "@/lib/api/tecnicos.types";
 
-interface TecnicoStats {
+// ─────────────────────────────────────────────────────────────────────────────
+//  Tipos e estado do formulário
+// ─────────────────────────────────────────────────────────────────────────────
+
+type FormState = {
   nome: string;
-  ativo: boolean; 
-  totalServicos: number;
-  servicosConcluidos: number;
-  servicosPendentes: number;
+  cpf: string;
+  cnpj: string;
+  whatsapp: string;
+  vinculo: string;
+};
+
+const FORM_VAZIO: FormState = {
+  nome: "",
+  cpf: "",
+  cnpj: "",
+  whatsapp: "",
+  vinculo: "",
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
+//  Cliente HTTP — fala com /api/tecnicos (Route Handler).
+//  Nunca importar `tecnicos.server.ts` aqui: aquele módulo depende de
+//  `server-only` e quebraria o bundle do cliente.
+// ─────────────────────────────────────────────────────────────────────────────
+
+async function apiFetch<T>(input: string, init?: RequestInit): Promise<T> {
+  const res = await fetch(input, {
+    ...init,
+    headers: {
+      "Content-Type": "application/json",
+      ...(init?.headers ?? {}),
+    },
+    cache: "no-store",
+  });
+
+  let json: unknown = null;
+  try {
+    json = await res.json();
+  } catch {
+    // resposta sem corpo JSON
+  }
+
+  const body = json as {
+    success?: boolean;
+    data?: T;
+    error?: string;
+    details?: string;
+  } | null;
+
+  if (!res.ok || (body && body.success === false)) {
+    const msg = body?.error ?? `HTTP ${res.status}`;
+    const details = body?.details ? ` (${body.details})` : "";
+    throw new Error(`${msg}${details}`);
+  }
+
+  return (body?.data ?? (body as unknown)) as T;
 }
+
+async function getTecnicosComStats(): Promise<TecnicoStats[]> {
+  return apiFetch<TecnicoStats[]>("/api/tecnicos?stats=1");
+}
+
+async function createTecnico(input: {
+  nome: string;
+  cpf?: string;
+  cnpj?: string;
+  whatsapp?: string;
+  vinculo?: string;
+}): Promise<void> {
+  await apiFetch("/api/tecnicos", {
+    method: "POST",
+    body: JSON.stringify(input),
+  });
+}
+
+async function updateTecnico(
+  nomeAntigo: string,
+  updates: {
+    nome?: string;
+    ativo?: boolean;
+    cpf?: string;
+    cnpj?: string;
+    whatsapp?: string;
+    vinculo?: string;
+  },
+): Promise<void> {
+  await apiFetch("/api/tecnicos", {
+    method: "PATCH",
+    body: JSON.stringify({ nomeAntigo, ...updates }),
+  });
+}
+
+async function deleteTecnico(nome: string): Promise<void> {
+  await apiFetch("/api/tecnicos", {
+    method: "DELETE",
+    body: JSON.stringify({ nome }),
+  });
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+//  Animações
+// ─────────────────────────────────────────────────────────────────────────────
 
 const containerVariants: Variants = {
   hidden: { opacity: 0 },
-  show: {
-    opacity: 1,
-    transition: { staggerChildren: 0.05 },
-  },
+  show: { opacity: 1, transition: { staggerChildren: 0.05 } },
 };
 
 const itemVariants: Variants = {
@@ -54,6 +142,10 @@ const itemVariants: Variants = {
     transition: { type: "spring", stiffness: 300, damping: 24 },
   },
 };
+
+// ─────────────────────────────────────────────────────────────────────────────
+//  Componente
+// ─────────────────────────────────────────────────────────────────────────────
 
 export default function TecnicosPage() {
   const [tecnicos, setTecnicos] = useState<TecnicoStats[]>([]);
@@ -72,7 +164,7 @@ export default function TecnicosPage() {
   const [deletingTecnico, setDeletingTecnico] = useState<TecnicoStats | null>(
     null,
   );
-  const [formData, setFormData] = useState({ nome: "" });
+  const [formData, setFormData] = useState<FormState>(FORM_VAZIO);
   const [formError, setFormError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -114,15 +206,19 @@ export default function TecnicosPage() {
       setFormError("Nome é obrigatório");
       return;
     }
-
     setIsSubmitting(true);
     setFormError("");
-
     try {
-      await createTecnico(formData.nome.trim());
+      await createTecnico({
+        nome: formData.nome.trim(),
+        cpf: formData.cpf.trim() || undefined,
+        cnpj: formData.cnpj.trim() || undefined,
+        whatsapp: formData.whatsapp.trim() || undefined,
+        vinculo: formData.vinculo.trim() || undefined,
+      });
       toast.success("Técnico criado com sucesso!");
       setIsFormOpen(false);
-      setFormData({ nome: "" });
+      setFormData(FORM_VAZIO);
       await carregarTecnicos();
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Erro ao criar técnico";
@@ -131,23 +227,27 @@ export default function TecnicosPage() {
     } finally {
       setIsSubmitting(false);
     }
-  }, [formData.nome, carregarTecnicos]);
+  }, [formData, carregarTecnicos]);
 
   const handleUpdate = useCallback(async () => {
     if (!editingTecnico || !formData.nome.trim()) {
       setFormError("Nome é obrigatório");
       return;
     }
-
     setIsSubmitting(true);
     setFormError("");
-
     try {
-      await updateTecnico(editingTecnico.nome, { nome: formData.nome.trim() });
+      await updateTecnico(editingTecnico.nome, {
+        nome: formData.nome.trim(),
+        cpf: formData.cpf.trim(),
+        cnpj: formData.cnpj.trim(),
+        whatsapp: formData.whatsapp.trim(),
+        vinculo: formData.vinculo.trim(),
+      });
       toast.success("Técnico atualizado com sucesso!");
       setIsFormOpen(false);
       setEditingTecnico(null);
-      setFormData({ nome: "" });
+      setFormData(FORM_VAZIO);
       await carregarTecnicos();
     } catch (err) {
       const msg =
@@ -157,7 +257,7 @@ export default function TecnicosPage() {
     } finally {
       setIsSubmitting(false);
     }
-  }, [editingTecnico, formData.nome, carregarTecnicos]);
+  }, [editingTecnico, formData, carregarTecnicos]);
 
   const handleToggleAtivo = useCallback(
     async (tecnico: TecnicoStats) => {
@@ -191,15 +291,28 @@ export default function TecnicosPage() {
 
   const openEditForm = useCallback((tecnico: TecnicoStats) => {
     setEditingTecnico(tecnico);
-    setFormData({ nome: tecnico.nome });
+    setFormData({
+      nome: tecnico.nome,
+      cpf: tecnico.cpf ?? "",
+      cnpj: tecnico.cnpj ?? "",
+      whatsapp: tecnico.whatsapp ?? "",
+      vinculo: tecnico.vinculo ?? "",
+    });
     setIsFormOpen(true);
     setFormError("");
   }, []);
 
   const openCreateForm = useCallback(() => {
     setEditingTecnico(null);
-    setFormData({ nome: "" });
+    setFormData(FORM_VAZIO);
     setIsFormOpen(true);
+    setFormError("");
+  }, []);
+
+  const closeForm = useCallback(() => {
+    setIsFormOpen(false);
+    setEditingTecnico(null);
+    setFormData(FORM_VAZIO);
     setFormError("");
   }, []);
 
@@ -456,7 +569,6 @@ export default function TecnicosPage() {
             {tecnicosFiltrados.map((tecnico) => (
               <motion.div key={tecnico.nome} variants={itemVariants} layout>
                 <Card className="p-6 bg-white shadow-sm hover:shadow-md border border-slate-100 rounded-2xl transition-all duration-300 relative overflow-hidden">
-                  {/* Indicador de status */}
                   <div
                     className={`absolute top-0 left-0 w-full h-1 ${
                       tecnico.ativo ? "bg-emerald-500" : "bg-slate-300"
@@ -468,7 +580,7 @@ export default function TecnicosPage() {
                       <div
                         className={`w-12 h-12 rounded-2xl flex items-center justify-center font-bold text-lg ${
                           tecnico.ativo
-                            ? "bg-gradient-to-br from-blue-500 to-indigo-600 text-white"
+                            ? "bg-linear-to-br from-blue-500 to-indigo-600 text-white"
                             : "bg-slate-200 text-slate-500"
                         }`}
                       >
@@ -493,12 +605,16 @@ export default function TecnicosPage() {
                             )}
                             {tecnico.ativo ? "Ativo" : "Inativo"}
                           </span>
+                          {tecnico.vinculo && (
+                            <span className="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-bold uppercase tracking-wider bg-slate-50 text-slate-600 ring-1 ring-inset ring-slate-500/20">
+                              {tecnico.vinculo}
+                            </span>
+                          )}
                         </div>
                       </div>
                     </div>
                   </div>
 
-                  {/* Estatísticas */}
                   <div className="bg-slate-50/50 border border-slate-100 rounded-xl p-4 mb-4">
                     <div className="grid grid-cols-3 gap-3 text-center">
                       <div>
@@ -528,7 +644,35 @@ export default function TecnicosPage() {
                     </div>
                   </div>
 
-                  {/* Ações */}
+                  {(tecnico.whatsapp || tecnico.cpf || tecnico.cnpj) && (
+                    <div className="space-y-1.5 mb-4 text-sm text-slate-600">
+                      {tecnico.whatsapp && (
+                        <p>
+                          <span className="font-semibold text-slate-500">
+                            WhatsApp:
+                          </span>{" "}
+                          {tecnico.whatsapp}
+                        </p>
+                      )}
+                      {tecnico.cpf && (
+                        <p>
+                          <span className="font-semibold text-slate-500">
+                            CPF:
+                          </span>{" "}
+                          {tecnico.cpf}
+                        </p>
+                      )}
+                      {tecnico.cnpj && (
+                        <p>
+                          <span className="font-semibold text-slate-500">
+                            CNPJ:
+                          </span>{" "}
+                          {tecnico.cnpj}
+                        </p>
+                      )}
+                    </div>
+                  )}
+
                   <div className="flex items-center justify-between pt-4 border-t border-slate-100">
                     <button
                       onClick={() => handleToggleAtivo(tecnico)}
@@ -576,12 +720,7 @@ export default function TecnicosPage() {
       {/* Modal de Criar/Editar */}
       <Modal
         isOpen={isFormOpen}
-        onClose={() => {
-          setIsFormOpen(false);
-          setEditingTecnico(null);
-          setFormData({ nome: "" });
-          setFormError("");
-        }}
+        onClose={closeForm}
         title={
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 bg-slate-900 rounded-xl flex items-center justify-center shadow-sm">
@@ -610,19 +749,66 @@ export default function TecnicosPage() {
           className="space-y-6"
         >
           <div className="space-y-5">
-            <div>
+            <Input
+              label="Nome do Técnico"
+              placeholder="Ex: João Silva"
+              value={formData.nome}
+              onChange={(e) => {
+                setFormData((f) => ({ ...f, nome: e.target.value }));
+                setFormError("");
+              }}
+              error={formError}
+              required
+              autoFocus
+            />
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <Input
-                label="Nome do Técnico"
-                placeholder="Ex: João Silva"
-                value={formData.nome}
-                onChange={(e) => {
-                  setFormData({ nome: e.target.value });
-                  setFormError("");
-                }}
-                error={formError}
-                required
-                autoFocus
+                label="CPF"
+                placeholder="000.000.000-00"
+                value={formData.cpf}
+                onChange={(e) =>
+                  setFormData((f) => ({ ...f, cpf: e.target.value }))
+                }
               />
+              <Input
+                label="CNPJ"
+                placeholder="00.000.000/0000-00"
+                value={formData.cnpj}
+                onChange={(e) =>
+                  setFormData((f) => ({ ...f, cnpj: e.target.value }))
+                }
+              />
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <Input
+                label="WhatsApp"
+                placeholder="(11) 99999-9999"
+                value={formData.whatsapp}
+                onChange={(e) =>
+                  setFormData((f) => ({ ...f, whatsapp: e.target.value }))
+                }
+              />
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1.5">
+                  Vínculo
+                </label>
+                <select
+                  value={formData.vinculo}
+                  onChange={(e) =>
+                    setFormData((f) => ({ ...f, vinculo: e.target.value }))
+                  }
+                  className="w-full px-3 py-2.5 bg-white border border-slate-200 rounded-xl text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+                >
+                  <option value="">Selecione…</option>
+                  <option value="clt">CLT</option>
+                  <option value="pj">PJ</option>
+                  <option value="terceirizado">Terceirizado</option>
+                  <option value="autonomo">Autônomo</option>
+                  <option value="estagio">Estágio</option>
+                </select>
+              </div>
             </div>
           </div>
 
@@ -637,12 +823,7 @@ export default function TecnicosPage() {
             <Button
               type="button"
               variant="outline"
-              onClick={() => {
-                setIsFormOpen(false);
-                setEditingTecnico(null);
-                setFormData({ nome: "" });
-                setFormError("");
-              }}
+              onClick={closeForm}
               disabled={isSubmitting}
               className="w-full sm:w-auto"
             >

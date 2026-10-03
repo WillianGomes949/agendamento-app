@@ -1,110 +1,93 @@
 // src/app/api/config/route.ts
-// Route Handler para configurações (técnicos, tipos, horários)
-// Suporta GET (legado) e POST (novo padrão)
-
 import { NextRequest, NextResponse } from "next/server";
 
-const GAS_URL = process.env.GAS_URL || "";
-const API_KEY = process.env.GAS_API_KEY || "";
+import { isTipoConfig, TIPO_TO_ACTION } from "@/lib/api/config.server";
+import { fetchGas, gasErrorToResponse } from "@/lib/gas/client";
 
-async function fetchGas(action: string, data: Record<string, unknown> = {}) {
-  if (!GAS_URL) throw new Error("GAS_URL não configurada");
+export const dynamic = "force-dynamic";
 
-  const url = new URL(GAS_URL);
-  if (API_KEY) url.searchParams.set("key", API_KEY);
-
-  const response = await fetch(url.toString(), {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ action, data }),
-    cache: "no-store",
-  });
-
-  if (!response.ok) {
-    const text = await response.text();
-    throw new Error(`HTTP ${response.status}: ${text.substring(0, 200)}`);
-  }
-
-  return response.json();
-}
-
-/**
- * GET legado — mantém compatibilidade com chamadas via ?tipo=tecnicos
- */
+/** GET legado — `?tipo=tecnicos`. @deprecated prefira POST. */
 export async function GET(request: NextRequest) {
-  try {
-    const { searchParams } = new URL(request.url);
-    const tipo = searchParams.get("tipo");
+  const { searchParams } = new URL(request.url);
+  const tipo = searchParams.get("tipo") ?? "";
 
-    let action: string;
-    switch (tipo) {
-      case "status":
-        action = "GET_STATUS";
-        break;
-      case "tecnicos":
-        action = "GET_TECNICOS";
-        break;
-      case "tipos":
-        action = "GET_TIPOS";
-        break;
-      case "horarios":
-        action = "GET_HORARIOS";
-        break;
-      default:
-        return NextResponse.json(
-          {
-            success: false,
-            error: "Tipo inválido. Use: tecnicos, tipos, horarios, status",
-          },
-          { status: 400 },
-        );
-    }
-
-    const result = await fetchGas(action);
-    return NextResponse.json(result);
-  } catch (err) {
-    console.error("[API Config GET] Erro:", err);
+  if (!isTipoConfig(tipo)) {
     return NextResponse.json(
       {
         success: false,
-        error: err instanceof Error ? err.message : "Erro interno",
+        error: "Tipo inválido.",
+        details: "Use: tecnicos, tipos, horarios, status.",
       },
-      { status: 500 },
+      { status: 400 },
     );
+  }
+
+  try {
+    const result = await fetchGas(TIPO_TO_ACTION[tipo]);
+    return NextResponse.json(result);
+  } catch (err) {
+    const { body, status } = gasErrorToResponse(err);
+    return NextResponse.json(body, { status });
   }
 }
 
-/**
- * POST — novo padrão usado por /api/tecnicos/route.ts
- * Recebe { action, data } e encaminha para o Apps Script.
- */
+/** POST — padrão atual. */
 export async function POST(request: NextRequest) {
+  let body: unknown;
   try {
-    const body = await request.json();
-    const { action, data } = body;
-
-    if (!action || typeof action !== "string") {
-      return NextResponse.json(
-        {
-          success: false,
-          error: "Action é obrigatória",
-          details: "Envie { action: string, data?: object }",
-        },
-        { status: 400 },
-      );
-    }
-
-    const result = await fetchGas(action.toUpperCase(), data || {});
-    return NextResponse.json(result);
-  } catch (err) {
-    console.error("[API Config POST] Erro:", err);
+    body = await request.json();
+  } catch {
     return NextResponse.json(
       {
         success: false,
-        error: err instanceof Error ? err.message : "Erro interno",
-        details: "Falha ao processar requisição",
+        error: "JSON inválido",
+        details: "O corpo deve ser um objeto: { action, data? }.",
       },
-      { status: 500 },
+      { status: 400 },
     );
+  }
+
+  if (
+    !body ||
+    typeof body !== "object" ||
+    Array.isArray(body) ||
+    typeof (body as { action?: unknown }).action !== "string" ||
+    !(body as { action: string }).action.trim()
+  ) {
+    return NextResponse.json(
+      {
+        success: false,
+        error: "Action é obrigatória",
+        details: "Envie { action: string, data?: object }.",
+      },
+      { status: 400 },
+    );
+  }
+
+  const { action, data } = body as {
+    action: string;
+    data?: Record<string, unknown>;
+  };
+
+  if (
+    data !== undefined &&
+    (typeof data !== "object" || data === null || Array.isArray(data))
+  ) {
+    return NextResponse.json(
+      {
+        success: false,
+        error: "Campo 'data' inválido",
+        details: "Deve ser um objeto.",
+      },
+      { status: 400 },
+    );
+  }
+
+  try {
+    const result = await fetchGas(action.toUpperCase(), data ?? {});
+    return NextResponse.json(result);
+  } catch (err) {
+    const { body: errBody, status } = gasErrorToResponse(err);
+    return NextResponse.json(errBody, { status });
   }
 }
