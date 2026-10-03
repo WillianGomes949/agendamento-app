@@ -7,26 +7,25 @@ import { Select } from "@/components/ui/Select";
 import { Button } from "@/components/ui/Button";
 import { Modal } from "@/components/modals/Modal";
 import { Spinner } from "@/components/ui/Spinner";
-import type { Servico } from "@/lib/types";
 import { formularioServicoSchema, type FormularioSchema } from "@/lib/schemas";
 import { useConfig } from "@/hooks/useConfig";
 import { AdvancedAddressSearch } from "@/components/ui/AdvancedAddressSearch";
 import { Car, Notebook, NotepadText, Pin, ToolCase, User } from "lucide-react";
+import type { FormularioServico, Servico } from "@/lib/types";
 
 interface Props {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (data: FormularioSchema & { status?: string }) => void;
+  onSubmit: (data: FormularioServico) => void | Promise<void>;
   initialData?: Servico | null;
   isLoading?: boolean;
 }
-
 const INITIAL_FORM: FormularioSchema & { status?: string } = {
   tecnico: "",
   data: "",
   horario: "",
   tipoServico: "",
-  status: "PENDENTE",
+  status: "pendente",
   ordemServico: null,
   cliente: { nome: "", contato: "" },
   veiculo: { placa: "", marcaModelo: "" },
@@ -88,7 +87,7 @@ export default function ServicoForm({
         data: initialData.data || "",
         horario: extrairHorario(initialData.horario),
         tipoServico: initialData.tipoServico || "",
-        status: initialData.status || "PENDENTE",
+        status: initialData.status || "pendente",
         ordemServico: initialData.ordemServico || null,
         cliente: {
           nome: initialData.cliente?.nome || "",
@@ -117,38 +116,46 @@ export default function ServicoForm({
   }, [initialData, isOpen]);
 
   const updateField = useCallback(
-  (section: string, field: string, value: string) => {
-    setForm((prev) => {
-      // Verifica se é uma seção aninhada (cliente, veiculo, endereco)
-      if (section === "cliente" || section === "veiculo" || section === "endereco") {
-        const sectionData = prev[section as keyof typeof prev];
-        
-        // Garante que sectionData é um objeto antes de fazer spread
-        if (sectionData && typeof sectionData === 'object' && !Array.isArray(sectionData)) {
-          return {
-            ...prev,
-            [section]: {
-              ...sectionData,
-              [field]: value,
-            },
-          };
+    (section: string, field: string, value: string) => {
+      setForm((prev) => {
+        // Verifica se é uma seção aninhada (cliente, veiculo, endereco)
+        if (
+          section === "cliente" ||
+          section === "veiculo" ||
+          section === "endereco"
+        ) {
+          const sectionData = prev[section as keyof typeof prev];
+
+          // Garante que sectionData é um objeto antes de fazer spread
+          if (
+            sectionData &&
+            typeof sectionData === "object" &&
+            !Array.isArray(sectionData)
+          ) {
+            return {
+              ...prev,
+              [section]: {
+                ...sectionData,
+                [field]: value,
+              },
+            };
+          }
         }
-      }
-      
-      // Para campos normais (não aninhados)
-      return { ...prev, [section]: value };
-    });
-    
-    const errorKey = field ? `${section}.${field}` : section;
-    if (touched[errorKey])
-      setErrors((prev) => {
-        const next = { ...prev };
-        delete next[errorKey];
-        return next;
+
+        // Para campos normais (não aninhados)
+        return { ...prev, [section]: value };
       });
-  },
-  [touched],
-);
+
+      const errorKey = field ? `${section}.${field}` : section;
+      if (touched[errorKey])
+        setErrors((prev) => {
+          const next = { ...prev };
+          delete next[errorKey];
+          return next;
+        });
+    },
+    [touched],
+  );
 
   const handleBlur = (section: string, field?: string) => {
     setTouched((prev) => ({
@@ -242,7 +249,7 @@ export default function ServicoForm({
       title={
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 bg-slate-900 rounded-xl flex items-center justify-center shadow-sm">
-            <NotepadText className="w-4 h-4 text-slate-50"/>
+            <NotepadText className="w-4 h-4 text-slate-50" />
           </div>
           <div>
             <h2 className="text-xl font-bold text-slate-900 tracking-tight">
@@ -271,7 +278,11 @@ export default function ServicoForm({
       <form onSubmit={handleSubmit} className="space-y-6">
         <FormSection
           title="Informações Gerais"
-          icon={<span className="text-lg leading-none"><ToolCase className="w-4 h-4"/></span>}
+          icon={
+            <span className="text-lg leading-none">
+              <ToolCase className="w-4 h-4" />
+            </span>
+          }
         >
           <div data-field="tecnico">
             <Select
@@ -347,7 +358,11 @@ export default function ServicoForm({
 
         <FormSection
           title="Dados do Cliente"
-          icon={<span className="text-lg leading-none"><User className="w-4 h-4"/></span>}
+          icon={
+            <span className="text-lg leading-none">
+              <User className="w-4 h-4" />
+            </span>
+          }
         >
           <div data-field="cliente.nome" className="md:col-span-2">
             <Input
@@ -382,7 +397,11 @@ export default function ServicoForm({
 
         <FormSection
           title="Veículo"
-          icon={<span className="text-lg leading-none"><Car className="w-4 h-4"/></span>}
+          icon={
+            <span className="text-lg leading-none">
+              <Car className="w-4 h-4" />
+            </span>
+          }
         >
           <div data-field="veiculo.placa">
             <Input
@@ -423,7 +442,9 @@ export default function ServicoForm({
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-200/60">
             <div className="flex items-center gap-3">
               <div className="w-8 h-8 rounded-lg bg-slate-200/50 flex items-center justify-center text-slate-600">
-                <span className="text-lg leading-none"><Pin className="w-4 h-4"/></span>
+                <span className="text-lg leading-none">
+                  <Pin className="w-4 h-4" />
+                </span>
               </div>
               <h3 className="font-bold text-slate-900 text-base">
                 Localização
@@ -561,7 +582,9 @@ export default function ServicoForm({
         <div className="bg-slate-50/50 border border-slate-100 rounded-2xl p-5 sm:p-6 space-y-4">
           <div className="flex items-center gap-3 pb-3 border-b border-slate-200/60">
             <div className="w-8 h-8 rounded-lg bg-slate-200/50 flex items-center justify-center text-slate-600">
-              <span className="text-lg leading-none"><Notebook className="w-4 h-4"/></span>
+              <span className="text-lg leading-none">
+                <Notebook className="w-4 h-4" />
+              </span>
             </div>
             <h3 className="font-bold text-slate-900 text-base">Observações</h3>
           </div>

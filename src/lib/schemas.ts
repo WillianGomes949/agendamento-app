@@ -1,6 +1,19 @@
 // src/lib/schemas.ts
 import { z } from "zod";
 
+export const statusServicoEnum = z.enum([
+  "pendente",
+  "em andamento",
+  "concluido",
+  "cancelado",
+  "deletado",
+  "PENDENTE",
+  "EM ANDAMENTO",
+  "CONCLUIDO",
+  "CANCELADO",
+  "DELETADO",
+]);
+
 export const clienteSchema = z.object({
   nome: z.string().min(1, "Nome do cliente é obrigatório"),
   contato: z
@@ -34,9 +47,8 @@ export const formularioServicoSchema = z.object({
       /^([01]\d|2[0-3]):([0-5]\d)$/,
       "Horário deve estar no formato HH:MM",
     ),
-
   tipoServico: z.string().min(1, "Tipo de serviço é obrigatório"),
-  status: z.string().optional(),
+  status: statusServicoEnum.optional(),
   ordemServico: z.string().nullable().optional(),
   observacao: z.string().optional(),
   cliente: clienteSchema,
