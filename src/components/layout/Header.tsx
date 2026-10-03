@@ -8,12 +8,15 @@ import {
   LogOut,
   User,
   Settings as SettingsIcon,
-  X,
+  Wifi,
+  WifiOff,
+  Loader2,
 } from "lucide-react";
 import { useState, useRef } from "react";
 import Link from "next/link";
 
 import { useClickOutside } from "@/hooks/useClickOutside";
+import { useApiHealth, type ApiStatus } from "@/hooks/useApiHealth";
 
 interface HeaderProps {
   onToggleSidebar: () => void;
@@ -21,6 +24,28 @@ interface HeaderProps {
   isSidebarCollapsed: boolean;
   isMobile: boolean;
 }
+
+// Configuração visual do indicador de status
+const STATUS_CONFIG: Record<
+  ApiStatus,
+  { color: string; label: string; icon: typeof Wifi }
+> = {
+  online: {
+    color: "bg-emerald-500",
+    label: "API Online",
+    icon: Wifi,
+  },
+  offline: {
+    color: "bg-rose-500",
+    label: "API Offline",
+    icon: WifiOff,
+  },
+  checking: {
+    color: "bg-slate-300 animate-pulse",
+    label: "Verificando...",
+    icon: Loader2,
+  },
+};
 
 export default function Header({
   onToggleSidebar,
@@ -31,7 +56,10 @@ export default function Header({
   const [searchOpen, setSearchOpen] = useState(false);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
- 
+
+  const apiStatus = useApiHealth();
+  const apiConfig = STATUS_CONFIG[apiStatus];
+  const ApiIcon = apiConfig.icon;
 
   const searchRef = useRef<HTMLDivElement>(null);
   const notificationsRef = useRef<HTMLDivElement>(null);
@@ -86,6 +114,44 @@ export default function Header({
 
       {/* Direita: Ações & Perfil */}
       <div className="flex items-center gap-1 sm:gap-2">
+        {/* Indicador de Status da API */}
+        <div
+          className="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-50 border border-slate-200/60"
+          title={apiConfig.label}
+        >
+          <ApiIcon
+            size={14}
+            className={
+              apiStatus === "checking"
+                ? "text-slate-400 animate-spin"
+                : apiStatus === "online"
+                ? "text-emerald-600"
+                : "text-rose-600"
+            }
+          />
+          <span className="text-xs font-semibold text-slate-600">
+            {apiConfig.label}
+          </span>
+          <div className={`w-2 h-2 rounded-full ${apiConfig.color}`} />
+        </div>
+
+        {/* Indicador Mobile (apenas bolinha) */}
+        <div
+          className="md:hidden flex items-center justify-center w-9 h-9 rounded-xl bg-slate-50 border border-slate-200/60"
+          title={apiConfig.label}
+        >
+          <ApiIcon
+            size={16}
+            className={
+              apiStatus === "checking"
+                ? "text-slate-400 animate-spin"
+                : apiStatus === "online"
+                ? "text-emerald-600"
+                : "text-rose-600"
+            }
+          />
+        </div>
+
         {/* Notificações */}
         <div className="relative" ref={notificationsRef}>
           <button
@@ -107,7 +173,9 @@ export default function Header({
                 {notifications.map((notif) => (
                   <div
                     key={notif.id}
-                    className={`p-4 hover:bg-slate-50 transition-colors border-b border-slate-50 last:border-0 ${!notif.read ? "bg-blue-50/30" : ""}`}
+                    className={`p-4 hover:bg-slate-50 transition-colors border-b border-slate-50 last:border-0 ${
+                      !notif.read ? "bg-blue-50/30" : ""
+                    }`}
                   >
                     <p className="text-sm font-semibold text-slate-900">
                       {notif.title}

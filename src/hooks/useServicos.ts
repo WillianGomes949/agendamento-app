@@ -10,10 +10,11 @@ import {
 } from "@/lib/gas-api";
 import { sanitizarDadosGAS } from "@/lib/utils-format";
 import type { Servico, FormularioServico, FiltrosServicos } from "@/lib/types";
+import { CACHE_TTL_SERVICOS, DEFAULT_PAGE_SIZE } from '@/lib/constants';
 
-const DEFAULT_PAGE_SIZE = 50;
 const CACHE_KEY = "@TrackApp:servicos";
-const CACHE_TTL = 1000 * 60 * 5; // 5 minutos de cache
+const CACHE_TTL = CACHE_TTL_SERVICOS;
+
 
 // Variável global para impedir requisições simultâneas aos serviços
 let globalServicosPromise: Promise<any> | null = null;
@@ -330,10 +331,12 @@ export function useServicos(initialFilters?: FiltrosServicos) {
   }, [servicos]);
 
   // Contagem de agendamentos pendentes (não concluídos)
-   const agendamentosPendentes = useMemo(() => {
+  const agendamentosPendentes = useMemo(() => {
     return servicos.filter((s) => {
       const status = s.status?.toUpperCase() || "";
-      return status !== "CONCLUIDO" && status !== "FINALIZADO" && status !== "CANCELADO";
+      return !["CONCLUIDO", "FINALIZADO", "CANCELADO", "DELETADO"].includes(
+        status,
+      );
     }).length;
   }, [servicos]);
 

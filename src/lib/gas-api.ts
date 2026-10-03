@@ -2,14 +2,19 @@
 // Cliente HTTP para API Route interna (proxy para GAS)
 // ✅ CORRETO: Chama /api/servicos em vez de GAS diretamente
 
-import type { Servico, FormularioServico, FiltrosServicos, PaginatedResponse } from "./types";
+import type {
+  Servico,
+  FormularioServico,
+  FiltrosServicos,
+  PaginatedResponse,
+} from "./types";
 
 const API_BASE = "/api/servicos";
 
 // Helper genérico para fetch
 async function apiFetch<T>(
   method: string,
-  body?: Record<string, unknown>
+  body?: Record<string, unknown>,
 ): Promise<T> {
   const response = await fetch(API_BASE, {
     method,
@@ -36,8 +41,11 @@ async function apiFetch<T>(
 
 // ─── CRUD Operations ───────────────────────────────────────
 
-export async function getServicos(filters?: FiltrosServicos): Promise<PaginatedResponse<Servico>> {
-  // Para GET com filtros, usamos query params
+// src/lib/gas-api.ts
+
+export async function getServicos(
+  filters?: FiltrosServicos,
+): Promise<PaginatedResponse<Servico>> {
   const url = new URL(API_BASE, window.location.origin);
   if (filters) {
     Object.entries(filters).forEach(([key, value]) => {
@@ -48,29 +56,47 @@ export async function getServicos(filters?: FiltrosServicos): Promise<PaginatedR
   }
 
   const response = await fetch(url.toString(), { cache: "no-store" });
+
   if (!response.ok) {
     throw new Error(`HTTP ${response.status}: Falha ao carregar serviços`);
   }
+
   const result = await response.json();
+
+  // ✅ MELHORIA: Agora o erro exibe os detalhes técnicos vindos do Apps Script
   if (!result || result.success !== true) {
-    throw new Error(result?.error || "Falha ao carregar serviços");
+    const detalhes = result.details ? ` | Detalhes: ${result.details}` : "";
+    throw new Error(
+      `${result?.error || "Falha ao carregar serviços"}${detalhes}`,
+    );
   }
+
   return result;
 }
 
-export async function createServico(data: FormularioServico): Promise<{ success: boolean; id: string; data: Servico }> {
+export async function createServico(
+  data: FormularioServico,
+): Promise<{ success: boolean; id: string; data: Servico }> {
   return apiFetch("POST", { ...data });
 }
 
-export async function updateServico(id: string, data: Partial<Servico>): Promise<{ success: boolean; data: Servico }> {
+export async function updateServico(
+  id: string,
+  data: Partial<Servico>,
+): Promise<{ success: boolean; data: Servico }> {
   return apiFetch("PATCH", { id, ...data });
 }
 
-export async function deleteServico(id: string): Promise<{ success: boolean; message: string }> {
+export async function deleteServico(
+  id: string,
+): Promise<{ success: boolean; message: string }> {
   return apiFetch("DELETE", { id });
 }
 
-export async function getStats(): Promise<{ success: boolean; data: Record<string, Record<string, number>> }> {
+export async function getStats(): Promise<{
+  success: boolean;
+  data: Record<string, Record<string, number>>;
+}> {
   const response = await fetch(`${API_BASE}/stats`, { cache: "no-store" });
   if (!response.ok) {
     throw new Error(`HTTP ${response.status}: Falha ao carregar estatísticas`);

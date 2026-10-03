@@ -2,6 +2,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import { CACHE_TTL_CONFIG, CONFIG_API_BASE } from '@/lib/constants';
 
 interface ConfigOptions {
   tecnicos: { value: string; label: string }[];
@@ -17,9 +18,11 @@ interface UseConfigReturn {
   refresh: () => void;
 }
 
-const API_BASE = "/api/config";
+
+
+const API_BASE = CONFIG_API_BASE;
 const CACHE_KEY = "@TrackApp:config";
-const CACHE_TTL = 1000 * 60 * 60 * 24; // 24 horas
+const CACHE_TTL = CACHE_TTL_CONFIG;
 
 // Variável global para impedir requisições simultâneas
 let globalConfigPromise: Promise<ConfigOptions> | null = null;

@@ -7,7 +7,6 @@ import { motion, Variants } from "framer-motion";
 import {
   BarChart3,
   Calendar,
-  TrendingUp,
   Users,
   Wrench,
   CheckCircle,
@@ -20,8 +19,6 @@ import {
   FileText,
   MapPin,
   Car,
-  ArrowUpRight,
-  ArrowDownRight,
 } from "lucide-react";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
@@ -36,8 +33,6 @@ import {
   PieChart,
   Pie,
   Cell,
-  LineChart,
-  Line,
   Legend,
 } from "recharts";
 import Link from "next/link";
@@ -77,6 +72,19 @@ const itemVariants: Variants = {
     y: 0,
     transition: { type: "spring", stiffness: 300, damping: 24 },
   },
+};
+
+// Estilo customizado para os tooltips do Recharts
+const customTooltipStyle = {
+  borderRadius: "12px",
+  border: "none",
+  boxShadow:
+    "0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1)",
+  backgroundColor: "#ffffff",
+  color: "#334155",
+  padding: "12px",
+  fontWeight: 500,
+  fontSize: "14px",
 };
 
 type PeriodoFiltro = "7dias" | "30dias" | "90dias" | "esteAno" | "todos";
@@ -133,50 +141,41 @@ export default function RelatoriosPage() {
   // === MÉTRICAS ===
   const metricas = useMemo(() => {
     const ativos = servicosPorTecnico.filter(
-      (s) => s.status?.toLowerCase() !== "deletado"
+      (s) => s.status?.toLowerCase() !== "deletado",
     );
 
     const total = ativos.length;
     const pendentes = ativos.filter(
-      (s) => s.status?.toLowerCase() === "pendente"
+      (s) => s.status?.toLowerCase() === "pendente",
     ).length;
     const emAndamento = ativos.filter((s) => {
       const status = s.status?.toLowerCase().replace(/\s+/g, "_");
       return status === "em_andamento";
     }).length;
     const concluidos = ativos.filter((s) => {
-      const status = s.status?.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+      const status = s.status
+        ?.toLowerCase()
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "");
       return status === "concluido";
     }).length;
-    const cancelados = ativos.filter((s) => {
-      const status = s.status?.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-      return status === "cancelado";
-    }).length;
 
-    // Taxa de conclusão
-    const taxaConclusao = total > 0 ? Math.round((concluidos / total) * 100) : 0;
-
-    // Tempo médio (dias entre criação e conclusão - simulado)
-    const servicosConcluidos = ativos.filter((s) => {
-      const status = s.status?.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-      return status === "concluido";
-    });
+    const taxaConclusao =
+      total > 0 ? Math.round((concluidos / total) * 100) : 0;
 
     return {
       total,
       pendentes,
       emAndamento,
       concluidos,
-      cancelados,
       taxaConclusao,
-      servicosConcluidos: servicosConcluidos.length,
     };
   }, [servicosPorTecnico]);
 
   // === DADOS PARA GRÁFICO DE STATUS (Pie) ===
   const dadosStatus = useMemo(() => {
     const ativos = servicosPorTecnico.filter(
-      (s) => s.status?.toLowerCase() !== "deletado"
+      (s) => s.status?.toLowerCase() !== "deletado",
     );
 
     const grupos: Record<string, number> = {};
@@ -193,7 +192,7 @@ export default function RelatoriosPage() {
   // === DADOS PARA GRÁFICO DE SERVIÇOS POR DIA (Bar) ===
   const dadosPorDia = useMemo(() => {
     const ativos = servicosPorTecnico.filter(
-      (s) => s.status?.toLowerCase() !== "deletado"
+      (s) => s.status?.toLowerCase() !== "deletado",
     );
 
     const grupos: Record<string, number> = {};
@@ -207,15 +206,18 @@ export default function RelatoriosPage() {
       .sort((a, b) => {
         const [d1, m1, y1] = a.data.split("/").map(Number);
         const [d2, m2, y2] = b.data.split("/").map(Number);
-        return new Date(y1, m1 - 1, d1).getTime() - new Date(y2, m2 - 1, d2).getTime();
+        return (
+          new Date(y1, m1 - 1, d1).getTime() -
+          new Date(y2, m2 - 1, d2).getTime()
+        );
       })
-      .slice(-15); // Últimos 15 dias com dados
+      .slice(-15);
   }, [servicosPorTecnico]);
 
   // === DADOS PARA GRÁFICO POR TÉCNICO (Bar) ===
   const dadosPorTecnico = useMemo(() => {
     const ativos = servicosPorTecnico.filter(
-      (s) => s.status?.toLowerCase() !== "deletado"
+      (s) => s.status?.toLowerCase() !== "deletado",
     );
 
     const grupos: Record<string, { total: number; concluidos: number }> = {};
@@ -224,7 +226,10 @@ export default function RelatoriosPage() {
       if (!grupos[tecnico]) grupos[tecnico] = { total: 0, concluidos: 0 };
       grupos[tecnico].total++;
 
-      const status = s.status?.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+      const status = s.status
+        ?.toLowerCase()
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "");
       if (status === "concluido") grupos[tecnico].concluidos++;
     });
 
@@ -241,7 +246,7 @@ export default function RelatoriosPage() {
   // === DADOS PARA GRÁFICO DE TIPOS DE SERVIÇO ===
   const dadosPorTipo = useMemo(() => {
     const ativos = servicosPorTecnico.filter(
-      (s) => s.status?.toLowerCase() !== "deletado"
+      (s) => s.status?.toLowerCase() !== "deletado",
     );
 
     const grupos: Record<string, number> = {};
@@ -259,7 +264,7 @@ export default function RelatoriosPage() {
   // === TOP CIDADES ===
   const topCidades = useMemo(() => {
     const ativos = servicosPorTecnico.filter(
-      (s) => s.status?.toLowerCase() !== "deletado"
+      (s) => s.status?.toLowerCase() !== "deletado",
     );
 
     const grupos: Record<string, number> = {};
@@ -277,7 +282,7 @@ export default function RelatoriosPage() {
   // === EXPORTAR CSV ===
   const exportarCSV = useCallback(() => {
     const ativos = servicosPorTecnico.filter(
-      (s) => s.status?.toLowerCase() !== "deletado"
+      (s) => s.status?.toLowerCase() !== "deletado",
     );
 
     const headers = [
@@ -306,7 +311,9 @@ export default function RelatoriosPage() {
       .map((row) => row.map((cell) => `"${cell || ""}"`).join(";"))
       .join("\n");
 
-    const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
+    const blob = new Blob(["\uFEFF" + csv], {
+      type: "text/csv;charset=utf-8;",
+    });
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.href = url;
@@ -324,7 +331,7 @@ export default function RelatoriosPage() {
           <Loader2 className="animate-spin text-slate-900 w-10 h-10 relative z-10 mb-4" />
         </div>
         <p className="text-slate-500 font-medium animate-pulse">
-          Carregando relatórios...
+          A carregar relatórios...
         </p>
       </div>
     );
@@ -358,10 +365,10 @@ export default function RelatoriosPage() {
       animate="show"
       className="space-y-8"
     >
-      {/* Cabeçalho */}
+      {/* Cabeçalho Unificado e Controles */}
       <motion.div
         variants={itemVariants}
-        className="flex flex-col lg:flex-row lg:items-end justify-between gap-4"
+        className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex flex-col lg:flex-row lg:items-center justify-between gap-6"
       >
         <div>
           <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight text-slate-900 mb-2">
@@ -372,13 +379,13 @@ export default function RelatoriosPage() {
           </p>
         </div>
 
-        <div className="flex flex-wrap items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3 w-full lg:w-auto">
           {/* Filtro de Período */}
-          <div className="relative">
+          <div className="relative flex-1 lg:flex-none">
             <select
               value={periodo}
               onChange={(e) => setPeriodo(e.target.value as PeriodoFiltro)}
-              className="appearance-none bg-white border border-slate-200 text-slate-700 text-sm font-semibold rounded-xl px-4 py-2.5 pr-10 focus:outline-none focus:ring-2 focus:ring-slate-400 focus:border-transparent cursor-pointer hover:border-slate-300 transition-colors"
+              className="w-full appearance-none bg-slate-50 border border-slate-200 text-slate-700 text-sm font-semibold rounded-xl px-4 py-2.5 pr-10 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent cursor-pointer hover:bg-slate-100 transition-colors"
             >
               <option value="7dias">Últimos 7 dias</option>
               <option value="30dias">Últimos 30 dias</option>
@@ -390,11 +397,11 @@ export default function RelatoriosPage() {
           </div>
 
           {/* Filtro de Técnico */}
-          <div className="relative">
+          <div className="relative flex-1 lg:flex-none">
             <select
               value={filtroTecnico}
               onChange={(e) => setFiltroTecnico(e.target.value)}
-              className="appearance-none bg-white border border-slate-200 text-slate-700 text-sm font-semibold rounded-xl px-4 py-2.5 pr-10 focus:outline-none focus:ring-2 focus:ring-slate-400 focus:border-transparent cursor-pointer hover:border-slate-300 transition-colors"
+              className="w-full appearance-none bg-slate-50 border border-slate-200 text-slate-700 text-sm font-semibold rounded-xl px-4 py-2.5 pr-10 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent cursor-pointer hover:bg-slate-100 transition-colors"
             >
               <option value="todos">Todos os técnicos</option>
               {tecnicos.map((t) => (
@@ -410,10 +417,11 @@ export default function RelatoriosPage() {
           <Button
             variant="outline"
             onClick={exportarCSV}
-            className="flex items-center gap-2"
+            className="flex items-center gap-2 flex-1 lg:flex-none justify-center bg-white hover:bg-slate-50 border-slate-200 text-slate-700 shadow-sm"
           >
             <Download className="w-4 h-4" />
-            Exportar CSV
+            <span className="hidden sm:inline">Exportar CSV</span>
+            <span className="sm:hidden">CSV</span>
           </Button>
         </div>
       </motion.div>
@@ -423,60 +431,62 @@ export default function RelatoriosPage() {
         variants={itemVariants}
         className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6"
       >
-        <Card className="p-5 flex items-center gap-4 hoverable group">
-          <div className="p-3.5 bg-blue-50 text-blue-600 rounded-2xl group-hover:scale-110 transition-transform duration-300">
+        <Card className="p-5 flex items-center gap-4 hover:shadow-md transition-shadow group cursor-default">
+          <div className="p-3.5 bg-blue-50 text-blue-600 rounded-2xl group-hover:scale-110 group-hover:bg-blue-100 transition-all duration-300">
             <FileText className="w-6 h-6" />
           </div>
           <div>
             <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">
-              Total de Serviços
+              Total
             </p>
-            <h3 className="text-2xl font-extrabold text-slate-900 mt-1">
+            <h3 className="text-2xl font-extrabold text-slate-900 mt-0.5">
               {metricas.total}
             </h3>
           </div>
         </Card>
 
-        <Card className="p-5 flex items-center gap-4 hoverable group">
-          <div className="p-3.5 bg-emerald-50 text-emerald-600 rounded-2xl group-hover:scale-110 transition-transform duration-300">
+        <Card className="p-5 flex items-center gap-4 hover:shadow-md transition-shadow group cursor-default">
+          <div className="p-3.5 bg-emerald-50 text-emerald-600 rounded-2xl group-hover:scale-110 group-hover:bg-emerald-100 transition-all duration-300">
             <CheckCircle className="w-6 h-6" />
           </div>
           <div>
             <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">
               Concluídos
             </p>
-            <h3 className="text-2xl font-extrabold text-slate-900 mt-1">
-              {metricas.concluidos}
-            </h3>
-            <p className="text-xs text-emerald-600 font-semibold mt-0.5">
-              {metricas.taxaConclusao}% de taxa
-            </p>
+            <div className="flex items-baseline gap-2 mt-0.5">
+              <h3 className="text-2xl font-extrabold text-slate-900">
+                {metricas.concluidos}
+              </h3>
+              <span className="text-xs text-emerald-600 font-semibold bg-emerald-50 px-1.5 py-0.5 rounded-md">
+                {metricas.taxaConclusao}%
+              </span>
+            </div>
           </div>
         </Card>
 
-        <Card className="p-5 flex items-center gap-4 hoverable group">
-          <div className="p-3.5 bg-amber-50 text-amber-600 rounded-2xl group-hover:scale-110 transition-transform duration-300">
+        <Card className="p-5 flex items-center gap-4 hover:shadow-md transition-shadow group cursor-default">
+          <div className="p-3.5 bg-amber-50 text-amber-600 rounded-2xl group-hover:scale-110 group-hover:bg-amber-100 transition-all duration-300">
             <Clock className="w-6 h-6" />
           </div>
           <div>
             <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">
               Pendentes
             </p>
-            <h3 className="text-2xl font-extrabold text-slate-900 mt-1">
+            <h3 className="text-2xl font-extrabold text-slate-900 mt-0.5">
               {metricas.pendentes}
             </h3>
           </div>
         </Card>
 
-        <Card className="p-5 flex items-center gap-4 hoverable group">
-          <div className="p-3.5 bg-indigo-50 text-indigo-600 rounded-2xl group-hover:scale-110 transition-transform duration-300">
+        <Card className="p-5 flex items-center gap-4 hover:shadow-md transition-shadow group cursor-default">
+          <div className="p-3.5 bg-indigo-50 text-indigo-600 rounded-2xl group-hover:scale-110 group-hover:bg-indigo-100 transition-all duration-300">
             <Wrench className="w-6 h-6" />
           </div>
           <div>
             <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">
               Em Andamento
             </p>
-            <h3 className="text-2xl font-extrabold text-slate-900 mt-1">
+            <h3 className="text-2xl font-extrabold text-slate-900 mt-0.5">
               {metricas.emAndamento}
             </h3>
           </div>
@@ -487,10 +497,10 @@ export default function RelatoriosPage() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Gráfico de Status (Pie) */}
         <motion.div variants={itemVariants}>
-          <Card className="p-6">
+          <Card className="p-6 border border-slate-200 shadow-sm h-full">
             <div className="flex items-center justify-between mb-6">
               <h3 className="text-lg font-bold text-slate-900 flex items-center gap-2">
-                <BarChart3 className="w-5 h-5 text-slate-400" />
+                <BarChart3 className="w-5 h-5 text-blue-500" />
                 Distribuição por Status
               </h3>
             </div>
@@ -502,30 +512,30 @@ export default function RelatoriosPage() {
                       data={dadosStatus}
                       cx="50%"
                       cy="50%"
-                      innerRadius={60}
-                      outerRadius={100}
-                      paddingAngle={4}
+                      innerRadius={65}
+                      outerRadius={105}
+                      paddingAngle={5}
                       dataKey="value"
+                      stroke="none"
                     >
                       {dadosStatus.map((_, index) => (
                         <Cell
                           key={`cell-${index}`}
                           fill={PIE_COLORS[index % PIE_COLORS.length]}
+                          className="hover:opacity-80 transition-opacity outline-none"
                         />
                       ))}
                     </Pie>
-                    <Tooltip
-                      contentStyle={{
-                        borderRadius: "12px",
-                        border: "1px solid #e2e8f0",
-                        boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)",
-                      }}
+                    <Tooltip contentStyle={customTooltipStyle} />
+                    <Legend
+                      iconType="circle"
+                      wrapperStyle={{ fontSize: "13px", paddingTop: "10px" }}
                     />
-                    <Legend />
                   </PieChart>
                 </ResponsiveContainer>
               ) : (
-                <div className="h-full flex items-center justify-center text-slate-400 text-sm">
+                <div className="h-full flex flex-col items-center justify-center text-slate-400 text-sm bg-slate-50 rounded-xl">
+                  <BarChart3 className="w-8 h-8 text-slate-300 mb-2" />
                   Sem dados para o período selecionado
                 </div>
               )}
@@ -535,50 +545,69 @@ export default function RelatoriosPage() {
 
         {/* Gráfico por Técnico (Bar) */}
         <motion.div variants={itemVariants}>
-          <Card className="p-6">
+          <Card className="p-6 border border-slate-200 shadow-sm h-full">
             <div className="flex items-center justify-between mb-6">
               <h3 className="text-lg font-bold text-slate-900 flex items-center gap-2">
-                <Users className="w-5 h-5 text-slate-400" />
+                <Users className="w-5 h-5 text-indigo-500" />
                 Serviços por Técnico
               </h3>
             </div>
             <div className="h-72">
               {dadosPorTecnico.length > 0 ? (
                 <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={dadosPorTecnico} layout="vertical">
-                    <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
-                    <XAxis type="number" fontSize={12} stroke="#94a3b8" />
+                  <BarChart
+                    data={dadosPorTecnico}
+                    layout="vertical"
+                    margin={{ left: 10 }}
+                  >
+                    <CartesianGrid
+                      strokeDasharray="3 3"
+                      stroke="#f1f5f9"
+                      horizontal={false}
+                    />
+                    <XAxis
+                      type="number"
+                      fontSize={12}
+                      stroke="#94a3b8"
+                      axisLine={false}
+                      tickLine={false}
+                    />
                     <YAxis
                       dataKey="name"
                       type="category"
                       fontSize={12}
                       stroke="#64748b"
                       width={100}
+                      axisLine={false}
+                      tickLine={false}
                     />
                     <Tooltip
-                      contentStyle={{
-                        borderRadius: "12px",
-                        border: "1px solid #e2e8f0",
-                        boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)",
-                      }}
+                      contentStyle={customTooltipStyle}
+                      cursor={{ fill: "#f8fafc" }}
                     />
-                    <Legend />
+                    <Legend
+                      iconType="circle"
+                      wrapperStyle={{ fontSize: "13px" }}
+                    />
                     <Bar
                       dataKey="total"
                       name="Total"
-                      fill={COLORS.primary}
-                      radius={[0, 6, 6, 0]}
+                      fill={COLORS.slate}
+                      radius={[0, 4, 4, 0]}
+                      barSize={12}
                     />
                     <Bar
                       dataKey="concluidos"
                       name="Concluídos"
                       fill={COLORS.success}
-                      radius={[0, 6, 6, 0]}
+                      radius={[0, 4, 4, 0]}
+                      barSize={12}
                     />
                   </BarChart>
                 </ResponsiveContainer>
               ) : (
-                <div className="h-full flex items-center justify-center text-slate-400 text-sm">
+                <div className="h-full flex flex-col items-center justify-center text-slate-400 text-sm bg-slate-50 rounded-xl">
+                  <Users className="w-8 h-8 text-slate-300 mb-2" />
                   Sem dados para o período selecionado
                 </div>
               )}
@@ -589,46 +618,57 @@ export default function RelatoriosPage() {
 
       {/* Gráficos - Linha 2 */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Gráfico de Serviços por Dia (Line) */}
+        {/* Gráfico de Serviços por Dia (Bar) */}
         <motion.div variants={itemVariants} className="lg:col-span-2">
-          <Card className="p-6">
+          <Card className="p-6 border border-slate-200 shadow-sm h-full">
             <div className="flex items-center justify-between mb-6">
               <h3 className="text-lg font-bold text-slate-900 flex items-center gap-2">
-                <Calendar className="w-5 h-5 text-slate-400" />
+                <Calendar className="w-5 h-5 text-emerald-500" />
                 Serviços por Dia
               </h3>
             </div>
             <div className="h-72">
               {dadosPorDia.length > 0 ? (
                 <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={dadosPorDia}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
+                  <BarChart
+                    data={dadosPorDia}
+                    margin={{ top: 10, right: 10, left: -20, bottom: 0 }}
+                  >
+                    <CartesianGrid
+                      strokeDasharray="3 3"
+                      stroke="#f1f5f9"
+                      vertical={false}
+                    />
                     <XAxis
                       dataKey="data"
                       fontSize={11}
                       stroke="#94a3b8"
-                      angle={-45}
-                      textAnchor="end"
-                      height={60}
+                      axisLine={false}
+                      tickLine={false}
+                      tickMargin={10}
                     />
-                    <YAxis fontSize={12} stroke="#94a3b8" />
+                    <YAxis
+                      fontSize={12}
+                      stroke="#94a3b8"
+                      axisLine={false}
+                      tickLine={false}
+                    />
                     <Tooltip
-                      contentStyle={{
-                        borderRadius: "12px",
-                        border: "1px solid #e2e8f0",
-                        boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)",
-                      }}
+                      contentStyle={customTooltipStyle}
+                      cursor={{ fill: "#f8fafc" }}
                     />
                     <Bar
                       dataKey="quantidade"
                       name="Quantidade"
                       fill={COLORS.secondary}
                       radius={[6, 6, 0, 0]}
+                      barSize={32}
                     />
                   </BarChart>
                 </ResponsiveContainer>
               ) : (
-                <div className="h-full flex items-center justify-center text-slate-400 text-sm">
+                <div className="h-full flex flex-col items-center justify-center text-slate-400 text-sm bg-slate-50 rounded-xl">
+                  <Calendar className="w-8 h-8 text-slate-300 mb-2" />
                   Sem dados para o período selecionado
                 </div>
               )}
@@ -638,37 +678,45 @@ export default function RelatoriosPage() {
 
         {/* Top Cidades */}
         <motion.div variants={itemVariants}>
-          <Card className="p-6">
+          <Card className="p-6 border border-slate-200 shadow-sm h-full">
             <div className="flex items-center justify-between mb-6">
               <h3 className="text-lg font-bold text-slate-900 flex items-center gap-2">
-                <MapPin className="w-5 h-5 text-slate-400" />
+                <MapPin className="w-5 h-5 text-amber-500" />
                 Top Cidades
               </h3>
             </div>
-            <div className="space-y-4">
+            <div className="space-y-5">
               {topCidades.length > 0 ? (
                 topCidades.map((cidade, index) => (
-                  <div key={cidade.cidade} className="flex items-center gap-3">
+                  <div
+                    key={cidade.cidade}
+                    className="flex items-center gap-4 group"
+                  >
                     <span
-                      className={`w-6 h-6 rounded-lg flex items-center justify-center text-xs font-bold ${
+                      className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold shadow-sm ${
                         index === 0
-                          ? "bg-amber-100 text-amber-700"
+                          ? "bg-amber-100 text-amber-700 ring-2 ring-amber-50"
                           : index === 1
-                          ? "bg-slate-200 text-slate-600"
-                          : index === 2
-                          ? "bg-orange-100 text-orange-700"
-                          : "bg-slate-100 text-slate-500"
+                            ? "bg-slate-200 text-slate-700 ring-2 ring-slate-50"
+                            : index === 2
+                              ? "bg-orange-100 text-orange-700 ring-2 ring-orange-50"
+                              : "bg-slate-50 text-slate-500 border border-slate-100"
                       }`}
                     >
                       {index + 1}
                     </span>
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-semibold text-slate-700 truncate">
-                        {cidade.cidade}
-                      </p>
-                      <div className="w-full bg-slate-100 rounded-full h-1.5 mt-1">
+                      <div className="flex justify-between items-center mb-1.5">
+                        <p className="text-sm font-bold text-slate-700 truncate group-hover:text-blue-600 transition-colors">
+                          {cidade.cidade}
+                        </p>
+                        <span className="text-sm font-extrabold text-slate-900">
+                          {cidade.quantidade}
+                        </span>
+                      </div>
+                      <div className="w-full bg-slate-100 rounded-full h-2 overflow-hidden">
                         <div
-                          className="bg-slate-400 h-1.5 rounded-full transition-all duration-500"
+                          className="bg-blue-500 h-2 rounded-full transition-all duration-1000 ease-out"
                           style={{
                             width: `${
                               (cidade.quantidade / topCidades[0].quantidade) *
@@ -678,13 +726,11 @@ export default function RelatoriosPage() {
                         />
                       </div>
                     </div>
-                    <span className="text-sm font-bold text-slate-900">
-                      {cidade.quantidade}
-                    </span>
                   </div>
                 ))
               ) : (
-                <div className="text-center text-slate-400 text-sm py-8">
+                <div className="h-48 flex flex-col items-center justify-center text-slate-400 text-sm bg-slate-50 rounded-xl">
+                  <MapPin className="w-8 h-8 text-slate-300 mb-2" />
                   Sem dados para o período selecionado
                 </div>
               )}
@@ -695,52 +741,65 @@ export default function RelatoriosPage() {
 
       {/* Gráfico de Tipos de Serviço */}
       <motion.div variants={itemVariants}>
-        <Card className="p-6">
+        <Card className="p-6 border border-slate-200 shadow-sm">
           <div className="flex items-center justify-between mb-6">
             <h3 className="text-lg font-bold text-slate-900 flex items-center gap-2">
-              <Car className="w-5 h-5 text-slate-400" />
+              <Car className="w-5 h-5 text-slate-600" />
               Serviços por Tipo
             </h3>
           </div>
           <div className="h-64">
             {dadosPorTipo.length > 0 ? (
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={dadosPorTipo}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
+                <BarChart
+                  data={dadosPorTipo}
+                  margin={{ top: 10, right: 10, left: -20, bottom: 20 }}
+                >
+                  <CartesianGrid
+                    strokeDasharray="3 3"
+                    stroke="#f1f5f9"
+                    vertical={false}
+                  />
                   <XAxis
                     dataKey="name"
                     fontSize={12}
                     stroke="#94a3b8"
                     interval={0}
-                    angle={-30}
+                    angle={-25}
                     textAnchor="end"
-                    height={70}
+                    height={50}
+                    axisLine={false}
+                    tickLine={false}
                   />
-                  <YAxis fontSize={12} stroke="#94a3b8" />
+                  <YAxis
+                    fontSize={12}
+                    stroke="#94a3b8"
+                    axisLine={false}
+                    tickLine={false}
+                  />
                   <Tooltip
-                    contentStyle={{
-                      borderRadius: "12px",
-                      border: "1px solid #e2e8f0",
-                      boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)",
-                    }}
+                    contentStyle={customTooltipStyle}
+                    cursor={{ fill: "#f8fafc" }}
                   />
                   <Bar
                     dataKey="value"
                     name="Quantidade"
-                    fill={COLORS.primary}
                     radius={[6, 6, 0, 0]}
+                    barSize={40}
                   >
                     {dadosPorTipo.map((_, index) => (
                       <Cell
                         key={`cell-${index}`}
                         fill={PIE_COLORS[index % PIE_COLORS.length]}
+                        className="hover:opacity-80 transition-opacity"
                       />
                     ))}
                   </Bar>
                 </BarChart>
               </ResponsiveContainer>
             ) : (
-              <div className="h-full flex items-center justify-center text-slate-400 text-sm">
+              <div className="h-full flex flex-col items-center justify-center text-slate-400 text-sm bg-slate-50 rounded-xl">
+                <Car className="w-8 h-8 text-slate-300 mb-2" />
                 Sem dados para o período selecionado
               </div>
             )}
@@ -749,11 +808,17 @@ export default function RelatoriosPage() {
       </motion.div>
 
       {/* Link para Agenda */}
-      <motion.div variants={itemVariants} className="flex justify-center">
-        <Link href="/agendamentos" className="w-full sm:w-auto">
-          <Button variant="primary" className="w-full sm:w-auto">
-            <Calendar className="w-4 h-4 mr-2" />
-            Ver Agenda Completa
+      <motion.div variants={itemVariants} className="flex justify-center pt-4">
+        <Link
+          href="/agendamentos"
+          className="w-full sm:w-auto focus:outline-none"
+        >
+          <Button
+            variant="outline"
+            className="w-full sm:w-auto bg-white hover:bg-slate-50 text-slate-700 shadow-sm border-slate-200 py-6 px-8 rounded-xl font-bold text-base transition-all hover:shadow-md"
+          >
+            <Calendar className="w-5 h-5 mr-3 text-blue-500" />
+            Abrir Agenda Completa
           </Button>
         </Link>
       </motion.div>

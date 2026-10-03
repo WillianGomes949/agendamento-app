@@ -15,6 +15,7 @@ import {
   Loader2,
   Wrench,
   FileText,
+  Plus,
 } from "lucide-react";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
@@ -55,6 +56,11 @@ export default function DashboardPage() {
         .replace(/[\u0300-\u036f]/g, "") === "concluido",
   ).length;
 
+  const taxaConclusao =
+    servicosAtivos.length > 0
+      ? Math.round((totalConcluidos / servicosAtivos.length) * 100)
+      : 0;
+
   // Pegar apenas os próximos 5 agendamentos que não estão finalizados
   const proximosAgendamentos = servicosAtivos
     .filter((s) => {
@@ -66,7 +72,6 @@ export default function DashboardPage() {
       return !["concluido", "cancelado"].includes(statusNormalizado);
     })
     .sort((a, b) => {
-      // Ordenação simples (idealmente seria por Date object)
       const dataA = a.data + " " + a.horario;
       const dataB = b.data + " " + b.horario;
       return dataA > dataB ? 1 : -1;
@@ -133,10 +138,10 @@ export default function DashboardPage() {
       animate="show"
       className="space-y-8"
     >
-      {/* Cabeçalho de Boas-vindas */}
+      {/* Cabeçalho de Boas-vindas com CTA Principal */}
       <motion.div
         variants={itemVariants}
-        className="flex flex-col md:flex-row md:items-end justify-between gap-4"
+        className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 bg-white p-6 rounded-2xl shadow-sm border border-slate-100"
       >
         <div>
           <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight text-slate-900 mb-2">
@@ -146,6 +151,17 @@ export default function DashboardPage() {
             Aqui está o resumo da sua operação de hoje.
           </p>
         </div>
+        <div className="flex gap-3 mt-2 sm:mt-0">
+          <Link href="/agendamentos/novo" className="w-full sm:w-auto">
+            <Button
+              variant="primary"
+              className="w-full shadow-md hover:shadow-lg transition-shadow"
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              Novo Serviço
+            </Button>
+          </Link>
+        </div>
       </motion.div>
 
       {/* Cartões de KPI (Métricas Principais) */}
@@ -153,123 +169,128 @@ export default function DashboardPage() {
         variants={itemVariants}
         className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6"
       >
-        <Card className="p-5 flex items-center gap-4 hoverable group">
-          <div className="p-3.5 bg-blue-50 text-blue-600 rounded-2xl group-hover:scale-110 transition-transform duration-300">
+        <Card className="p-5 flex items-center gap-4 hover:shadow-md transition-shadow group cursor-default">
+          <div className="p-3.5 bg-blue-50 text-blue-600 rounded-2xl group-hover:scale-110 group-hover:bg-blue-100 transition-all duration-300">
             <FileText className="w-6 h-6" />
           </div>
           <div>
             <p className="text-sm font-bold text-slate-500 uppercase tracking-wider">
-              Total de Serviços
+              Total
             </p>
-            <h3 className="text-2xl font-extrabold text-slate-900 mt-1">
+            <h3 className="text-2xl font-extrabold text-slate-900 mt-0.5">
               {servicosAtivos.length}
             </h3>
           </div>
         </Card>
 
-        <Card className="p-5 flex items-center gap-4 hoverable group">
-          <div className="p-3.5 bg-amber-50 text-amber-600 rounded-2xl group-hover:scale-110 transition-transform duration-300">
+        <Card className="p-5 flex items-center gap-4 hover:shadow-md transition-shadow group cursor-default">
+          <div className="p-3.5 bg-amber-50 text-amber-600 rounded-2xl group-hover:scale-110 group-hover:bg-amber-100 transition-all duration-300">
             <Clock className="w-6 h-6" />
           </div>
           <div>
             <p className="text-sm font-bold text-slate-500 uppercase tracking-wider">
               Pendentes
             </p>
-            <h3 className="text-2xl font-extrabold text-slate-900 mt-1">
+            <h3 className="text-2xl font-extrabold text-slate-900 mt-0.5">
               {totalPendentes}
             </h3>
           </div>
         </Card>
 
-        <Card className="p-5 flex items-center gap-4 hoverable group">
-          <div className="p-3.5 bg-indigo-50 text-indigo-600 rounded-2xl group-hover:scale-110 transition-transform duration-300">
+        <Card className="p-5 flex items-center gap-4 hover:shadow-md transition-shadow group cursor-default">
+          <div className="p-3.5 bg-indigo-50 text-indigo-600 rounded-2xl group-hover:scale-110 group-hover:bg-indigo-100 transition-all duration-300">
             <Wrench className="w-6 h-6" />
           </div>
           <div>
             <p className="text-sm font-bold text-slate-500 uppercase tracking-wider">
               Em Andamento
             </p>
-            <h3 className="text-2xl font-extrabold text-slate-900 mt-1">
+            <h3 className="text-2xl font-extrabold text-slate-900 mt-0.5">
               {totalEmAndamento}
             </h3>
           </div>
         </Card>
 
-        <Card className="p-5 flex items-center gap-4 hoverable group">
-          <div className="p-3.5 bg-emerald-50 text-emerald-600 rounded-2xl group-hover:scale-110 transition-transform duration-300">
+        <Card className="p-5 flex items-center gap-4 hover:shadow-md transition-shadow group cursor-default">
+          <div className="p-3.5 bg-emerald-50 text-emerald-600 rounded-2xl group-hover:scale-110 group-hover:bg-emerald-100 transition-all duration-300">
             <CheckCircle className="w-6 h-6" />
           </div>
           <div>
             <p className="text-sm font-bold text-slate-500 uppercase tracking-wider">
               Concluídos
             </p>
-            <h3 className="text-2xl font-extrabold text-slate-900 mt-1">
+            <h3 className="text-2xl font-extrabold text-slate-900 mt-0.5">
               {totalConcluidos}
             </h3>
           </div>
         </Card>
       </motion.div>
 
-      {/* Conteúdo Principal (Layout dividido em Desktop) */}
+      {/* Conteúdo Principal */}
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
         {/* Próximos Agendamentos (Ocupa 2 colunas) */}
         <motion.div variants={itemVariants} className="xl:col-span-2 space-y-4">
           <div className="flex flex-col md:flex-row gap-3 items-start md:items-center justify-between w-full">
-            <h2 className="text-xl font-bold text-slate-900 mb-3">
+            <h2 className="text-xl font-bold text-slate-900">
               Próximos Agendamentos
             </h2>
-            <div className="flex gap-3 w-full md:w-1/2 items-end justify-end">
-              <Link
-                href="/agendamentos"
-                className="w-full sm:w-auto focus:outline-none"
+            <Link
+              href="/agendamentos"
+              className="w-full md:w-auto focus:outline-none"
+            >
+              <Button
+                variant="outline"
+                className="w-full bg-white hover:bg-slate-50 text-slate-700"
               >
-                <Button variant="primary" className="w-full">
-                  <Calendar className="w-4 h-4 mr-2" />
-                  Ver Agenda
-                </Button>
-              </Link>
-            </div>
+                <Calendar className="w-4 h-4 mr-2" />
+                Abrir Agenda Completa
+              </Button>
+            </Link>
           </div>
 
-          <Card padding="none" className="overflow-hidden">
+          <Card
+            padding="none"
+            className="overflow-hidden border border-slate-200 shadow-sm"
+          >
             {proximosAgendamentos.length === 0 ? (
-              <div className="p-8 text-center bg-slate-50/50">
-                <div className="w-16 h-16 bg-slate-100 rounded-2xl flex items-center justify-center mx-auto mb-4 border border-slate-200/60">
-                  <CheckCircle className="w-8 h-8 text-slate-400" />
+              <div className="p-12 text-center bg-white">
+                <div className="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-5 border border-slate-100">
+                  <CheckCircle className="w-10 h-10 text-emerald-400" />
                 </div>
-                <h3 className="text-lg font-bold text-slate-900 mb-1">
+                <h3 className="text-lg font-bold text-slate-900 mb-2">
                   Tudo em dia!
                 </h3>
-                <p className="text-sm text-slate-500">
-                  Não há serviços pendentes no momento.
+                <p className="text-sm text-slate-500 max-w-sm mx-auto">
+                  A sua agenda está limpa no momento. Quando novos serviços
+                  entrarem, aparecerão aqui.
                 </p>
               </div>
             ) : (
-              <div className="divide-y divide-slate-100">
+              <div className="divide-y divide-slate-100 bg-white">
                 {proximosAgendamentos.map((servico) => (
                   <Link
                     href={`/agendamentos/${servico.id}`}
                     key={servico.id}
-                    className="flex flex-col sm:flex-row sm:items-center justify-between p-5 hover:bg-slate-50 transition-colors gap-4 group focus:outline-none focus:bg-slate-50"
+                    className="flex flex-col sm:flex-row sm:items-center justify-between p-5 hover:bg-slate-50/80 transition-all gap-4 group focus:outline-none focus:bg-slate-50 border-l-4 border-transparent hover:border-blue-500"
                   >
                     <div className="flex items-start gap-4">
-                      <div className="hidden sm:flex p-3 bg-slate-100 text-slate-600 rounded-xl group-hover:bg-white group-hover:shadow-sm border border-transparent group-hover:border-slate-200 transition-all">
+                      <div className="hidden sm:flex p-3 bg-slate-50 text-slate-500 rounded-xl group-hover:bg-white group-hover:shadow-sm border border-slate-100 group-hover:text-blue-600 transition-all">
                         <Car className="w-5 h-5" />
                       </div>
                       <div>
-                        <h4 className="font-bold text-slate-900 text-base mb-1">
+                        <h4 className="font-bold text-slate-900 text-base mb-1.5 group-hover:text-blue-700 transition-colors">
                           {servico.cliente?.nome || "Cliente não informado"}
                         </h4>
-                        <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-xs font-medium text-slate-500">
-                          <span className="flex items-center gap-1.5">
+                        <div className="flex flex-wrap items-center gap-x-3 gap-y-2 text-xs font-medium text-slate-500">
+                          <span className="flex items-center gap-1.5 bg-slate-100 px-2 py-1 rounded-md text-slate-700">
                             <Calendar className="w-3.5 h-3.5 text-slate-400" />
-                            {formatarDataExibicao(servico.data)} às{" "}
+                            {formatarDataExibicao(servico.data)}
+                          </span>
+                          <span className="flex items-center gap-1.5 bg-slate-100 px-2 py-1 rounded-md text-slate-700">
+                            <Clock className="w-3.5 h-3.5 text-slate-400" />
                             {formatarHorarioExibicao(servico.horario)}
                           </span>
-                          <span className="hidden sm:inline text-slate-300">
-                            •
-                          </span>
-                          <span className="flex items-center gap-1.5 font-mono uppercase bg-slate-100 px-2 py-0.5 rounded text-slate-700">
+                          <span className="flex items-center gap-1.5 font-mono uppercase bg-slate-100 px-2 py-1 rounded-md text-slate-700">
                             {servico.veiculo?.placa || "S/ Placa"}
                           </span>
                         </div>
@@ -277,7 +298,9 @@ export default function DashboardPage() {
                     </div>
                     <div className="flex items-center justify-between sm:justify-end gap-4 w-full sm:w-auto mt-2 sm:mt-0">
                       <StatusBadge status={servico.status || "pendente"} />
-                      <ArrowRight className="w-4 h-4 text-slate-300 group-hover:text-slate-900 transition-colors" />
+                      <div className="w-8 h-8 rounded-full flex items-center justify-center group-hover:bg-blue-50 transition-colors">
+                        <ArrowRight className="w-4 h-4 text-slate-300 group-hover:text-blue-600 transition-colors" />
+                      </div>
                     </div>
                   </Link>
                 ))}
@@ -287,55 +310,66 @@ export default function DashboardPage() {
         </motion.div>
 
         {/* Painel Lateral Rápido (Ocupa 1 coluna) */}
-        <motion.div
-          variants={itemVariants}
-          className="space-y-4 bg-slate-200 rounded-2xl p-5"
-        >
+        <motion.div variants={itemVariants} className="space-y-5">
           <h2 className="text-xl font-bold text-slate-900">Acesso Rápido</h2>
 
-          <div className="grid grid-cols-1 gap-4 ">
-            <Card className="p-5">
-              <h3 className="font-bold text-slate-900 flex items-center gap-2 mb-4">
-                <Activity className="w-5 h-5 text-slate-400" /> Status da
+          <div className="grid grid-cols-1 gap-5">
+            <Card className="p-6 border border-slate-200 shadow-sm">
+              <h3 className="font-bold text-slate-900 flex items-center gap-2 mb-5">
+                <Activity className="w-5 h-5 text-blue-500" /> Status da
                 Operação
               </h3>
               <div className="space-y-4">
                 <div>
-                  <div className="flex justify-between text-sm font-semibold mb-1.5">
+                  <div className="flex justify-between text-sm font-semibold mb-2">
                     <span className="text-slate-600">Taxa de Conclusão</span>
-                    <span className="text-slate-900">
-                      {servicosAtivos.length > 0
-                        ? Math.round(
-                            (totalConcluidos / servicosAtivos.length) * 100,
-                          )
-                        : 0}
-                      %
-                    </span>
+                    <span className="text-slate-900">{taxaConclusao}%</span>
                   </div>
-                  <div className="w-full bg-slate-100 rounded-full h-2.5 overflow-hidden">
+                  <div className="w-full bg-slate-100 rounded-full h-3 overflow-hidden shadow-inner relative">
                     <div
-                      className="bg-emerald-500 h-2.5 rounded-full transition-all duration-1000 ease-out"
-                      style={{
-                        width: `${servicosAtivos.length > 0 ? (totalConcluidos / servicosAtivos.length) * 100 : 0}%`,
-                      }}
-                    />
+                      className="bg-emerald-500 h-full rounded-full transition-all duration-1000 ease-out relative overflow-hidden"
+                      style={{ width: `${taxaConclusao}%` }}
+                    >
+                      {/* Efeito de brilho na barra de progresso */}
+                      <div
+                        className="absolute top-0 left-0 right-0 bottom-0 bg-white/20"
+                        style={{
+                          transform: "skewX(-20deg)",
+                          width: "20px",
+                          animation: "progress-shine 2s infinite",
+                        }}
+                      />
+                    </div>
                   </div>
+                  <p className="text-xs text-slate-400 mt-2 font-medium">
+                    {totalConcluidos} de {servicosAtivos.length} serviços
+                    finalizados
+                  </p>
                 </div>
               </div>
             </Card>
-            <Card
-              hoverable
-              className="p-5 flex flex-col justify-center gap-2 group cursor-pointer border-transparent bg-linear-to-br from-slate-900 to-slate-800 text-white"
+
+            {/* Link envolve o Card inteiro para melhorar UX (área de clique expandida) */}
+            <Link
+              href="/relatorios"
+              className="block focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 rounded-2xl group transition-transform hover:-translate-y-1"
             >
-              <Link href="/relatorios">
-                <TrendingUp className="w-8 h-8 text-blue-400 mb-2 group-hover:-translate-y-1 transition-transform duration-300" />
-                <h3 className="text-lg font-bold">Relatório Mensal</h3>
-                <p className="text-slate-400 text-sm">
-                  Visualize o desempenho e as métricas deste mês.
-                </p>
-               
-              </Link>
-            </Card>
+              <Card className="p-6 flex flex-col justify-center gap-3 border-transparent bg-linear-to-br from-slate-900 via-slate-800 to-slate-900 text-white shadow-lg overflow-hidden relative">
+                {/* Elemento decorativo de fundo */}
+                <div className="absolute -right-6 -top-6 w-24 h-24 bg-white/5 rounded-full blur-2xl group-hover:bg-blue-400/20 transition-colors duration-500" />
+
+                <TrendingUp className="w-8 h-8 text-blue-400 mb-1" />
+                <div>
+                  <h3 className="text-lg font-bold flex items-center justify-between">
+                    Relatório Mensal
+                    <ArrowRight className="w-4 h-4 text-slate-400 group-hover:text-white group-hover:translate-x-1 transition-all" />
+                  </h3>
+                  <p className="text-slate-400 text-sm mt-1">
+                    Visualize o desempenho e as métricas deste mês.
+                  </p>
+                </div>
+              </Card>
+            </Link>
           </div>
         </motion.div>
       </div>

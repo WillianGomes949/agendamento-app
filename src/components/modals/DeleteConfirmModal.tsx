@@ -53,17 +53,16 @@ export function DeleteConfirmModal({
                   <h3 className="text-lg font-bold text-slate-900 leading-tight">
                     {title}
                   </h3>
-                  <p className="mt-2 text-sm text-slate-500 leading-relaxed">
+                  <div className="mt-2 text-sm text-slate-500 leading-relaxed">
                     {message}{" "}
                     {itemName && (
                       <div className=" text-red-400 mt-2 gap-0 flex flex-col py-2 px-4 bg-red-50 rounded-xl border border-red-100">
-                        <p>Agendamento de: </p>
                         <span className="font-bold text-red-500 block">
                           {itemName}
                         </span>
                       </div>
                     )}
-                  </p>
+                  </div>
                 </div>
                 <button
                   onClick={onClose}
