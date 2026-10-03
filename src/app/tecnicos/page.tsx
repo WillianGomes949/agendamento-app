@@ -32,10 +32,10 @@ import {
 
 interface TecnicoStats {
   nome: string;
+  ativo: boolean; 
   totalServicos: number;
   servicosConcluidos: number;
   servicosPendentes: number;
-  ativo: boolean;
 }
 
 const containerVariants: Variants = {

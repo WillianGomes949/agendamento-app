@@ -371,7 +371,27 @@ function acaoObterStatus(requestId) {
 }
 
 function acaoObterTecnicos(requestId) {
-  return montarResposta({ success: true, requestId, data: obterItensConfig(ABAS_CONFIG.TECNICOS, 'nome') }, 200);
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const aba = ss.getSheetByName(ABAS_CONFIG.TECNICOS);
+  if (!aba || aba.getLastRow() < 2) {
+    return montarResposta({ success: true, requestId, data: [] }, 200);
+  }
+  const valores = aba.getDataRange().getDisplayValues();
+  const cabecalhos = valores[0].map(normalizarTexto);
+  const idxNome = cabecalhos.indexOf('nome');
+  const idxAtivo = cabecalhos.indexOf('ativo');
+
+  const itens = [];
+  for (let i = 1; i < valores.length; i++) {
+    const nome = String(valores[i][idxNome] || '').trim();
+    if (!nome) continue;
+    const ativo = idxAtivo === -1 ||
+      ['true', 'sim', 'yes', '1', 'x'].includes(
+        normalizarTexto(valores[i][idxAtivo])
+      );
+    itens.push({ nome, ativo });
+  }
+  return montarResposta({ success: true, requestId, data: itens }, 200);
 }
 
 function acaoObterTiposServico(requestId) {
