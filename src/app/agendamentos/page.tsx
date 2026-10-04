@@ -1,5 +1,5 @@
+// src/app/agendamentos/page.tsx
 "use client";
-import "./calendar-custom.css";
 import { useState, useMemo, useCallback } from "react";
 import { useServicos } from "@/hooks/useServicos";
 import { motion, Variants, AnimatePresence } from "framer-motion";
@@ -27,7 +27,7 @@ import { DeleteConfirmModal } from "@/components/modals/DeleteConfirmModal";
 import { FloatingActionButton } from "@/components/features/FloatingActionButton";
 import { Toaster, toast } from "react-hot-toast";
 import type { Servico, FormularioServico } from "@/lib/types";
-import { Calendar, dateFnsLocalizer, View } from "react-big-calendar";
+import { Calendar, dateFnsLocalizer } from "react-big-calendar";
 import { format } from "date-fns/format";
 import { parse } from "date-fns/parse";
 import { startOfWeek } from "date-fns/startOfWeek";
@@ -180,7 +180,7 @@ export default function AgendamentosPage() {
     ({ event }: { event: any }) => (
       <div className="flex items-center gap-1.5 overflow-hidden">
         <span className="truncate flex-1">{event.title}</span>
-        <span className="text-[10px] opacity-80 font-mono bg-white/30 px-1 rounded">
+        <span className="text-[10px] opacity-80 font-mono bg-bg/30 px-1 rounded">
           {event.resource?.horario || "S/H"}
         </span>
       </div>
@@ -192,6 +192,7 @@ export default function AgendamentosPage() {
     (event: any) => setSelectedEvent(event.resource as Servico),
     [],
   );
+
   const handleSelectSlot = useCallback(
     (slotInfo: any) => {
       setDate(slotInfo.start);
@@ -201,6 +202,7 @@ export default function AgendamentosPage() {
   );
 
   const handleNavigate = useCallback((newDate: Date) => setDate(newDate), []);
+
   const calendarTitle = useMemo(
     () => format(date, "MMMM yyyy", { locale: ptBR }),
     [date],
@@ -216,6 +218,7 @@ export default function AgendamentosPage() {
     },
     [create],
   );
+
   const handleUpdate = useCallback(
     async (id: string, data: Partial<Servico>) => {
       const result = await update(id, data);
@@ -227,6 +230,7 @@ export default function AgendamentosPage() {
     },
     [update],
   );
+
   const handleDelete = useCallback(async () => {
     if (!deletingServico) return;
     const result = await remove(deletingServico.id);
@@ -246,8 +250,8 @@ export default function AgendamentosPage() {
   if (loading && servicos.length === 0) {
     return (
       <div className="min-h-[80vh] flex flex-col items-center justify-center p-6">
-        <Loader2 className="animate-spin text-blue-600 w-12 h-12 mb-4" />
-        <p className="text-slate-500 font-medium">Carregando sua agenda...</p>
+        <Loader2 className="animate-spin text-blue-600 dark:text-blue-400 w-12 h-12 mb-4" />
+        <p className="text-text-muted font-medium">Carregando sua agenda...</p>
       </div>
     );
   }
@@ -255,13 +259,11 @@ export default function AgendamentosPage() {
   if (error) {
     return (
       <div className="min-h-[80vh] flex flex-col items-center justify-center p-6 text-center">
-        <div className="w-16 h-16 bg-rose-100/50 rounded-full flex items-center justify-center mb-4">
-          <AlertCircle className="w-8 h-8 text-rose-600" />
+        <div className="w-16 h-16 bg-rose-50 dark:bg-rose-950/30 rounded-full flex items-center justify-center mb-4 border border-rose-200 dark:border-rose-800">
+          <AlertCircle className="w-8 h-8 text-rose-500 dark:text-rose-400" />
         </div>
-        <h2 className="text-xl font-bold text-slate-900">
-          Ops! Algo deu errado
-        </h2>
-        <p className="text-slate-500 mt-2 text-sm max-w-xs">{error}</p>
+        <h2 className="text-xl font-bold text-text">Ops! Algo deu errado</h2>
+        <p className="text-text-muted mt-2 text-sm max-w-xs">{error}</p>
         <Button variant="outline" className="mt-6 min-h-11" onClick={refresh}>
           Tentar novamente
         </Button>
@@ -290,7 +292,7 @@ export default function AgendamentosPage() {
         position="top-center"
         toastOptions={{
           className:
-            "shadow-xl rounded-2xl font-medium text-sm border border-slate-100",
+            "shadow-xl rounded-2xl font-medium text-sm border border-border",
           duration: 3000,
         }}
       />
@@ -301,10 +303,10 @@ export default function AgendamentosPage() {
         className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 px-4 sm:px-0"
       >
         <div>
-          <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
+          <h1 className="text-2xl sm:text-3xl font-extrabold text-text tracking-tight">
             Agenda
           </h1>
-          <p className="text-slate-500 text-sm mt-1">
+          <p className="text-text-muted text-sm mt-1">
             Planeje e gerencie seus serviços.
           </p>
         </div>
@@ -330,37 +332,33 @@ export default function AgendamentosPage() {
             icon: CalendarIcon,
             label: "Total",
             value: metricas.total,
-            color: "blue",
-            bg: "bg-blue-50",
-            text: "text-blue-600",
-            border: "border-blue-100",
+            bg: "bg-blue-50 dark:bg-blue-950/30",
+            text: "text-blue-600 dark:text-blue-400",
+            border: "border-blue-100 dark:border-blue-900/50",
           },
           {
             icon: CheckCircle,
             label: "Hoje",
             value: metricas.hoje,
-            color: "emerald",
-            bg: "bg-emerald-50",
-            text: "text-emerald-600",
-            border: "border-emerald-100",
+            bg: "bg-emerald-50 dark:bg-emerald-950/30",
+            text: "text-emerald-600 dark:text-emerald-400",
+            border: "border-emerald-100 dark:border-emerald-900/50",
           },
           {
             icon: Clock,
             label: "Pendentes",
             value: metricas.pendentes,
-            color: "amber",
-            bg: "bg-amber-50",
-            text: "text-amber-600",
-            border: "border-amber-100",
+            bg: "bg-amber-50 dark:bg-amber-950/30",
+            text: "text-amber-600 dark:text-amber-400",
+            border: "border-amber-100 dark:border-amber-900/50",
           },
           {
             icon: Wrench,
             label: "Concluídos",
             value: metricas.concluidos,
-            color: "indigo",
-            bg: "bg-indigo-50",
-            text: "text-indigo-600",
-            border: "border-indigo-100",
+            bg: "bg-indigo-50 dark:bg-indigo-950/30",
+            text: "text-indigo-600 dark:text-indigo-400",
+            border: "border-indigo-100 dark:border-indigo-900/50",
           },
         ].map((kpi, i) => (
           <Card
@@ -373,10 +371,10 @@ export default function AgendamentosPage() {
               <kpi.icon className="w-5 h-5 sm:w-6 sm:h-6" />
             </div>
             <div>
-              <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-0.5">
+              <p className="text-xs font-bold text-text-muted uppercase tracking-wider mb-0.5">
                 {kpi.label}
               </p>
-              <p className="text-xl sm:text-2xl font-black text-slate-900 leading-none">
+              <p className="text-xl sm:text-2xl font-black text-text leading-none">
                 {kpi.value}
               </p>
             </div>
@@ -386,9 +384,9 @@ export default function AgendamentosPage() {
 
       {/* Calendário Area */}
       <motion.div variants={itemVariants} className="px-4 sm:px-0">
-        <Card className="p-0 overflow-hidden shadow-sm border border-slate-200/60 bg-white">
-          {/* Toolbar Customizada Unificada (Resolve a sobreposição e melhora o responsivo) */}
-          <div className="flex flex-col lg:flex-row items-center justify-between gap-4 p-4 border-b border-slate-100 bg-slate-50/50">
+        <Card className="p-0 overflow-hidden shadow-sm border border-border bg-bg-elevated">
+          {/* Toolbar Customizada */}
+          <div className="flex flex-col lg:flex-row items-center justify-between gap-4 p-4 border-b border-border bg-bg-muted/50">
             {/* Navegação de Meses/Dias */}
             <div className="flex items-center justify-between w-full lg:w-auto gap-2">
               <Button
@@ -397,26 +395,24 @@ export default function AgendamentosPage() {
                 onClick={() =>
                   setDate(new Date(date.getFullYear(), date.getMonth() - 1, 1))
                 }
-                className="min-h-11 min-w-11 rounded-xl bg-white"
+                className="min-h-11 min-w-11 rounded-xl bg-bg-elevated"
               >
-                <ChevronLeft className="w-5 h-5 text-slate-600" />
+                <ChevronLeft className="w-5 h-5 text-text-muted" />
               </Button>
-
               <div className="flex flex-col items-center min-w-35">
-                <h2 className="text-lg font-bold text-slate-900 capitalize leading-tight">
+                <h2 className="text-lg font-bold text-text capitalize leading-tight">
                   {calendarTitle}
                 </h2>
               </div>
-
               <Button
                 variant="outline"
                 size="sm"
                 onClick={() =>
                   setDate(new Date(date.getFullYear(), date.getMonth() + 1, 1))
                 }
-                className="min-h-11 min-w-11 rounded-xl bg-white"
+                className="min-h-11 min-w-11 rounded-xl bg-bg-elevated"
               >
-                <ChevronRight className="w-5 h-5 text-slate-600" />
+                <ChevronRight className="w-5 h-5 text-text-muted" />
               </Button>
             </div>
 
@@ -425,20 +421,19 @@ export default function AgendamentosPage() {
               <Button
                 variant="outline"
                 onClick={() => setDate(new Date())}
-                className="min-h-10 bg-white whitespace-nowrap shrink-0"
+                className="min-h-10 bg-bg-elevated whitespace-nowrap shrink-0"
               >
                 Ir para Hoje
               </Button>
-
-              <div className="flex bg-slate-100/80 p-1 rounded-xl shrink-0">
+              <div className="flex bg-bg-muted p-1 rounded-xl shrink-0 border border-border">
                 {views.map((v) => (
                   <button
                     key={v}
                     onClick={() => setView(v)}
                     className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all whitespace-nowrap ${
                       view === v
-                        ? "bg-white text-blue-600 shadow-sm ring-1 ring-slate-200/50"
-                        : "text-slate-500 hover:text-slate-900"
+                        ? "bg-bg-elevated text-blue-600 dark:text-blue-400 shadow-sm ring-1 ring-border"
+                        : "text-text-muted hover:text-text"
                     }`}
                   >
                     {viewLabels[v]}
@@ -497,19 +492,17 @@ export default function AgendamentosPage() {
         </Card>
       </motion.div>
 
-      {/* Bottom Sheet Modal (Mobile) / Side ou Central Card (Desktop) */}
+      {/* Bottom Sheet Modal (Mobile) / Card (Desktop) */}
       <AnimatePresence>
         {selectedEvent && (
           <>
-            {/* Backdrop escurecido no mobile */}
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setSelectedEvent(null)}
-              className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-40 md:hidden"
+              className="fixed inset-0 bg-black/40 dark:bg-black/60 backdrop-blur-sm z-40 md:hidden"
             />
-
             <motion.div
               initial={{ opacity: 0, y: "100%" }}
               animate={{ opacity: 1, y: 0 }}
@@ -517,20 +510,20 @@ export default function AgendamentosPage() {
               transition={{ type: "spring", damping: 25, stiffness: 200 }}
               className="fixed bottom-0 left-0 right-0 z-50 md:static md:z-auto md:mt-6"
             >
-              <Card className="rounded-t-3xl md:rounded-2xl p-5 md:p-6 max-h-[85vh] overflow-y-auto bg-white shadow-2xl md:shadow-lg border-t border-slate-100 md:border">
-                {/* Drag Handle (Apenas Mobile) */}
-                <div className="w-12 h-1.5 bg-slate-200 rounded-full mx-auto mb-6 md:hidden" />
+              <Card className="rounded-t-3xl md:rounded-2xl p-5 md:p-6 max-h-[85vh] overflow-y-auto bg-bg-elevated shadow-2xl md:shadow-lg border-t border-border md:border">
+                {/* Drag Handle (Mobile) */}
+                <div className="w-12 h-1.5 bg-border-strong rounded-full mx-auto mb-6 md:hidden" />
 
                 <div className="flex items-start justify-between mb-6">
                   <div className="flex items-center gap-4">
-                    <div className="p-3 bg-slate-50 border border-slate-100 rounded-2xl">
-                      <Car className="w-6 h-6 text-slate-600" />
+                    <div className="p-3 bg-bg-muted border border-border rounded-2xl">
+                      <Car className="w-6 h-6 text-text-muted" />
                     </div>
                     <div>
-                      <h3 className="text-lg font-bold text-slate-900">
+                      <h3 className="text-lg font-bold text-text">
                         {selectedEvent.cliente?.nome || "Cliente não informado"}
                       </h3>
-                      <p className="text-sm text-slate-500 font-mono font-medium tracking-wide bg-slate-100 inline-block px-2 py-0.5 rounded-md mt-1">
+                      <p className="text-sm text-text font-mono font-medium tracking-wide bg-bg-muted inline-block px-2 py-0.5 rounded-md mt-1 border border-border">
                         {selectedEvent.veiculo?.placa || "S/ PLACA"}
                       </p>
                     </div>
@@ -538,19 +531,19 @@ export default function AgendamentosPage() {
                   <div className="flex flex-col items-end gap-3">
                     <button
                       onClick={() => setSelectedEvent(null)}
-                      className="p-2 hover:bg-slate-100 rounded-full active:scale-90 transition-transform bg-slate-50"
+                      className="p-2 hover:bg-bg-muted rounded-full active:scale-90 transition-transform bg-bg-muted border border-border"
                     >
-                      <X className="w-5 h-5 text-slate-500" />
+                      <X className="w-5 h-5 text-text-muted" />
                     </button>
                     <StatusBadge status={selectedEvent.status || "pendente"} />
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6 bg-slate-50/50 p-4 rounded-2xl border border-slate-100">
-                  <div className="flex items-center gap-3 text-slate-600">
-                    <CalendarIcon className="w-5 h-5 text-blue-500" />
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6 bg-bg-muted p-4 rounded-2xl border border-border">
+                  <div className="flex items-center gap-3 text-text">
+                    <CalendarIcon className="w-5 h-5 text-blue-500 dark:text-blue-400" />
                     <div className="flex flex-col">
-                      <span className="text-xs font-semibold text-slate-400 uppercase">
+                      <span className="text-xs font-semibold text-text-muted uppercase">
                         Data & Hora
                       </span>
                       <span className="font-semibold text-sm">
@@ -558,10 +551,10 @@ export default function AgendamentosPage() {
                       </span>
                     </div>
                   </div>
-                  <div className="flex items-center gap-3 text-slate-600">
-                    <User className="w-5 h-5 text-emerald-500" />
+                  <div className="flex items-center gap-3 text-text">
+                    <User className="w-5 h-5 text-emerald-500 dark:text-emerald-400" />
                     <div className="flex flex-col">
-                      <span className="text-xs font-semibold text-slate-400 uppercase">
+                      <span className="text-xs font-semibold text-text-muted uppercase">
                         Técnico
                       </span>
                       <span className="font-semibold text-sm">
@@ -569,10 +562,10 @@ export default function AgendamentosPage() {
                       </span>
                     </div>
                   </div>
-                  <div className="flex items-center gap-3 text-slate-600">
-                    <MapPin className="w-5 h-5 text-rose-500" />
+                  <div className="flex items-center gap-3 text-text">
+                    <MapPin className="w-5 h-5 text-rose-500 dark:text-rose-400" />
                     <div className="flex flex-col">
-                      <span className="text-xs font-semibold text-slate-400 uppercase">
+                      <span className="text-xs font-semibold text-text-muted uppercase">
                         Local
                       </span>
                       <span className="font-semibold text-sm">
@@ -580,10 +573,10 @@ export default function AgendamentosPage() {
                       </span>
                     </div>
                   </div>
-                  <div className="flex items-center gap-3 text-slate-600">
-                    <Wrench className="w-5 h-5 text-amber-500" />
+                  <div className="flex items-center gap-3 text-text">
+                    <Wrench className="w-5 h-5 text-amber-500 dark:text-amber-400" />
                     <div className="flex flex-col">
-                      <span className="text-xs font-semibold text-slate-400 uppercase">
+                      <span className="text-xs font-semibold text-text-muted uppercase">
                         Serviço
                       </span>
                       <span className="font-semibold text-sm">
@@ -594,19 +587,19 @@ export default function AgendamentosPage() {
                 </div>
 
                 {selectedEvent.observacao && (
-                  <div className="mb-6 p-4 bg-amber-50/50 border border-amber-100/50 rounded-2xl text-sm text-slate-700">
-                    <span className="font-bold text-amber-800 block mb-1">
+                  <div className="mb-6 p-4 bg-amber-50/50 dark:bg-amber-950/20 border border-amber-200/60 dark:border-amber-800/60 rounded-2xl text-sm text-amber-900 dark:text-amber-200">
+                    <span className="font-bold text-amber-800 dark:text-amber-300 block mb-1">
                       Observações:
                     </span>
                     {selectedEvent.observacao}
                   </div>
                 )}
 
-                <div className="flex flex-col sm:flex-row gap-3 pt-2 border-t border-slate-100 mt-2">
+                <div className="flex flex-col sm:flex-row gap-3 pt-2 border-t border-border mt-2">
                   <Button
                     variant="outline"
                     onClick={() => openEditForm(selectedEvent)}
-                    className="flex-1 flex items-center justify-center gap-2 min-h-12 bg-white hover:bg-slate-50"
+                    className="flex-1 flex items-center justify-center gap-2 min-h-12 bg-bg-elevated hover:bg-bg-muted"
                   >
                     <Wrench className="w-4 h-4" /> Editar Serviço
                   </Button>
@@ -616,7 +609,7 @@ export default function AgendamentosPage() {
                       setDeletingServico(selectedEvent);
                       setSelectedEvent(null);
                     }}
-                    className="flex-1 flex items-center justify-center gap-2 min-h-12 text-rose-600 border-rose-200 hover:bg-rose-50 hover:text-rose-700"
+                    className="flex-1 flex items-center justify-center gap-2 min-h-12 text-rose-600 dark:text-rose-400 border-rose-200 dark:border-rose-800 hover:bg-rose-50 dark:hover:bg-rose-950/20 hover:text-rose-700 dark:hover:text-rose-300"
                   >
                     <Trash2 className="w-4 h-4" /> Excluir Registro
                   </Button>
@@ -651,6 +644,7 @@ export default function AgendamentosPage() {
         initialData={editingServico}
         isLoading={isCreating || isUpdating}
       />
+
       <DeleteConfirmModal
         isOpen={!!deletingServico}
         onClose={() => setDeletingServico(null)}

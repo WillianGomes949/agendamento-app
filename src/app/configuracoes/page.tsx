@@ -1,6 +1,5 @@
 // src/app/configuracoes/page.tsx
 "use client";
-
 import { useState } from "react";
 import { motion, Variants } from "framer-motion";
 import { Toaster, toast } from "react-hot-toast";
@@ -18,10 +17,11 @@ import {
   Globe,
   Trash2,
 } from "lucide-react";
-
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
+import { useTheme } from "@/hooks/useTheme";
+import { ThemeToggle } from "@/components/ui/ThemeToggle";
 
 // Variantes de animação padrão do projeto
 const containerVariants: Variants = {
@@ -41,7 +41,7 @@ const itemVariants: Variants = {
   },
 };
 
-// Componente Toggle Switch alinhado ao design system (slate-900 para ativo)
+// Componente Toggle Switch alinhado ao design system
 const ToggleSwitch = ({
   enabled,
   onToggle,
@@ -53,23 +53,23 @@ const ToggleSwitch = ({
   label: string;
   description?: string;
 }) => (
-  <div className="flex items-center justify-between p-5 border border-slate-200/60 rounded-2xl bg-white hover:border-slate-300 transition-colors">
+  <div className="flex items-center justify-between p-5 border border-border rounded-2xl bg-bg-elevated hover:border-border-strong transition-colors">
     <div className="flex-1 pr-4">
-      <h3 className="font-bold text-slate-900">{label}</h3>
+      <h3 className="font-bold text-text">{label}</h3>
       {description && (
-        <p className="text-sm text-slate-500 mt-0.5">{description}</p>
+        <p className="text-sm text-text-muted mt-0.5">{description}</p>
       )}
     </div>
     <button
       onClick={onToggle}
-      className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-slate-900 focus:ring-offset-2 ${
-        enabled ? "bg-slate-900" : "bg-slate-200"
+      className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2 ${
+        enabled ? "bg-accent" : "bg-border-strong"
       }`}
       role="switch"
       aria-checked={enabled}
     >
       <span
-        className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
+        className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-bg-elevated shadow ring-0 transition duration-200 ease-in-out ${
           enabled ? "translate-x-5" : "translate-x-0"
         }`}
       />
@@ -92,8 +92,9 @@ export default function ConfiguracoesPage() {
   const [notifications, setNotifications] = useState(true);
   const [emailAlerts, setEmailAlerts] = useState(true);
   const [twoFactor, setTwoFactor] = useState(false);
-  const [darkMode, setDarkMode] = useState(false);
   const [language, setLanguage] = useState("pt-BR");
+
+  const { theme, setTheme, resolvedTheme } = useTheme();
 
   const handleSave = () => {
     toast.success("Configurações salvas com sucesso!", {
@@ -143,7 +144,7 @@ export default function ConfiguracoesPage() {
         position="top-right"
         toastOptions={{
           className:
-            "shadow-xl rounded-2xl font-medium text-sm border border-slate-100",
+            "shadow-xl rounded-2xl font-medium text-sm border border-border",
           duration: 4000,
         }}
       />
@@ -154,10 +155,10 @@ export default function ConfiguracoesPage() {
         className="flex flex-col md:flex-row md:items-end justify-between gap-4"
       >
         <div>
-          <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight text-slate-900 mb-2">
+          <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight text-text mb-2">
             Configurações
           </h1>
-          <p className="text-slate-500 text-sm md:text-base">
+          <p className="text-text-muted text-sm md:text-base">
             Gerencie suas preferências, segurança e dados da conta.
           </p>
         </div>
@@ -187,12 +188,14 @@ export default function ConfiguracoesPage() {
                   onClick={() => setActiveTab(tab.id)}
                   className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left transition-all duration-200 ${
                     isActive
-                      ? "bg-slate-900 text-white shadow-sm"
-                      : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
+                      ? "bg-accent text-accent-foreground shadow-sm"
+                      : "text-text-muted hover:bg-bg-muted hover:text-text"
                   }`}
                 >
                   <Icon
-                    className={`w-5 h-5 ${isActive ? "text-white" : "text-slate-400"}`}
+                    className={`w-5 h-5 ${
+                      isActive ? "text-accent-foreground" : "text-text-muted"
+                    }`}
                   />
                   <span className="font-semibold text-sm">{tab.label}</span>
                 </button>
@@ -201,19 +204,19 @@ export default function ConfiguracoesPage() {
           </Card>
 
           {/* Danger Zone */}
-          <Card className="p-5 bg-rose-50/50 border-rose-100">
-            <div className="flex items-center gap-2 text-rose-700 mb-2">
+          <Card className="p-5 bg-rose-50/50 dark:bg-rose-950/20 border-rose-200 dark:border-rose-900">
+            <div className="flex items-center gap-2 text-rose-700 dark:text-rose-400 mb-2">
               <AlertTriangle className="w-5 h-5" />
               <h3 className="font-bold text-sm uppercase tracking-wider">
                 Zona de Perigo
               </h3>
             </div>
-            <p className="text-xs text-rose-600/80 mb-4">
+            <p className="text-xs text-rose-600/80 dark:text-rose-400/80 mb-4">
               Ações irreversíveis para a sua conta e dados.
             </p>
             <Button
               variant="outline"
-              className="w-full text-rose-600 border-rose-200 hover:bg-rose-100 hover:text-rose-700 hover:border-rose-300"
+              className="w-full text-rose-600 dark:text-rose-400 border-rose-200 dark:border-rose-800 hover:bg-rose-100 dark:hover:bg-rose-950/30 hover:text-rose-700 dark:hover:text-rose-300 hover:border-rose-300 dark:hover:border-rose-700"
             >
               <Trash2 className="w-4 h-4 mr-2" />
               Excluir conta
@@ -228,29 +231,27 @@ export default function ConfiguracoesPage() {
               {/* ABA: PERFIL */}
               {activeTab === "perfil" && (
                 <div className="space-y-6">
-                  <h2 className="text-xl font-bold text-slate-900 mb-6">
+                  <h2 className="text-xl font-bold text-text mb-6">
                     Informações do Perfil
                   </h2>
-
-                  <div className="flex items-center gap-6 mb-8 p-4 bg-slate-50/50 rounded-2xl border border-slate-100">
-                    <div className="w-20 h-20 rounded-full bg-slate-900 flex items-center justify-center text-white text-3xl font-bold shadow-sm">
+                  <div className="flex items-center gap-6 mb-8 p-4 bg-bg-muted rounded-2xl border border-border">
+                    <div className="w-20 h-20 rounded-full bg-accent flex items-center justify-center text-accent-foreground text-3xl font-bold shadow-sm">
                       {user.nome.charAt(0).toUpperCase()}
                     </div>
                     <div>
                       <Button
                         variant="outline"
                         size="sm"
-                        className="gap-2 bg-white"
+                        className="gap-2 bg-bg-elevated"
                       >
                         <Upload className="w-4 h-4" />
                         Alterar foto
                       </Button>
-                      <p className="text-xs text-slate-500 mt-2">
+                      <p className="text-xs text-text-muted mt-2">
                         JPG, PNG ou GIF. Máx. 2MB
                       </p>
                     </div>
                   </div>
-
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                     <Input
                       label="Nome completo"
@@ -283,7 +284,7 @@ export default function ConfiguracoesPage() {
                       }
                     />
                     <div className="md:col-span-2">
-                      <label className="block text-sm font-semibold text-slate-700 mb-1.5">
+                      <label className="block text-sm font-semibold text-text mb-1.5">
                         Bio
                       </label>
                       <textarea
@@ -293,7 +294,7 @@ export default function ConfiguracoesPage() {
                           setUser({ ...user, bio: e.target.value })
                         }
                         placeholder="Conte um pouco sobre você e seus projetos..."
-                        className="w-full px-4 py-2.5 border border-slate-200 rounded-xl bg-slate-50/50 text-slate-900 focus:bg-white focus:outline-none focus:ring-4 focus:ring-slate-100 focus:border-slate-900 transition-all resize-none shadow-sm"
+                        className="w-full px-4 py-2.5 border border-border rounded-xl bg-bg-muted text-text focus:bg-bg-elevated focus:outline-none focus:ring-4 focus:ring-accent/10 focus:border-accent transition-all resize-none shadow-sm"
                       />
                     </div>
                   </div>
@@ -303,7 +304,7 @@ export default function ConfiguracoesPage() {
               {/* ABA: NOTIFICAÇÕES */}
               {activeTab === "notificacoes" && (
                 <div className="space-y-6">
-                  <h2 className="text-xl font-bold text-slate-900 mb-6">
+                  <h2 className="text-xl font-bold text-text mb-6">
                     Preferências de Notificação
                   </h2>
                   <div className="space-y-4">
@@ -326,49 +327,47 @@ export default function ConfiguracoesPage() {
               {/* ABA: SEGURANÇA */}
               {activeTab === "seguranca" && (
                 <div className="space-y-6">
-                  <h2 className="text-xl font-bold text-slate-900 mb-6">
+                  <h2 className="text-xl font-bold text-text mb-6">
                     Segurança da Conta
                   </h2>
                   <div className="space-y-4">
                     <Card className="p-5">
-                      <h3 className="font-bold text-slate-900 mb-1">
+                      <h3 className="font-bold text-text mb-1">
                         Alterar senha
                       </h3>
-                      <p className="text-sm text-slate-500 mb-4">
+                      <p className="text-sm text-text-muted mb-4">
                         Última alteração há 3 meses
                       </p>
                       <Button variant="outline">Redefinir senha</Button>
                     </Card>
-
                     <ToggleSwitch
                       enabled={twoFactor}
                       onToggle={() => setTwoFactor(!twoFactor)}
                       label="Autenticação de dois fatores (2FA)"
                       description="Adicione uma camada extra de segurança à sua conta."
                     />
-
                     <Card className="p-5">
-                      <h3 className="font-bold text-slate-900 mb-1">
+                      <h3 className="font-bold text-text mb-1">
                         Sessões ativas
                       </h3>
-                      <p className="text-sm text-slate-500 mb-4">
+                      <p className="text-sm text-text-muted mb-4">
                         Gerencie os dispositivos conectados à sua conta.
                       </p>
-                      <div className="flex items-center justify-between p-4 bg-slate-50 rounded-xl border border-slate-100">
+                      <div className="flex items-center justify-between p-4 bg-bg-muted rounded-xl border border-border">
                         <div className="flex items-center gap-4">
-                          <div className="p-2 bg-white rounded-lg shadow-sm border border-slate-100">
-                            <Laptop className="w-5 h-5 text-slate-500" />
+                          <div className="p-2 bg-bg-elevated rounded-lg shadow-sm border border-border">
+                            <Laptop className="w-5 h-5 text-text-muted" />
                           </div>
                           <div>
-                            <p className="text-sm font-bold text-slate-900">
+                            <p className="text-sm font-bold text-text">
                               Chrome - Linux (Pop!_OS)
                             </p>
-                            <p className="text-xs text-emerald-600 font-medium mt-0.5">
+                            <p className="text-xs text-emerald-600 dark:text-emerald-400 font-medium mt-0.5">
                               Sessão Atual • Fortaleza, BR
                             </p>
                           </div>
                         </div>
-                        <span className="text-xs font-semibold px-2.5 py-1 bg-emerald-100 text-emerald-700 rounded-full">
+                        <span className="text-xs font-semibold px-2.5 py-1 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 rounded-full">
                           Online
                         </span>
                       </div>
@@ -380,26 +379,29 @@ export default function ConfiguracoesPage() {
               {/* ABA: APARÊNCIA */}
               {activeTab === "aparencia" && (
                 <div className="space-y-6">
-                  <h2 className="text-xl font-bold text-slate-900 mb-6">
+                  <h2 className="text-xl font-bold text-text mb-6">
                     Aparência e Idioma
                   </h2>
                   <div className="space-y-4">
-                    <ToggleSwitch
-                      enabled={darkMode}
-                      onToggle={() => setDarkMode(!darkMode)}
-                      label="Modo escuro"
-                      description="Alterne entre o tema claro e escuro da interface."
-                    />
+                    <Card className="p-5">
+                      <h3 className="font-bold text-text mb-1">
+                        Tema da interface
+                      </h3>
+                      <p className="text-sm text-text-muted mb-4">
+                        Escolha entre claro, escuro ou seguir o sistema.
+                      </p>
+                      <ThemeToggle />
+                    </Card>
 
                     <Card className="p-5">
-                      <h3 className="font-bold text-slate-900 mb-3 flex items-center gap-2">
-                        <Globe className="w-5 h-5 text-slate-500" />
+                      <h3 className="font-bold text-text mb-3 flex items-center gap-2">
+                        <Globe className="w-5 h-5 text-text-muted" />
                         Idioma do Sistema
                       </h3>
                       <select
                         value={language}
                         onChange={(e) => setLanguage(e.target.value)}
-                        className="w-full md:w-1/2 px-4 py-2.5 border border-slate-200 rounded-xl bg-slate-50/50 text-slate-900 font-medium focus:bg-white focus:outline-none focus:ring-4 focus:ring-slate-100 focus:border-slate-900 transition-all shadow-sm cursor-pointer"
+                        className="w-full md:w-1/2 px-4 py-2.5 border border-border rounded-xl bg-bg-muted text-text font-medium focus:bg-bg-elevated focus:outline-none focus:ring-4 focus:ring-accent/10 focus:border-accent transition-all shadow-sm cursor-pointer"
                       >
                         <option value="pt-BR">Português (Brasil)</option>
                         <option value="en-US">English (US)</option>
@@ -413,7 +415,7 @@ export default function ConfiguracoesPage() {
               {/* ABA: INTEGRAÇÕES */}
               {activeTab === "integracoes" && (
                 <div className="space-y-6">
-                  <h2 className="text-xl font-bold text-slate-900 mb-6">
+                  <h2 className="text-xl font-bold text-text mb-6">
                     Integrações de Ferramentas
                   </h2>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -424,21 +426,21 @@ export default function ConfiguracoesPage() {
                       >
                         <div className="flex items-start justify-between mb-4">
                           <div className="flex items-center gap-3">
-                            <div className="p-2.5 bg-slate-50 rounded-xl border border-slate-100 shadow-sm">
-                              <Blocks className="w-6 h-6 text-slate-600" />
+                            <div className="p-2.5 bg-bg-muted rounded-xl border border-border shadow-sm">
+                              <Blocks className="w-6 h-6 text-text-muted" />
                             </div>
                             <div>
-                              <h3 className="font-bold text-slate-900">
+                              <h3 className="font-bold text-text">
                                 {integration.name}
                               </h3>
-                              <p className="text-xs text-slate-500 mt-0.5">
+                              <p className="text-xs text-text-muted mt-0.5">
                                 {integration.description}
                               </p>
                               <span
                                 className={`inline-block mt-2 text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full ${
                                   integration.connected
-                                    ? "bg-emerald-100 text-emerald-700"
-                                    : "bg-slate-100 text-slate-600"
+                                    ? "bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400"
+                                    : "bg-bg-muted text-text-muted"
                                 }`}
                               >
                                 {integration.connected
@@ -454,7 +456,7 @@ export default function ConfiguracoesPage() {
                           }
                           className={`w-full mt-4 ${
                             integration.connected
-                              ? "text-rose-600 border-rose-200 hover:bg-rose-50 hover:text-rose-700 hover:border-rose-300"
+                              ? "text-rose-600 dark:text-rose-400 border-rose-200 dark:border-rose-800 hover:bg-rose-50 dark:hover:bg-rose-950/30 hover:text-rose-700 dark:hover:text-rose-300 hover:border-rose-300 dark:hover:border-rose-700"
                               : ""
                           }`}
                         >

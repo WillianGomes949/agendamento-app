@@ -1,6 +1,5 @@
 // src/components/ui/Button.tsx
 "use client";
-
 import { forwardRef } from "react";
 import { motion, HTMLMotionProps } from "framer-motion";
 import { Loader2, LucideIcon } from "lucide-react";
@@ -18,11 +17,16 @@ interface ButtonProps extends Omit<HTMLMotionProps<"button">, "children"> {
 }
 
 const variantClasses: Record<ButtonVariant, string> = {
-  primary: "bg-slate-900 text-white hover:bg-slate-800 focus:ring-slate-900 shadow-sm",
-  secondary: "bg-slate-100 text-slate-900 hover:bg-slate-200 focus:ring-slate-300",
-  outline: "border-2 border-slate-200 bg-transparent text-slate-700 hover:border-slate-300 hover:bg-slate-50 focus:ring-slate-200",
-  ghost: "bg-transparent text-slate-600 hover:bg-slate-100 hover:text-slate-900 focus:ring-slate-200",
-  danger: "bg-red-500 text-white hover:bg-red-600 focus:ring-red-500 shadow-sm",
+  primary:
+    "bg-accent text-accent-foreground hover:bg-accent/90 focus:ring-accent shadow-sm",
+  secondary:
+    "bg-bg-muted text-text hover:bg-bg-muted/80 focus:ring-border-strong",
+  outline:
+    "border-2 border-border bg-transparent text-text hover:border-border-strong hover:bg-bg-muted focus:ring-border",
+  ghost:
+    "bg-transparent text-text-muted hover:bg-bg-muted hover:text-text focus:ring-border",
+  danger:
+    "bg-rose-500 text-white hover:bg-rose-600 focus:ring-rose-500 shadow-sm",
 };
 
 const sizeClasses: Record<ButtonSize, string> = {
@@ -32,7 +36,19 @@ const sizeClasses: Record<ButtonSize, string> = {
 };
 
 export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
-  ({ variant = "primary", size = "md", isLoading, icon: Icon, className, children, disabled, ...props }, ref) => {
+  (
+    {
+      variant = "primary",
+      size = "md",
+      isLoading,
+      icon: Icon,
+      className,
+      children,
+      disabled,
+      ...props
+    },
+    ref,
+  ) => {
     const isDisabled = disabled || isLoading;
 
     return (
@@ -46,7 +62,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
           "inline-flex items-center justify-center gap-2 rounded-xl transition-all focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed",
           variantClasses[variant],
           sizeClasses[size],
-          className
+          className,
         )}
         {...props}
       >
@@ -58,7 +74,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
         {children}
       </motion.button>
     );
-  }
+  },
 );
 
 Button.displayName = "Button";

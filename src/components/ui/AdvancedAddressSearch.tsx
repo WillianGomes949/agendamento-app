@@ -1,6 +1,5 @@
 // src/components/ui/AdvancedAddressSearch.tsx
 "use client";
-
 import { useState, useCallback } from "react";
 import {
   Search,
@@ -38,7 +37,7 @@ export function AdvancedAddressSearch({
   const [street, setStreet] = useState("");
   const [results, setResults] = useState<EnderecoResponse[]>([]);
   const [loading, setLoading] = useState(false);
- const [error, setError] = useState<string | undefined>(undefined);
+  const [error, setError] = useState<string | undefined>(undefined);
   const [showResults, setShowResults] = useState(false);
 
   const buscarPorCep = useCallback(async () => {
@@ -46,10 +45,13 @@ export function AdvancedAddressSearch({
       setError("Digite um CEP válido com 8 dígitos");
       return;
     }
+
     setLoading(true);
     setError(undefined);
+
     try {
       const result = await addressService.buscarPorCep(cep);
+
       if (result) {
         onAddressSelect({
           cep: result.cep,
@@ -63,7 +65,7 @@ export function AdvancedAddressSearch({
       } else {
         setError("CEP não encontrado");
       }
-    } catch (err) {
+    } catch {
       setError("Erro ao buscar CEP");
     } finally {
       setLoading(false);
@@ -75,14 +77,17 @@ export function AdvancedAddressSearch({
       setError("Preencha UF, Cidade e Rua para buscar");
       return;
     }
+
     setLoading(true);
     setError(undefined);
+
     try {
       const enderecos = await addressService.buscarPorEndereco({
         uf,
         city,
         street,
       });
+
       if (enderecos.length > 0) {
         setResults(enderecos);
         setShowResults(true);
@@ -90,42 +95,45 @@ export function AdvancedAddressSearch({
         setError("Nenhum endereço encontrado");
         setResults([]);
       }
-    } catch (err) {
+    } catch {
       setError("Erro ao buscar endereço");
     } finally {
       setLoading(false);
     }
   }, [uf, city, street]);
 
-  const selecionarEndereco = useCallback((endereco: EnderecoResponse) => {
-    onAddressSelect({
-      cep: endereco.cep,
-      rua: endereco.street,
-      bairro: endereco.neighborhood,
-      cidade: endereco.city,
-      estado: endereco.state,
-    });
-    setResults([]);
-    setShowResults(false);
-   setError(undefined);
-  }, [onAddressSelect]);
+  const selecionarEndereco = useCallback(
+    (endereco: EnderecoResponse) => {
+      onAddressSelect({
+        cep: endereco.cep,
+        rua: endereco.street,
+        bairro: endereco.neighborhood,
+        cidade: endereco.city,
+        estado: endereco.state,
+      });
+      setResults([]);
+      setShowResults(false);
+      setError(undefined);
+    },
+    [onAddressSelect],
+  );
 
   return (
     <div className={`space-y-5 ${className}`}>
       {/* Abas (Tabs) Modernas */}
-      <div className="flex gap-4 border-b border-slate-200">
+      <div className="flex gap-4 border-b border-border">
         <button
           type="button"
           onClick={() => setSearchType("cep")}
           className={`pb-3 text-sm font-semibold transition-all relative flex items-center gap-2 ${
             searchType === "cep"
-              ? "text-slate-900"
-              : "text-slate-500 hover:text-slate-700"
+              ? "text-text"
+              : "text-text-muted hover:text-text"
           }`}
         >
           <Home size={14} /> Buscar por CEP
           {searchType === "cep" && (
-            <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-slate-900 rounded-t-full" />
+            <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-accent rounded-t-full" />
           )}
         </button>
         <button
@@ -133,19 +141,19 @@ export function AdvancedAddressSearch({
           onClick={() => setSearchType("address")}
           className={`pb-3 text-sm font-semibold transition-all relative flex items-center gap-2 ${
             searchType === "address"
-              ? "text-slate-900"
-              : "text-slate-500 hover:text-slate-700"
+              ? "text-text"
+              : "text-text-muted hover:text-text"
           }`}
         >
           <Building size={14} /> Buscar por Endereço
           {searchType === "address" && (
-            <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-slate-900 rounded-t-full" />
+            <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-accent rounded-t-full" />
           )}
         </button>
       </div>
 
       {/* Área do Formulário */}
-      <div className="bg-slate-50/50 border border-slate-200/60 p-5 rounded-2xl">
+      <div className="bg-bg-muted border border-border p-5 rounded-2xl">
         {searchType === "cep" && (
           <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-end">
             <Input
@@ -221,7 +229,7 @@ export function AdvancedAddressSearch({
               </Button>
             </div>
             {error && (
-              <div className="flex items-center gap-2 text-sm font-medium text-red-600 bg-red-50 p-3 rounded-xl border border-red-100">
+              <div className="flex items-center gap-2 text-sm font-medium text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/30 p-3 rounded-xl border border-rose-200 dark:border-rose-800">
                 <AlertCircle size={16} /> {error}
               </div>
             )}
@@ -231,9 +239,9 @@ export function AdvancedAddressSearch({
 
       {/* Resultados da Busca (Endereços) */}
       {showResults && results.length > 0 && (
-        <div className="border border-slate-200 rounded-2xl overflow-hidden shadow-sm">
-          <div className="bg-slate-50 px-5 py-3 border-b border-slate-200">
-            <p className="text-sm font-bold text-slate-700">
+        <div className="border border-border rounded-2xl overflow-hidden shadow-sm">
+          <div className="bg-bg-muted px-5 py-3 border-b border-border">
+            <p className="text-sm font-bold text-text">
               {results.length} endereço(s) encontrado(s)
             </p>
           </div>
@@ -243,23 +251,23 @@ export function AdvancedAddressSearch({
                 key={index}
                 type="button"
                 onClick={() => selecionarEndereco(result)}
-                className="w-full text-left px-5 py-3.5 hover:bg-slate-50 transition-colors border-b border-slate-100 last:border-0 group"
+                className="w-full text-left px-5 py-3.5 hover:bg-bg-muted transition-colors border-b border-border last:border-0 group"
               >
                 <div className="flex items-start gap-3">
-                  <div className="p-2 bg-slate-100 rounded-lg group-hover:bg-slate-200 transition-colors">
+                  <div className="p-2 bg-bg-elevated rounded-lg group-hover:bg-bg-muted transition-colors border border-border">
                     <MapPin
                       size={16}
-                      className="text-slate-500 group-hover:text-slate-700"
+                      className="text-text-muted group-hover:text-text"
                     />
                   </div>
                   <div>
-                    <p className="text-sm font-bold text-slate-900">
+                    <p className="text-sm font-bold text-text">
                       {result.street}
                     </p>
-                    <p className="text-xs font-medium text-slate-500 mt-0.5">
+                    <p className="text-xs font-medium text-text-muted mt-0.5">
                       {result.neighborhood} - {result.city}/{result.state}
                     </p>
-                    <p className="text-xs font-semibold text-slate-400 mt-1 uppercase tracking-wider">
+                    <p className="text-xs font-semibold text-text-muted mt-1 uppercase tracking-wider">
                       CEP: {result.cep}
                     </p>
                   </div>

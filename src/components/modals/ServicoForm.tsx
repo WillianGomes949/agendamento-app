@@ -1,6 +1,5 @@
 // src/components/features/ServicoForm.tsx
 "use client";
-
 import { useState, useEffect, useCallback } from "react";
 import { Input } from "@/components/ui/Input";
 import { Select } from "@/components/ui/Select";
@@ -20,6 +19,7 @@ interface Props {
   initialData?: Servico | null;
   isLoading?: boolean;
 }
+
 const INITIAL_FORM: FormularioSchema & { status?: string } = {
   tecnico: "",
   data: "",
@@ -49,14 +49,14 @@ const FormSection = ({
   icon?: React.ReactNode;
   children: React.ReactNode;
 }) => (
-  <div className="bg-slate-50/50 border border-slate-100 rounded-2xl p-5 sm:p-6 space-y-5 transition-all">
-    <div className="flex items-center gap-3 pb-3 border-b border-slate-200/60">
+  <div className="bg-bg-muted border border-border rounded-2xl p-5 sm:p-6 space-y-5 transition-all">
+    <div className="flex items-center gap-3 pb-3 border-b border-border">
       {icon && (
-        <div className="w-8 h-8 rounded-lg bg-slate-200/50 flex items-center justify-center text-slate-600">
+        <div className="w-8 h-8 rounded-lg bg-bg-elevated flex items-center justify-center text-text-muted border border-border">
           {icon}
         </div>
       )}
-      <h3 className="font-bold text-slate-900 text-base">{title}</h3>
+      <h3 className="font-bold text-text text-base">{title}</h3>
     </div>
     <div className="grid grid-cols-1 md:grid-cols-2 gap-5">{children}</div>
   </div>
@@ -118,15 +118,12 @@ export default function ServicoForm({
   const updateField = useCallback(
     (section: string, field: string, value: string) => {
       setForm((prev) => {
-        // Verifica se é uma seção aninhada (cliente, veiculo, endereco)
         if (
           section === "cliente" ||
           section === "veiculo" ||
           section === "endereco"
         ) {
           const sectionData = prev[section as keyof typeof prev];
-
-          // Garante que sectionData é um objeto antes de fazer spread
           if (
             sectionData &&
             typeof sectionData === "object" &&
@@ -141,11 +138,8 @@ export default function ServicoForm({
             };
           }
         }
-
-        // Para campos normais (não aninhados)
         return { ...prev, [section]: value };
       });
-
       const errorKey = field ? `${section}.${field}` : section;
       if (touched[errorKey])
         setErrors((prev) => {
@@ -188,7 +182,6 @@ export default function ServicoForm({
       newTouched[f] = true;
     });
     setTouched(newTouched);
-
     const result = formularioServicoSchema.safeParse(form);
     if (!result.success) {
       const newErrors: Record<string, string> = {};
@@ -226,16 +219,19 @@ export default function ServicoForm({
     : configOptions.tecnicos.length > 0
       ? [{ value: "", label: "Selecione..." }, ...configOptions.tecnicos]
       : [{ value: "", label: "Nenhum técnico" }];
+
   const tiposOptions = configLoading
     ? [{ value: "", label: "Carregando..." }]
     : configOptions.tiposServico.length > 0
       ? [{ value: "", label: "Selecione..." }, ...configOptions.tiposServico]
       : [{ value: "", label: "Nenhum tipo" }];
+
   const horariosOptions = configLoading
     ? [{ value: "", label: "Carregando..." }]
     : configOptions.horarios.length > 0
       ? [{ value: "", label: "Selecione..." }, ...configOptions.horarios]
       : [{ value: "", label: "Nenhum horário" }];
+
   const statusOptions = configLoading
     ? [{ value: "", label: "Carregando..." }]
     : configOptions.status.length > 0
@@ -248,14 +244,14 @@ export default function ServicoForm({
       onClose={onClose}
       title={
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-slate-900 rounded-xl flex items-center justify-center shadow-sm">
-            <NotepadText className="w-4 h-4 text-slate-50" />
+          <div className="w-10 h-10 bg-accent rounded-xl flex items-center justify-center shadow-sm">
+            <NotepadText className="w-4 h-4 text-accent-foreground" />
           </div>
           <div>
-            <h2 className="text-xl font-bold text-slate-900 tracking-tight">
+            <h2 className="text-xl font-bold text-text tracking-tight">
               {initialData ? "Editar Serviço" : "Novo Agendamento"}
             </h2>
-            <p className="text-xs font-medium text-slate-500 mt-0.5">
+            <p className="text-xs font-medium text-text-muted mt-0.5">
               {initialData
                 ? "Atualize as informações do OS"
                 : "Preencha os dados do novo atendimento"}
@@ -267,14 +263,13 @@ export default function ServicoForm({
       closeOnOverlayClick={!isLoading}
     >
       {configLoading && (
-        <div className="flex items-center justify-center p-6 bg-slate-50 rounded-2xl border border-slate-100 mb-6">
+        <div className="flex items-center justify-center p-6 bg-bg-muted rounded-2xl border border-border mb-6">
           <Spinner size="md" variant="slate" />
-          <span className="ml-3 text-sm font-medium text-slate-600">
+          <span className="ml-3 text-sm font-medium text-text-muted">
             Carregando configurações...
           </span>
         </div>
       )}
-
       <form onSubmit={handleSubmit} className="space-y-6">
         <FormSection
           title="Informações Gerais"
@@ -355,7 +350,6 @@ export default function ServicoForm({
             />
           </div>
         </FormSection>
-
         <FormSection
           title="Dados do Cliente"
           icon={
@@ -394,7 +388,6 @@ export default function ServicoForm({
             />
           </div>
         </FormSection>
-
         <FormSection
           title="Veículo"
           icon={
@@ -437,18 +430,15 @@ export default function ServicoForm({
             />
           </div>
         </FormSection>
-
-        <div className="bg-slate-50/50 border border-slate-100 rounded-2xl p-5 sm:p-6 space-y-5 transition-all">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-200/60">
+        <div className="bg-bg-muted border border-border rounded-2xl p-5 sm:p-6 space-y-5 transition-all">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-border">
             <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-lg bg-slate-200/50 flex items-center justify-center text-slate-600">
+              <div className="w-8 h-8 rounded-lg bg-bg-elevated flex items-center justify-center text-text-muted border border-border">
                 <span className="text-lg leading-none">
                   <Pin className="w-4 h-4" />
                 </span>
               </div>
-              <h3 className="font-bold text-slate-900 text-base">
-                Localização
-              </h3>
+              <h3 className="font-bold text-text text-base">Localização</h3>
             </div>
             <Button
               type="button"
@@ -462,7 +452,6 @@ export default function ServicoForm({
                 : "Digitar endereço manual"}
             </Button>
           </div>
-
           {!manualAddress ? (
             <AdvancedAddressSearch
               onAddressSelect={(a) => {
@@ -480,11 +469,10 @@ export default function ServicoForm({
               }}
             />
           ) : (
-            <p className="text-sm font-medium text-slate-500">
+            <p className="text-sm font-medium text-text-muted">
               Modo de preenchimento manual ativado.
             </p>
           )}
-
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5 pt-2">
             <div data-field="endereco.cep" className="md:col-span-2">
               <Input
@@ -578,21 +566,20 @@ export default function ServicoForm({
             </div>
           </div>
         </div>
-
-        <div className="bg-slate-50/50 border border-slate-100 rounded-2xl p-5 sm:p-6 space-y-4">
-          <div className="flex items-center gap-3 pb-3 border-b border-slate-200/60">
-            <div className="w-8 h-8 rounded-lg bg-slate-200/50 flex items-center justify-center text-slate-600">
+        <div className="bg-bg-muted border border-border rounded-2xl p-5 sm:p-6 space-y-4">
+          <div className="flex items-center gap-3 pb-3 border-b border-border">
+            <div className="w-8 h-8 rounded-lg bg-bg-elevated flex items-center justify-center text-text-muted border border-border">
               <span className="text-lg leading-none">
                 <Notebook className="w-4 h-4" />
               </span>
             </div>
-            <h3 className="font-bold text-slate-900 text-base">Observações</h3>
+            <h3 className="font-bold text-text text-base">Observações</h3>
           </div>
           <textarea
-            className={`w-full p-4 rounded-xl text-sm outline-none transition-all focus:ring-4 focus:ring-slate-100 focus:border-slate-900 resize-none shadow-sm ${
+            className={`w-full p-4 rounded-xl text-sm outline-none transition-all focus:ring-4 focus:ring-accent/10 focus:border-accent resize-none shadow-sm bg-bg-elevated text-text border ${
               errors.observacao
-                ? "border-red-300 bg-red-50"
-                : "border-slate-200 bg-white"
+                ? "border-red-300 dark:border-red-700 bg-red-50 dark:bg-red-950/20"
+                : "border-border"
             }`}
             placeholder="Detalhes adicionais, referências de endereço ou instruções específicas..."
             value={form.observacao || ""}
@@ -600,9 +587,7 @@ export default function ServicoForm({
             rows={4}
           />
         </div>
-
-        {/* Footers em modais no Mobile devem empilhar os botões */}
-        <div className="flex flex-col-reverse sm:flex-row justify-end gap-3 pt-6 border-t border-slate-200">
+        <div className="flex flex-col-reverse sm:flex-row justify-end gap-3 pt-6 border-t border-border">
           <Button
             type="button"
             variant="outline"

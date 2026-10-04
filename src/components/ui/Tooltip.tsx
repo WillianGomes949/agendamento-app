@@ -1,6 +1,5 @@
 // src/components/ui/Tooltip.tsx
 "use client";
-
 import { useState, useRef, ReactNode } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
@@ -27,13 +26,16 @@ const positionClasses: Record<TooltipPosition, string> = {
   right: "left-full top-1/2 -translate-y-1/2 ml-2",
 };
 
+// Usa variáveis do tema para inverter automaticamente no dark mode
 const variantClasses: Record<TooltipVariant, string> = {
-  dark: "bg-slate-900 text-white shadow-lg shadow-slate-900/20",
+  dark: "bg-accent text-accent-foreground shadow-lg shadow-accent/20",
   light:
-    "bg-white text-slate-900 border border-slate-200/80 shadow-xl shadow-slate-200/50",
-  info: "bg-blue-600 text-white shadow-lg shadow-blue-900/20",
-  warning: "bg-amber-500 text-white shadow-lg shadow-amber-900/20",
-  error: "bg-rose-600 text-white shadow-lg shadow-rose-900/20",
+    "bg-bg-elevated text-text border border-border shadow-xl shadow-black/5",
+  info: "bg-blue-600 text-white shadow-lg shadow-blue-900/20 dark:bg-blue-500 dark:shadow-blue-500/20",
+  warning:
+    "bg-amber-500 text-white shadow-lg shadow-amber-900/20 dark:bg-amber-400 dark:text-amber-950 dark:shadow-amber-500/20",
+  error:
+    "bg-rose-600 text-white shadow-lg shadow-rose-900/20 dark:bg-rose-500 dark:shadow-rose-500/20",
 };
 
 // Bordas da seta ajustadas para as cores do novo Design System
@@ -42,32 +44,32 @@ const arrowBorderClasses: Record<
   Record<TooltipVariant, string>
 > = {
   top: {
-    dark: "border-t-slate-900",
-    light: "border-t-white",
-    info: "border-t-blue-600",
-    warning: "border-t-amber-500",
-    error: "border-t-rose-600",
+    dark: "border-t-accent",
+    light: "border-t-bg-elevated",
+    info: "border-t-blue-600 dark:border-t-blue-500",
+    warning: "border-t-amber-500 dark:border-t-amber-400",
+    error: "border-t-rose-600 dark:border-t-rose-500",
   },
   bottom: {
-    dark: "border-b-slate-900",
-    light: "border-b-white",
-    info: "border-b-blue-600",
-    warning: "border-b-amber-500",
-    error: "border-b-rose-600",
+    dark: "border-b-accent",
+    light: "border-b-bg-elevated",
+    info: "border-b-blue-600 dark:border-b-blue-500",
+    warning: "border-b-amber-500 dark:border-b-amber-400",
+    error: "border-b-rose-600 dark:border-b-rose-500",
   },
   left: {
-    dark: "border-l-slate-900",
-    light: "border-l-white",
-    info: "border-l-blue-600",
-    warning: "border-l-amber-500",
-    error: "border-l-rose-600",
+    dark: "border-l-accent",
+    light: "border-l-bg-elevated",
+    info: "border-l-blue-600 dark:border-l-blue-500",
+    warning: "border-l-amber-500 dark:border-l-amber-400",
+    error: "border-l-rose-600 dark:border-l-rose-500",
   },
   right: {
-    dark: "border-r-slate-900",
-    light: "border-r-white",
-    info: "border-r-blue-600",
-    warning: "border-r-amber-500",
-    error: "border-r-rose-600",
+    dark: "border-r-accent",
+    light: "border-r-bg-elevated",
+    info: "border-r-blue-600 dark:border-r-blue-500",
+    warning: "border-r-amber-500 dark:border-r-amber-400",
+    error: "border-r-rose-600 dark:border-r-rose-500",
   },
 };
 
@@ -178,7 +180,7 @@ export function HelpTooltip({ content, className }: HelpTooltipProps) {
       <button
         type="button"
         className={cn(
-          "inline-flex items-center justify-center w-4 h-4 rounded-full bg-slate-100 text-slate-500 text-xs font-bold hover:bg-slate-200 hover:text-slate-900 transition-colors focus:outline-none focus:ring-2 focus:ring-slate-900 focus:ring-offset-1",
+          "inline-flex items-center justify-center w-4 h-4 rounded-full bg-bg-muted text-text-muted text-xs font-bold hover:bg-bg-muted/80 hover:text-text transition-colors focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-1",
           className,
         )}
         aria-label="Ajuda"

@@ -1,6 +1,5 @@
 // src/components/modals/Modal.tsx
 "use client";
-
 import { useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X } from "lucide-react";
@@ -56,7 +55,7 @@ export function Modal({
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           transition={{ duration: 0.2 }}
-          className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-sm p-4 sm:p-6"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 dark:bg-black/60 backdrop-blur-sm p-4 sm:p-6"
           onClick={closeOnOverlayClick ? onClose : undefined}
         >
           <motion.div
@@ -66,17 +65,17 @@ export function Modal({
             transition={{ type: "spring", stiffness: 300, damping: 25 }}
             onClick={(e) => e.stopPropagation()}
             className={cn(
-              "w-full bg-white rounded-2xl shadow-2xl border border-slate-200/60 overflow-hidden max-h-[90vh] flex flex-col",
+              "w-full bg-bg-elevated rounded-2xl shadow-2xl border border-border overflow-hidden max-h-[90vh] flex flex-col",
               sizeClasses[size],
               className,
             )}
           >
             {title && (
-              <div className="flex items-center justify-between px-5 sm:px-6 py-4 border-b border-slate-100 bg-white/80 backdrop-blur-md z-10 shrink-0">
-                <div className="font-semibold text-slate-900">{title}</div>
+              <div className="flex items-center justify-between px-5 sm:px-6 py-4 border-b border-border bg-bg-elevated/80 backdrop-blur-md z-10 shrink-0">
+                <div className="font-semibold text-text">{title}</div>
                 <button
                   onClick={onClose}
-                  className="p-2 hover:bg-slate-100 rounded-xl transition-colors text-slate-500 hover:text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-900"
+                  className="p-2 hover:bg-bg-muted rounded-xl transition-colors text-text-muted hover:text-text focus:outline-none focus:ring-2 focus:ring-accent"
                   aria-label="Fechar"
                 >
                   <X className="w-5 h-5" aria-hidden="true" />

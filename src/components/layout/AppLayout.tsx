@@ -1,6 +1,5 @@
 // src/components/layout/AppLayout.tsx
 "use client";
-
 import { useState, useEffect, useCallback } from "react";
 import Sidebar from "./Sidebar";
 import Header from "./Header";
@@ -13,18 +12,14 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const [mounted, setMounted] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [isHoveringSidebar, setIsHoveringSidebar] = useState(false);
-  const {
-    loading,
-    agendamentosPendentes, // ← PEGAR DO HOOK
-  } = useServicos();
+
+  const { loading, agendamentosPendentes } = useServicos();
 
   useEffect(() => {
     setMounted(true);
-
     const checkMobile = () => {
       const mobile = window.innerWidth < 1024;
       setIsMobile(mobile);
-
       if (mobile) {
         setMobileMenuOpen(false);
         setSidebarCollapsed(true);
@@ -35,7 +30,6 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         }
       }
     };
-
     checkMobile();
     window.addEventListener("resize", checkMobile);
     return () => window.removeEventListener("resize", checkMobile);
@@ -62,13 +56,13 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
   if (!mounted) {
     return (
-      <div className="min-h-screen bg-slate-50 flex">
+      <div className="min-h-screen bg-bg flex">
         <div className="flex-1 flex flex-col">
-          <div className="h-16 bg-white/80 backdrop-blur-md border-b border-slate-200/60" />
+          <div className="h-16 bg-bg-elevated/80 backdrop-blur-md border-b border-border" />
           <main className="flex-1 p-4 lg:p-8">
             <div className="animate-pulse space-y-6 max-w-7xl mx-auto">
-              <div className="h-32 bg-slate-200/60 rounded-2xl" />
-              <div className="h-64 bg-slate-200/60 rounded-2xl" />
+              <div className="h-32 bg-bg-muted rounded-2xl" />
+              <div className="h-64 bg-bg-muted rounded-2xl" />
             </div>
           </main>
         </div>
@@ -76,7 +70,6 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     );
   }
 
-  // Largura dinâmica tratada via variável de estilo apenas no Desktop
   const effectiveSidebarWidth = isMobile
     ? "0px"
     : sidebarCollapsed
@@ -84,14 +77,14 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       : "16rem";
 
   return (
-    <div className="min-h-screen bg-slate-50 flex font-sans">
+    <div className="min-h-screen bg-bg flex font-sans">
       <Sidebar
         isOpen={mobileMenuOpen}
         isCollapsed={sidebarCollapsed && !isMobile}
         onCloseMobile={() => setMobileMenuOpen(false)}
         onHoverStart={() => setIsHoveringSidebar(true)}
         onHoverEnd={() => setIsHoveringSidebar(false)}
-        agendamentosPendentes={agendamentosPendentes} // ← SÓ PENDENTES
+        agendamentosPendentes={agendamentosPendentes}
         isLoading={loading}
       />
 
@@ -105,7 +98,6 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           isSidebarCollapsed={sidebarCollapsed}
           isMobile={isMobile}
         />
-
         <main className="flex-1 p-4 sm:p-6 lg:p-8 overflow-y-auto">
           <div className="max-w-7xl mx-auto pb-20 lg:pb-0">{children}</div>
         </main>

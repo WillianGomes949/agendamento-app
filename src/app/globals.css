@@ -1,9 +1,354 @@
 @import "tailwindcss";
 
-body {
-  @apply bg-gray-50 text-gray-900 antialiased;
+/* Ativa o modo dark quando a classe .dark está no html */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* ===== Tokens de tema (claro por padrão) ===== */
+@theme {
+  --color-bg: #f8fafc;
+  --color-bg-elevated: #ffffff;
+  --color-bg-muted: #f1f5f9;
+  --color-text: #0f172a;
+  --color-text-muted: #64748b;
+  --color-border: #e2e8f0;
+  --color-border-strong: #cbd5e1;
+  --color-accent: #0f172a;
+  --color-accent-foreground: #ffffff;
 }
-* {
-  scrollbar-width: thin;
-  scrollbar-color: #cbd5e1 transparent;
+
+/* ===== Tema escuro ===== */
+.dark {
+  --color-bg: #0b1020;
+  --color-bg-elevated: #111827;
+  --color-bg-muted: #1e293b;
+  --color-text: #f1f5f9;
+  --color-text-muted: #94a3b8;
+  --color-border: #1f2937;
+  --color-border-strong: #334155;
+  --color-accent: #f1f5f9;
+  --color-accent-foreground: #0f172a;
+}
+
+/* ===== Base ===== */
+html {
+  color-scheme: light;
+  transition:
+    background-color 0.3s ease,
+    color 0.3s ease;
+}
+html.dark {
+  color-scheme: dark;
+}
+
+body {
+  background-color: var(--color-bg);
+  color: var(--color-text);
+  @apply antialiased;
+}
+
+/* Scrollbar global */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--color-border-strong);
+  border-radius: 8px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-text-muted);
+}
+
+/* Evita flash de tema errado no carregamento */
+html:not(.dark) body {
+  background-color: var(--color-bg);
+}
+
+/* ============================================================
+   REACT BIG CALENDAR — Estilos customizados com suporte a tema
+   ============================================================ */
+
+/* Container principal */
+.rbc-custom .rbc-calendar {
+  font-family: inherit;
+  background: var(--color-bg-elevated);
+  color: var(--color-text);
+}
+
+/* Esconde a toolbar padrão (usamos a nossa própria) */
+.rbc-custom .rbc-toolbar {
+  display: none !important;
+}
+
+/* Cabeçalho dos dias da semana (Seg, Ter, Qua...) */
+.rbc-custom .rbc-header {
+  padding: 14px 8px;
+  font-weight: 700;
+  font-size: 13px;
+  text-transform: capitalize;
+  color: var(--color-text-muted);
+  border-bottom: 1px solid var(--color-border);
+  background: var(--color-bg);
+}
+
+.rbc-custom .rbc-header + .rbc-header {
+  border-left: 1px solid var(--color-bg-muted);
+}
+
+/* Views: mês e time */
+.rbc-custom .rbc-month-view,
+.rbc-custom .rbc-time-view {
+  border: none;
+  border-radius: 0 0 16px 16px;
+  background: var(--color-bg-elevated);
+}
+
+.rbc-custom .rbc-month-row + .rbc-month-row {
+  border-top: 1px solid var(--color-bg-muted);
+}
+
+.rbc-custom .rbc-day-bg + .rbc-day-bg {
+  border-left: 1px solid var(--color-bg-muted);
+}
+
+/* Célula "Hoje" */
+.rbc-custom .rbc-today {
+  background-color: rgba(59, 130, 246, 0.08);
+}
+.dark .rbc-custom .rbc-today {
+  background-color: rgba(96, 165, 250, 0.12);
+}
+
+.rbc-custom .rbc-current {
+  background-color: transparent;
+}
+
+/* Número do dia */
+.rbc-custom .rbc-date-cell {
+  padding: 8px 10px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.rbc-custom .rbc-date-cell.rbc-now {
+  color: #2563eb;
+  font-weight: 800;
+}
+.dark .rbc-custom .rbc-date-cell.rbc-now {
+  color: #60a5fa;
+}
+
+.rbc-custom .rbc-date-cell.rbc-off-range {
+  color: var(--color-border-strong);
+}
+.dark .rbc-custom .rbc-date-cell.rbc-off-range {
+  color: #475569;
+}
+
+.rbc-custom .rbc-date-cell > a {
+  text-decoration: none;
+  color: inherit;
+  display: inline-block;
+  min-width: 24px;
+  min-height: 24px;
+  text-align: right;
+}
+
+/* Eventos base */
+.rbc-custom .rbc-event {
+  border-radius: 6px;
+  padding: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  border: none;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  margin-bottom: 2px;
+}
+.dark .rbc-custom .rbc-event {
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+.rbc-custom .rbc-event:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  z-index: 10;
+}
+.dark .rbc-custom .rbc-event:hover {
+  box-shadow: 0 4px 8px -1px rgba(0, 0, 0, 0.4);
+}
+
+.rbc-custom .rbc-event.rbc-selected {
+  box-shadow: 0 0 0 2px #3b82f6;
+  outline: none;
+}
+.dark .rbc-custom .rbc-event.rbc-selected {
+  box-shadow: 0 0 0 2px #60a5fa;
+}
+
+/* View de Agenda (Lista) */
+.rbc-custom .rbc-agenda-view {
+  border: none;
+  background: var(--color-bg-elevated);
+}
+
+.rbc-custom .rbc-agenda-table {
+  border: none;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+.rbc-custom .rbc-agenda-table thead {
+  display: none;
+}
+
+.rbc-custom .rbc-agenda-table tbody tr {
+  border-bottom: 1px solid var(--color-bg-muted);
+  transition: background-color 0.2s;
+}
+
+.rbc-custom .rbc-agenda-table tbody tr:hover {
+  background-color: var(--color-bg);
+}
+
+.rbc-custom .rbc-agenda-table td {
+  padding: 20px 16px;
+  border: none;
+  color: var(--color-text);
+}
+
+.rbc-custom .rbc-agenda-time-cell {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-text-muted);
+  white-space: nowrap;
+}
+
+.rbc-custom .rbc-agenda-date-cell {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--color-text);
+}
+
+/* Time view (Dia/Semana) */
+.rbc-custom .rbc-time-header {
+  border-bottom: 1px solid var(--color-border);
+  background: var(--color-bg-elevated);
+}
+
+.rbc-custom .rbc-time-header-content {
+  border-left: 1px solid var(--color-bg-muted);
+}
+
+.rbc-custom .rbc-time-content {
+  border-top: none;
+  background: var(--color-bg-elevated);
+}
+
+.rbc-custom .rbc-time-slot {
+  font-size: 12px;
+  color: var(--color-text-muted);
+  font-weight: 500;
+}
+
+.rbc-custom .rbc-timeslot-group {
+  border-bottom: 1px solid var(--color-bg-muted);
+  min-height: 56px;
+}
+
+/* Slot selecionável (drag para criar evento) */
+.rbc-custom .rbc-slot-selection {
+  background-color: rgba(59, 130, 246, 0.1);
+  border: 2px dashed #3b82f6;
+  border-radius: 8px;
+}
+.dark .rbc-custom .rbc-slot-selection {
+  background-color: rgba(96, 165, 250, 0.15);
+  border-color: #60a5fa;
+}
+
+/* Popup "+X mais" */
+.rbc-custom .rbc-overlay {
+  background: var(--color-bg-elevated);
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+  padding: 12px;
+  z-index: 50;
+  min-width: 200px;
+}
+.dark .rbc-custom .rbc-overlay {
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
+}
+
+.rbc-custom .rbc-overlay-header {
+  font-weight: 700;
+  font-size: 14px;
+  color: var(--color-text);
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--color-bg-muted);
+  margin-bottom: 8px;
+}
+
+/* Botões e interações do calendário */
+.rbc-custom .rbc-btn-group button {
+  background: var(--color-bg-elevated);
+  color: var(--color-text);
+  border: 1px solid var(--color-border);
+  padding: 6px 12px;
+  font-size: 13px;
+  font-weight: 600;
+  transition: all 0.15s ease;
+}
+
+.rbc-custom .rbc-btn-group button:hover {
+  background: var(--color-bg-muted);
+  color: var(--color-text);
+}
+
+.rbc-custom .rbc-btn-group button.rbc-active {
+  background: var(--color-accent);
+  color: var(--color-accent-foreground);
+  border-color: var(--color-accent);
+}
+
+/* Ajustes Mobile-First */
+@media (max-width: 640px) {
+  .rbc-custom .rbc-header {
+    padding: 8px 4px;
+    font-size: 11px;
+    text-overflow: clip;
+    overflow: hidden;
+  }
+  .rbc-custom .rbc-date-cell {
+    padding: 4px;
+    font-size: 12px;
+  }
+  .rbc-custom .rbc-event {
+    font-size: 10px;
+    padding: 2px 4px;
+  }
+  .rbc-custom .rbc-agenda-table td {
+    padding: 12px 8px;
+  }
+}
+
+/* Scrollbar customizada dentro do calendário */
+.rbc-custom .rbc-time-content::-webkit-scrollbar {
+  width: 8px;
+}
+.rbc-custom .rbc-time-content::-webkit-scrollbar-track {
+  background: transparent;
+}
+.rbc-custom .rbc-time-content::-webkit-scrollbar-thumb {
+  background: var(--color-border-strong);
+  border-radius: 10px;
+  border: 2px solid var(--color-bg-elevated);
+}
+.rbc-custom .rbc-time-content::-webkit-scrollbar-thumb:hover {
+  background: var(--color-text-muted);
 }

@@ -1,6 +1,5 @@
 // src/components/ui/CepSearch.tsx
 "use client";
-
 import { useState, useCallback } from "react";
 import { Input } from "./Input";
 import { Button } from "./Button";
@@ -71,6 +70,7 @@ export function CepSearch({
         cidade: data.city || "",
         estado: data.state || "",
       });
+
       setSuccess(true);
       setTimeout(() => setSuccess(false), 4000);
     } catch (error) {
@@ -92,7 +92,7 @@ export function CepSearch({
 
   return (
     <div className={`space-y-3 ${className}`}>
-      <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-end bg-slate-50/50 border border-slate-200/60 p-4 rounded-2xl">
+      <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-end bg-bg-muted border border-border p-4 rounded-2xl">
         <div className="flex-1 w-full">
           <Input
             label="Buscar por CEP"
@@ -123,7 +123,7 @@ export function CepSearch({
       </div>
 
       {success && (
-        <div className="text-sm font-medium text-emerald-700 bg-emerald-50 p-3 rounded-xl flex items-center gap-2 border border-emerald-100 shadow-sm">
+        <div className="text-sm font-medium text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/30 p-3 rounded-xl flex items-center gap-2 border border-emerald-200 dark:border-emerald-800 shadow-sm">
           <Check className="w-4 h-4" />
           Endereço preenchido! Lembre-se de adicionar o número.
         </div>

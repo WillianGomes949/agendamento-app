@@ -1,16 +1,15 @@
 // src/components/features/ServiceList.tsx
 "use client";
-
 import { AnimatePresence } from "framer-motion";
 import type { Servico } from "@/lib/types";
-import { EmptyState } from "./EmptyState";
+import { EmptyState } from "../ui/EmptyState";
 import { ServicoCard } from "./ServiceCard";
 
 interface ServiceListProps {
   servicos: Servico[];
   onEdit: (servico: Servico) => void;
   onDelete: (servico: Servico) => void;
-   onViewDetails: (id: string) => void;
+  onViewDetails: (id: string) => void;
 }
 
 export function ServiceList({
@@ -31,15 +30,18 @@ export function ServiceList({
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6">
       <AnimatePresence mode="popLayout">
-        {servicos.map((servico, index) => (
-          <ServicoCard
-            key={servico?.id || `fallback-${index}`}
-             onViewDetails={() => onViewDetails(servico.id)}
-            servico={servico}
-            onEdit={onEdit}
-            onDelete={onDelete}
-          />
-        ))}
+        {servicos.map((servico, index) => {
+          const idSeguro = String(servico?.id ?? `fallback-${index}`);
+          return (
+            <ServicoCard
+              key={idSeguro}
+              onViewDetails={() => onViewDetails(idSeguro)}
+              servico={servico}
+              onEdit={onEdit}
+              onDelete={onDelete}
+            />
+          );
+        })}
       </AnimatePresence>
     </div>
   );

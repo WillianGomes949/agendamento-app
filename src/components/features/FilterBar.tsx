@@ -1,6 +1,5 @@
 // src/components/features/FilterBar.tsx
 "use client";
-
 import {
   Search,
   Filter,
@@ -35,10 +34,6 @@ interface ActiveFilter {
 }
 
 // === FUNÇÕES AUXILIARES DE DATA REFATORADAS ===
-
-/**
- * Converte data do formato ISO (YYYY-MM-DD) para formato BR (DD/MM/YYYY)
- */
 const isoToBrDate = (isoDate: string): string => {
   if (!isoDate) return "";
   const [year, month, day] = isoDate.split("-");
@@ -46,9 +41,6 @@ const isoToBrDate = (isoDate: string): string => {
   return `${day}/${month}/${year}`;
 };
 
-/**
- * Converte data do formato BR (DD/MM/YYYY) para formato ISO (YYYY-MM-DD)
- */
 const brToIsoDate = (brDate?: string): string => {
   if (!brDate) return "";
   const parts = brDate.split("/");
@@ -58,14 +50,10 @@ const brToIsoDate = (brDate?: string): string => {
   return `${year}-${month.padStart(2, "0")}-${day.padStart(2, "0")}`;
 };
 
-/**
- * Valida se uma string está no formato DD/MM/YYYY
- */
 const isValidBrDate = (date: string): boolean => {
   if (!date) return false;
   const regex = /^(0[1-9]|[12][0-9]|3[01])\/(0[1-9]|1[0-2])\/\d{4}$/;
   if (!regex.test(date)) return false;
-
   const [day, month, year] = date.split("/").map(Number);
   const jsDate = new Date(year, month - 1, day);
   return (
@@ -75,9 +63,6 @@ const isValidBrDate = (date: string): boolean => {
   );
 };
 
-/**
- * Formata uma data Date para string BR (DD/MM/YYYY)
- */
 const formatDateToBr = (date: Date): string => {
   const day = String(date.getDate()).padStart(2, "0");
   const month = String(date.getMonth() + 1).padStart(2, "0");
@@ -85,9 +70,6 @@ const formatDateToBr = (date: Date): string => {
   return `${day}/${month}/${year}`;
 };
 
-/**
- * Calcula o primeiro dia da semana (domingo)
- */
 const getStartOfWeek = (date: Date): Date => {
   const d = new Date(date);
   const day = d.getDay();
@@ -95,9 +77,6 @@ const getStartOfWeek = (date: Date): Date => {
   return d;
 };
 
-/**
- * Calcula o último dia da semana (sábado)
- */
 const getEndOfWeek = (date: Date): Date => {
   const d = new Date(date);
   const day = d.getDay();
@@ -105,16 +84,10 @@ const getEndOfWeek = (date: Date): Date => {
   return d;
 };
 
-/**
- * Calcula o primeiro dia do mês
- */
 const getStartOfMonth = (date: Date): Date => {
   return new Date(date.getFullYear(), date.getMonth(), 1);
 };
 
-/**
- * Calcula o último dia do mês
- */
 const getEndOfMonth = (date: Date): Date => {
   return new Date(date.getFullYear(), date.getMonth() + 1, 0);
 };
@@ -132,7 +105,6 @@ export function FilterBar({
   const searchInputRef = useRef<HTMLInputElement>(null);
   const { options: configOptions, loading: configLoading } = useConfig();
 
-  // Estados locais para os campos de data (formato ISO para o input)
   const [localDataInicio, setLocalDataInicio] = useState<string>(
     brToIsoDate(filters.dataInicio),
   );
@@ -140,7 +112,6 @@ export function FilterBar({
     brToIsoDate(filters.dataFim),
   );
 
-  // Sincroniza os estados locais quando os filtros mudam externamente
   useEffect(() => {
     setLocalDataInicio(brToIsoDate(filters.dataInicio));
   }, [filters.dataInicio]);
@@ -149,7 +120,6 @@ export function FilterBar({
     setLocalDataFim(brToIsoDate(filters.dataFim));
   }, [filters.dataFim]);
 
-  // Conta filtros ativos (exceto o campo de busca que é sempre visível)
   const activeFiltersCount = useMemo(() => {
     return [
       filters.data,
@@ -166,7 +136,6 @@ export function FilterBar({
     filters.dataFim,
   ]);
 
-  // Limpar todos os filtros
   const handleClearAll = useCallback(() => {
     onChange({
       busca: undefined,
@@ -181,11 +150,9 @@ export function FilterBar({
     if (onClear) onClear();
   }, [onChange, onClear]);
 
-  // Remover um filtro específico
   const removeFilter = useCallback(
     (type: keyof FiltrosServicos) => {
       const newFilters: Partial<FiltrosServicos> = {};
-
       switch (type) {
         case "busca":
           newFilters.busca = undefined;
@@ -208,43 +175,37 @@ export function FilterBar({
           setLocalDataFim("");
           break;
       }
-
       onChange(newFilters);
     },
     [onChange],
   );
 
-  // Handler para mudança de data inicial
   const handleDataInicioChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
       const isoValue = e.target.value;
       setLocalDataInicio(isoValue);
-
       const brValue = isoValue ? isoToBrDate(isoValue) : undefined;
       onChange({
         dataInicio: brValue,
-        data: undefined, // Remove filtro de data única quando usa intervalo
+        data: undefined,
       });
     },
     [onChange],
   );
 
-  // Handler para mudança de data final
   const handleDataFimChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
       const isoValue = e.target.value;
       setLocalDataFim(isoValue);
-
       const brValue = isoValue ? isoToBrDate(isoValue) : undefined;
       onChange({
         dataFim: brValue,
-        data: undefined, // Remove filtro de data única quando usa intervalo
+        data: undefined,
       });
     },
     [onChange],
   );
 
-  // Ações de períodos rápidos
   const quickActions = useMemo(
     () => [
       {
@@ -267,7 +228,6 @@ export function FilterBar({
           const now = new Date();
           const startOfWeek = getStartOfWeek(now);
           const endOfWeek = getEndOfWeek(now);
-
           onChange({
             data: undefined,
             dataInicio: formatDateToBr(startOfWeek),
@@ -284,7 +244,6 @@ export function FilterBar({
           const now = new Date();
           const startOfMonth = getStartOfMonth(now);
           const endOfMonth = getEndOfMonth(now);
-
           onChange({
             data: undefined,
             dataInicio: formatDateToBr(startOfMonth),
@@ -301,7 +260,6 @@ export function FilterBar({
           const today = new Date();
           const nextWeek = new Date(today);
           nextWeek.setDate(nextWeek.getDate() + 7);
-
           onChange({
             data: undefined,
             dataInicio: formatDateToBr(today),
@@ -316,7 +274,6 @@ export function FilterBar({
     [onChange],
   );
 
-  // Opções dos selects
   const statusOptions = configLoading
     ? [{ value: "", label: "Carregando..." }]
     : [{ value: "", label: "Todos os status" }, ...configOptions.status];
@@ -331,10 +288,8 @@ export function FilterBar({
     ...tecnicos.map((t) => ({ value: t, label: t })),
   ];
 
-  // Lista de filtros ativos para exibição
   const activeFiltersList: ActiveFilter[] = useMemo(() => {
     const list: ActiveFilter[] = [];
-
     if (filters.busca) {
       list.push({
         label: "Busca",
@@ -343,7 +298,6 @@ export function FilterBar({
         onRemove: () => removeFilter("busca"),
       });
     }
-
     if (filters.data && isValidBrDate(filters.data)) {
       list.push({
         label: "Data",
@@ -352,7 +306,6 @@ export function FilterBar({
         onRemove: () => removeFilter("data"),
       });
     }
-
     if (filters.status) {
       const statusLabel =
         configOptions.status.find((s) => s.value === filters.status)?.label ||
@@ -364,7 +317,6 @@ export function FilterBar({
         onRemove: () => removeFilter("status"),
       });
     }
-
     if (filters.tecnico) {
       list.push({
         label: "Técnico",
@@ -373,7 +325,6 @@ export function FilterBar({
         onRemove: () => removeFilter("tecnico"),
       });
     }
-
     if (filters.dataInicio && isValidBrDate(filters.dataInicio)) {
       list.push({
         label: "Início",
@@ -382,7 +333,6 @@ export function FilterBar({
         onRemove: () => removeFilter("dataInicio"),
       });
     }
-
     if (filters.dataFim && isValidBrDate(filters.dataFim)) {
       list.push({
         label: "Fim",
@@ -391,11 +341,9 @@ export function FilterBar({
         onRemove: () => removeFilter("dataFim"),
       });
     }
-
     return list;
   }, [filters, configOptions.status, removeFilter]);
 
-  // Keyboard shortcut para focus na busca
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if ((e.ctrlKey || e.metaKey) && e.key === "k") {
@@ -409,7 +357,7 @@ export function FilterBar({
 
   return (
     <div className="space-y-4">
-      <div className="bg-white rounded-2xl border border-slate-200/60 shadow-sm transition-shadow duration-200">
+      <div className="bg-bg-elevated rounded-2xl border border-border shadow-sm transition-shadow duration-200">
         <div className="p-4 sm:p-5">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
             {/* Campo de Busca */}
@@ -438,7 +386,6 @@ export function FilterBar({
                 disabled={isLoading || configLoading}
               />
             </div>
-
             <div className="lg:col-span-2">
               <Select
                 value={filters.status || ""}
@@ -449,7 +396,6 @@ export function FilterBar({
                 disabled={isLoading || configLoading}
               />
             </div>
-
             <div className="lg:col-span-2">
               <Select
                 value={filters.tecnico || ""}
@@ -467,8 +413,8 @@ export function FilterBar({
                 onClick={() => setIsAdvancedOpen(!isAdvancedOpen)}
                 className={`w-full h-10 flex items-center justify-center gap-1 px-3 rounded-xl text-sm font-semibold transition-all ${
                   isAdvancedOpen || activeFiltersCount > 0
-                    ? "bg-slate-900 text-white shadow-sm"
-                    : "bg-slate-50 text-slate-700 hover:bg-slate-100 border border-slate-200/60"
+                    ? "bg-accent text-accent-foreground shadow-sm"
+                    : "bg-bg-muted text-text hover:bg-bg border border-border"
                 }`}
               >
                 <SlidersHorizontal size={16} />
@@ -477,8 +423,8 @@ export function FilterBar({
                   <span
                     className={`text-xs rounded-full w-5 h-5 flex items-center justify-center px-2 ${
                       isAdvancedOpen
-                        ? "bg-white/20 text-white"
-                        : "bg-slate-200 text-slate-800"
+                        ? "bg-accent-foreground/20 text-accent-foreground"
+                        : "bg-border-strong text-text"
                     }`}
                   >
                     {activeFiltersCount}
@@ -495,10 +441,10 @@ export function FilterBar({
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -10 }}
-                className="mt-4 pt-4 border-t border-slate-100"
+                className="mt-4 pt-4 border-t border-border"
               >
                 <div className="flex flex-wrap items-center gap-2">
-                  <span className="text-xs text-slate-400 font-bold uppercase tracking-wider mr-1">
+                  <span className="text-xs text-text-muted font-bold uppercase tracking-wider mr-1">
                     Ativos:
                   </span>
                   {activeFiltersList.map((filter) => (
@@ -507,26 +453,25 @@ export function FilterBar({
                       initial={{ scale: 0.9, opacity: 0 }}
                       animate={{ scale: 1, opacity: 1 }}
                       exit={{ scale: 0.9, opacity: 0 }}
-                      className="inline-flex items-center gap-2 px-3 py-1.5 bg-slate-100 text-slate-700 rounded-lg text-xs font-medium group hover:bg-slate-200 transition-colors border border-slate-200/60"
+                      className="inline-flex items-center gap-2 px-3 py-1.5 bg-bg-muted text-text rounded-lg text-xs font-medium group hover:bg-bg transition-colors border border-border"
                     >
-                      <span className="text-slate-500 font-bold uppercase tracking-wide text-[10px]">
+                      <span className="text-text-muted font-bold uppercase tracking-wide text-[10px]">
                         {filter.label}:
                       </span>
                       <span className="max-w-37 truncate">{filter.value}</span>
                       <button
                         onClick={filter.onRemove}
-                        className="p-0.5 hover:bg-slate-300 rounded-md transition-colors text-slate-500 hover:text-slate-900"
+                        className="p-0.5 hover:bg-border-strong rounded-md transition-colors text-text-muted hover:text-text"
                         aria-label={`Remover filtro ${filter.label}`}
                       >
                         <X size={14} />
                       </button>
                     </motion.span>
                   ))}
-
                   {activeFiltersList.length > 1 && (
                     <button
                       onClick={handleClearAll}
-                      className="ml-2 px-3 py-1.5 text-xs font-semibold text-rose-600 hover:bg-rose-50 rounded-lg transition-colors flex items-center gap-1.5"
+                      className="ml-2 px-3 py-1.5 text-xs font-semibold text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/20 rounded-lg transition-colors flex items-center gap-1.5"
                     >
                       <RefreshCw size={12} />
                       Limpar todos
@@ -546,36 +491,35 @@ export function FilterBar({
               animate={{ height: "auto", opacity: 1 }}
               exit={{ height: 0, opacity: 0 }}
               transition={{ duration: 0.2 }}
-              className="overflow-hidden border-t border-slate-100 bg-slate-50/50 rounded-b-2xl"
+              className="overflow-hidden border-t border-border bg-bg-muted/50 rounded-b-2xl"
             >
               <div className="p-4 sm:p-5 space-y-5">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {/* Intervalo de Datas - Usando input nativo */}
+                  {/* Intervalo de Datas */}
                   <div className="space-y-3">
-                    <label className="text-xs font-bold text-slate-500 uppercase tracking-wider flex items-center gap-2">
+                    <label className="text-xs font-bold text-text-muted uppercase tracking-wider flex items-center gap-2">
                       <Calendar size={14} /> Intervalo Personalizado
                     </label>
-
                     <div className="grid grid-cols-2 gap-3">
                       <div className="space-y-1">
-                        <label className="text-xs text-slate-500 font-medium">
+                        <label className="text-xs text-text-muted font-medium">
                           Data Inicial
                         </label>
                         <input
                           type="date"
-                          className="w-full px-3 py-2 text-sm border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-slate-400 focus:border-transparent transition-all bg-white"
+                          className="w-full px-3 py-2 text-sm border border-border rounded-xl focus:outline-none focus:ring-2 focus:ring-accent/50 focus:border-accent transition-all bg-bg-elevated text-text"
                           value={localDataInicio}
                           onChange={handleDataInicioChange}
                           disabled={isLoading}
                         />
                       </div>
                       <div className="space-y-1">
-                        <label className="text-xs text-slate-500 font-medium">
+                        <label className="text-xs text-text-muted font-medium">
                           Data Final
                         </label>
                         <input
                           type="date"
-                          className="w-full px-3 py-2 text-sm border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-slate-400 focus:border-transparent transition-all bg-white"
+                          className="w-full px-3 py-2 text-sm border border-border rounded-xl focus:outline-none focus:ring-2 focus:ring-accent/50 focus:border-accent transition-all bg-bg-elevated text-text"
                           value={localDataFim}
                           onChange={handleDataFimChange}
                           disabled={isLoading}
@@ -583,10 +527,8 @@ export function FilterBar({
                         />
                       </div>
                     </div>
-
-                    {/* Indicador de intervalo ativo */}
                     {(filters.dataInicio || filters.dataFim) && (
-                      <div className="text-xs text-slate-400 bg-white rounded-lg px-2 py-1 inline-block">
+                      <div className="text-xs text-text-muted bg-bg-elevated rounded-lg px-2 py-1 inline-block border border-border">
                         {filters.dataInicio && `De ${filters.dataInicio}`}
                         {filters.dataInicio && filters.dataFim && " até "}
                         {filters.dataFim && filters.dataFim}
@@ -596,7 +538,7 @@ export function FilterBar({
 
                   {/* Períodos Rápidos */}
                   <div className="space-y-3">
-                    <label className="text-xs font-bold text-slate-500 uppercase tracking-wider flex items-center gap-2">
+                    <label className="text-xs font-bold text-text-muted uppercase tracking-wider flex items-center gap-2">
                       <Clock size={14} /> Períodos Rápidos
                     </label>
                     <div className="flex flex-wrap gap-2">
@@ -604,7 +546,7 @@ export function FilterBar({
                         <button
                           key={quick.label}
                           onClick={quick.action}
-                          className="px-4 py-2 text-sm font-medium bg-white border border-slate-200/60 rounded-xl hover:border-slate-400 hover:bg-slate-50 transition-colors shadow-sm"
+                          className="px-4 py-2 text-sm font-medium bg-bg-elevated border border-border rounded-xl hover:border-accent hover:bg-bg-muted transition-colors shadow-sm text-text"
                         >
                           {quick.label}
                         </button>
@@ -617,21 +559,19 @@ export function FilterBar({
           )}
         </AnimatePresence>
       </div>
-      
 
-      {/* Info Bar - CORRIGIDA: totalResults agora reflete servicosFiltrados */}
+      {/* Info Bar */}
       <div className="flex items-center justify-between px-1">
         <div className="flex items-center gap-3 text-sm">
-          <div className="flex items-center gap-2 px-3 py-1.5 bg-slate-100 rounded-lg">
-            <Filter size={14} className="text-slate-500" />
-            <span className="font-bold text-slate-800">{totalResults}</span>
-            <span className="text-slate-500 font-medium">
+          <div className="flex items-center gap-2 px-3 py-1.5 bg-bg-muted rounded-lg border border-border">
+            <Filter size={14} className="text-text-muted" />
+            <span className="font-bold text-text">{totalResults}</span>
+            <span className="text-text-muted font-medium">
               {totalResults === 1 ? "resultado" : "resultados"}
             </span>
           </div>
-
           {isLoading && (
-            <div className="flex items-center gap-2 text-slate-500">
+            <div className="flex items-center gap-2 text-text-muted">
               <RefreshCw size={14} className="animate-spin" />
               <span className="text-xs font-medium">Atualizando...</span>
             </div>

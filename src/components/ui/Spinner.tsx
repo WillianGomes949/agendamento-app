@@ -1,6 +1,5 @@
 // src/components/ui/Spinner.tsx
 "use client";
-
 import { motion, HTMLMotionProps } from "framer-motion";
 import { cn } from "@/lib/utils";
 
@@ -23,10 +22,10 @@ const sizeClasses: Record<SpinnerSize, string> = {
 };
 
 const variantColors: Record<SpinnerVariant, string> = {
-  primary: "border-slate-200 border-t-slate-900",
-  secondary: "border-slate-200 border-t-slate-500",
+  primary: "border-border border-t-accent",
+  secondary: "border-border border-t-text-muted",
   white: "border-white/30 border-t-white",
-  slate: "border-slate-200 border-t-slate-600",
+  slate: "border-border border-t-text",
 };
 
 const labelSizeClasses: Record<SpinnerSize, string> = {
@@ -65,9 +64,8 @@ export function Spinner({
           variantColors[variant],
         )}
       />
-
       {showLabel && (
-        <span className={cn("text-slate-500", labelSizeClasses[size])}>
+        <span className={cn("text-text-muted", labelSizeClasses[size])}>
           {label}
         </span>
       )}
@@ -81,7 +79,7 @@ export function FullPageSpinner({
   label?: string;
 }) {
   return (
-    <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-slate-50/80 backdrop-blur-md">
+    <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-bg/80 backdrop-blur-md">
       <Spinner size="xl" variant="primary" showLabel label={label} />
     </div>
   );

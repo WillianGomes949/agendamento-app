@@ -2,7 +2,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { CACHE_TTL_CONFIG, CONFIG_API_BASE } from '@/lib/constants';
+import { CACHE_TTL_CONFIG, CONFIG_API_BASE } from "@/lib/constants";
 
 interface ConfigOptions {
   tecnicos: { value: string; label: string }[];
@@ -18,14 +18,36 @@ interface UseConfigReturn {
   refresh: () => void;
 }
 
-
-
 const API_BASE = CONFIG_API_BASE;
 const CACHE_KEY = "@TrackApp:config";
 const CACHE_TTL = CACHE_TTL_CONFIG;
 
 // Variável global para impedir requisições simultâneas
 let globalConfigPromise: Promise<ConfigOptions> | null = null;
+
+/**
+ * Extrai uma string legível de um item de configuração.
+ * Aceita string, número, ou objeto com chaves comuns (nome, label, value, etc.).
+ */
+function extrairStringConfig(item: unknown): string {
+  if (item === null || item === undefined) return "";
+  if (typeof item === "string") return item.trim();
+  if (typeof item === "number" || typeof item === "boolean")
+    return String(item);
+  if (typeof item === "object") {
+    const obj = item as Record<string, unknown>;
+    const valor =
+      obj.nome ??
+      obj.name ??
+      obj.label ??
+      obj.value ??
+      obj.horario ??
+      obj.id ??
+      "";
+    return String(valor).trim();
+  }
+  return String(item).trim();
+}
 
 function sanitizarHorario(valor: unknown): string {
   if (!valor) return "";
@@ -66,17 +88,22 @@ async function fetchConfig(tipo: string): Promise<string[]> {
     cache: "no-store",
   });
   if (!response.ok) throw new Error(`HTTP ${response.status}`);
-  const result = await response.json();
-  if (!result.success)
-    throw new Error(result.error || "Erro ao carregar configuração");
 
-  const dados = (result.data || []) as unknown[];
+  const result = await response.json();
+  if (!result.success) {
+    throw new Error(result.error || "Erro ao carregar configuração");
+  }
+
+  const dados: unknown[] = Array.isArray(result.data) ? result.data : [];
+
   if (tipo === "horarios") {
     return dados
+      .map(extrairStringConfig)
       .map(sanitizarHorario)
       .filter((h) => h !== "" && /^([01]\d|2[0-3]):([0-5]\d)$/.test(h));
   }
-  return dados.map(String).filter((s) => s.trim() !== "");
+
+  return dados.map(extrairStringConfig).filter((s) => s !== "");
 }
 
 async function fetchAllConfigs(): Promise<ConfigOptions> {

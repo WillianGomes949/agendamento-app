@@ -1,6 +1,5 @@
 // src/components/ui/Card.tsx
 "use client";
-
 import { motion, type HTMLMotionProps } from "framer-motion";
 import { cn } from "@/lib/utils";
 
@@ -16,25 +15,28 @@ const paddingClasses = {
   lg: "p-6 sm:p-8 md:p-10",
 };
 
-export function Card({ 
-  children, 
-  className, 
-  hoverable = false, 
-  padding = "md", 
-  ...props 
+export function Card({
+  children,
+  className,
+  hoverable = false,
+  padding = "md",
+  ...props
 }: CardProps) {
   return (
     <motion.div
       whileHover={
-        hoverable 
-          ? { y: -2, boxShadow: "0 12px 24px -8px rgba(15, 23, 42, 0.08)" } 
+        hoverable
+          ? {
+              y: -2,
+              boxShadow: "0 12px 24px -8px rgba(15, 23, 42, 0.12)",
+            }
           : undefined
       }
       transition={{ duration: 0.2, ease: "easeOut" }}
       className={cn(
-        "bg-white rounded-2xl border border-slate-200/60 shadow-sm transition-colors",
+        "bg-bg-elevated rounded-2xl border border-border shadow-sm transition-colors",
         paddingClasses[padding],
-        className
+        className,
       )}
       {...props}
     >
