@@ -11,7 +11,6 @@ import {
   Blocks,
   AlertTriangle,
   Upload,
-  Laptop,
   Check,
   Save,
   Globe,
@@ -89,11 +88,7 @@ export default function ConfiguracoesPage() {
     bio: "Desenvolvedor Full Stack especializado em Next.js e automação de processos.",
   });
 
-  const [notifications, setNotifications] = useState(true);
-  const [emailAlerts, setEmailAlerts] = useState(true);
-  const [twoFactor, setTwoFactor] = useState(false);
   const [language, setLanguage] = useState("pt-BR");
-
   const { theme, setTheme, resolvedTheme } = useTheme();
 
   const handleSave = () => {
@@ -108,29 +103,6 @@ export default function ConfiguracoesPage() {
     { id: "seguranca", label: "Segurança", icon: Shield },
     { id: "aparencia", label: "Aparência", icon: Palette },
     { id: "integracoes", label: "Integrações", icon: Blocks },
-  ];
-
-  const integrations = [
-    {
-      name: "Google Analytics",
-      connected: true,
-      description: "Rastreamento de visitas",
-    },
-    {
-      name: "Stripe",
-      connected: false,
-      description: "Processamento de pagamentos",
-    },
-    {
-      name: "Slack",
-      connected: true,
-      description: "Notificações em tempo real",
-    },
-    {
-      name: "GitHub",
-      connected: false,
-      description: "Sincronização de repositórios",
-    },
   ];
 
   return (
@@ -301,81 +273,6 @@ export default function ConfiguracoesPage() {
                 </div>
               )}
 
-              {/* ABA: NOTIFICAÇÕES */}
-              {activeTab === "notificacoes" && (
-                <div className="space-y-6">
-                  <h2 className="text-xl font-bold text-text mb-6">
-                    Preferências de Notificação
-                  </h2>
-                  <div className="space-y-4">
-                    <ToggleSwitch
-                      enabled={notifications}
-                      onToggle={() => setNotifications(!notifications)}
-                      label="Notificações push"
-                      description="Receba alertas em tempo real no navegador."
-                    />
-                    <ToggleSwitch
-                      enabled={emailAlerts}
-                      onToggle={() => setEmailAlerts(!emailAlerts)}
-                      label="Alertas por e-mail"
-                      description="Receba resumos diários e alertas importantes."
-                    />
-                  </div>
-                </div>
-              )}
-
-              {/* ABA: SEGURANÇA */}
-              {activeTab === "seguranca" && (
-                <div className="space-y-6">
-                  <h2 className="text-xl font-bold text-text mb-6">
-                    Segurança da Conta
-                  </h2>
-                  <div className="space-y-4">
-                    <Card className="p-5">
-                      <h3 className="font-bold text-text mb-1">
-                        Alterar senha
-                      </h3>
-                      <p className="text-sm text-text-muted mb-4">
-                        Última alteração há 3 meses
-                      </p>
-                      <Button variant="outline">Redefinir senha</Button>
-                    </Card>
-                    <ToggleSwitch
-                      enabled={twoFactor}
-                      onToggle={() => setTwoFactor(!twoFactor)}
-                      label="Autenticação de dois fatores (2FA)"
-                      description="Adicione uma camada extra de segurança à sua conta."
-                    />
-                    <Card className="p-5">
-                      <h3 className="font-bold text-text mb-1">
-                        Sessões ativas
-                      </h3>
-                      <p className="text-sm text-text-muted mb-4">
-                        Gerencie os dispositivos conectados à sua conta.
-                      </p>
-                      <div className="flex items-center justify-between p-4 bg-bg-muted rounded-xl border border-border">
-                        <div className="flex items-center gap-4">
-                          <div className="p-2 bg-bg-elevated rounded-lg shadow-sm border border-border">
-                            <Laptop className="w-5 h-5 text-text-muted" />
-                          </div>
-                          <div>
-                            <p className="text-sm font-bold text-text">
-                              Chrome - Linux (Pop!_OS)
-                            </p>
-                            <p className="text-xs text-emerald-600 dark:text-emerald-400 font-medium mt-0.5">
-                              Sessão Atual • Fortaleza, BR
-                            </p>
-                          </div>
-                        </div>
-                        <span className="text-xs font-semibold px-2.5 py-1 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 rounded-full">
-                          Online
-                        </span>
-                      </div>
-                    </Card>
-                  </div>
-                </div>
-              )}
-
               {/* ABA: APARÊNCIA */}
               {activeTab === "aparencia" && (
                 <div className="space-y-6">
@@ -408,64 +305,6 @@ export default function ConfiguracoesPage() {
                         <option value="es">Español</option>
                       </select>
                     </Card>
-                  </div>
-                </div>
-              )}
-
-              {/* ABA: INTEGRAÇÕES */}
-              {activeTab === "integracoes" && (
-                <div className="space-y-6">
-                  <h2 className="text-xl font-bold text-text mb-6">
-                    Integrações de Ferramentas
-                  </h2>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {integrations.map((integration) => (
-                      <Card
-                        key={integration.name}
-                        className="p-5 flex flex-col justify-between hover:shadow-md transition-shadow"
-                      >
-                        <div className="flex items-start justify-between mb-4">
-                          <div className="flex items-center gap-3">
-                            <div className="p-2.5 bg-bg-muted rounded-xl border border-border shadow-sm">
-                              <Blocks className="w-6 h-6 text-text-muted" />
-                            </div>
-                            <div>
-                              <h3 className="font-bold text-text">
-                                {integration.name}
-                              </h3>
-                              <p className="text-xs text-text-muted mt-0.5">
-                                {integration.description}
-                              </p>
-                              <span
-                                className={`inline-block mt-2 text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full ${
-                                  integration.connected
-                                    ? "bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400"
-                                    : "bg-bg-muted text-text-muted"
-                                }`}
-                              >
-                                {integration.connected
-                                  ? "Conectado"
-                                  : "Não conectado"}
-                              </span>
-                            </div>
-                          </div>
-                        </div>
-                        <Button
-                          variant={
-                            integration.connected ? "outline" : "primary"
-                          }
-                          className={`w-full mt-4 ${
-                            integration.connected
-                              ? "text-rose-600 dark:text-rose-400 border-rose-200 dark:border-rose-800 hover:bg-rose-50 dark:hover:bg-rose-950/30 hover:text-rose-700 dark:hover:text-rose-300 hover:border-rose-300 dark:hover:border-rose-700"
-                              : ""
-                          }`}
-                        >
-                          {integration.connected
-                            ? "Desconectar"
-                            : "Conectar Conta"}
-                        </Button>
-                      </Card>
-                    ))}
                   </div>
                 </div>
               )}

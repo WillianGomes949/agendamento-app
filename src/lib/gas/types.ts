@@ -5,6 +5,7 @@
 export interface GasRequestPayload {
   action: string;
   data?: Record<string, unknown>;
+  apiKey: string;
 }
 
 /** Resposta padrão do GAS (sempre HTTP 200 no transporte). */
@@ -43,6 +44,7 @@ export const GAS_ACTIONS = {
   CREATE_TECNICO: "CREATE_TECNICO",
   UPDATE_TECNICO: "UPDATE_TECNICO",
   DELETE_TECNICO: "DELETE_TECNICO",
+  GET_HORARIOS_OCUPADOS: "GET_HORARIOS_OCUPADOS",
 } as const;
 
 export type GasAction = (typeof GAS_ACTIONS)[keyof typeof GAS_ACTIONS];

@@ -74,6 +74,38 @@ export default function ServicoForm({
   const [touched, setTouched] = useState<Record<string, boolean>>({});
   const [manualAddress, setManualAddress] = useState(false);
   const { options: configOptions, loading: configLoading } = useConfig();
+  const [horariosOcupados, setHorariosOcupados] = useState<Set<string>>(new Set());
+
+useEffect(() => {
+  if (!form.tecnico || !form.data || form.data.length !== 10) {
+    setHorariosOcupados(new Set());
+    return;
+  }
+
+  let cancelled = false;
+
+  const fetchOcupados = async () => {
+    try {
+      const url = new URL("/api/servicos/horarios-ocupados", window.location.origin);
+      url.searchParams.set("tecnico", form.tecnico);
+      url.searchParams.set("data", form.data);
+      if (initialData?.id) url.searchParams.set("excludeId", String(initialData.id));
+
+      const res = await fetch(url.toString(), { cache: "no-store" });
+      const json = await res.json();
+      if (!cancelled && json.success) {
+        setHorariosOcupados(new Set<string>(json.data ?? []));
+      }
+    } catch (err) {
+      console.error("Erro ao buscar horários ocupados:", err);
+    }
+  };
+
+  fetchOcupados();
+  return () => {
+    cancelled = true;
+  };
+}, [form.tecnico, form.data, initialData?.id]);
 
   useEffect(() => {
     if (initialData) {

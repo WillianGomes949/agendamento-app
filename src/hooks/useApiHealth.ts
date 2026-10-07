@@ -11,9 +11,8 @@ export function useApiHealth(): ApiStatus {
 
     const checkHealth = async () => {
       try {
-        // Usa o endpoint de health check do Apps Script (doGet)
-        // Se preferir, pode usar '/api/servicos' com query param
-        const response = await fetch('/api/servicos?health=1', {
+        // Agora aponta para o nosso endpoint de health local que testa o WordPress
+        const response = await fetch('/api/health', {
           method: 'GET',
           cache: 'no-store',
           headers: { 'Accept': 'application/json' },
@@ -30,8 +29,6 @@ export function useApiHealth(): ApiStatus {
     };
 
     checkHealth();
-
-    // Re-verifica a cada 30 segundos
     const interval = setInterval(() => {
       if (!cancelled) checkHealth();
     }, 30000);

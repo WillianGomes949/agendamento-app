@@ -149,7 +149,7 @@ export default function DashboardPage() {
           </p>
         </div>
         <div className="flex gap-3 mt-2 sm:mt-0">
-          <Link href="/agendamentos/novo" className="w-full sm:w-auto">
+          {/* <Link href="/agendamentos" className="w-full sm:w-auto">
             <Button
               variant="primary"
               className="w-full shadow-md hover:shadow-lg transition-shadow"
@@ -157,7 +157,7 @@ export default function DashboardPage() {
               <Plus className="w-4 h-4 mr-2" />
               Novo Serviço
             </Button>
-          </Link>
+          </Link> */}
         </div>
       </motion.div>
 

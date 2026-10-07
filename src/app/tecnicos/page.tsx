@@ -23,6 +23,7 @@ import { Modal } from "@/components/modals/Modal";
 import { DeleteConfirmModal } from "@/components/modals/DeleteConfirmModal";
 import { Toaster, toast } from "react-hot-toast";
 import type { TecnicoStats } from "@/lib/api/tecnicos.types";
+import { invalidateConfigCache } from "@/lib/config-cache";
 
 type FormState = {
   nome: string;
@@ -44,6 +45,7 @@ async function apiFetch<T>(input: string, init?: RequestInit): Promise<T> {
     ...init,
     headers: { "Content-Type": "application/json", ...(init?.headers ?? {}) },
     cache: "no-store",
+    next: { revalidate: 0 },
   });
   let json: unknown = null;
   try {
@@ -72,8 +74,8 @@ async function createTecnico(input: {
   cnpj?: string;
   whatsapp?: string;
   vinculo?: string;
-}): Promise<void> {
-  await apiFetch("/api/tecnicos", {
+}): Promise<TecnicoStats> {
+  return apiFetch<TecnicoStats>("/api/tecnicos", {
     method: "POST",
     body: JSON.stringify(input),
   });
@@ -89,7 +91,7 @@ async function updateTecnico(
     vinculo?: string;
   },
 ): Promise<void> {
-  await apiFetch("/api/tecnicos", {
+  await apiFetch<TecnicoStats>("/api/tecnicos", {
     method: "PATCH",
     body: JSON.stringify({ nomeAntigo, ...updates }),
   });
@@ -138,6 +140,7 @@ export default function TecnicosPage() {
     setError(null);
     try {
       const dados = await getTecnicosComStats();
+      console.log("🔍 carregarTecnicos retornou:", dados);
       setTecnicos(dados);
     } catch (err) {
       const msg =
@@ -173,18 +176,30 @@ export default function TecnicosPage() {
     }
     setIsSubmitting(true);
     setFormError("");
+
+    // 🔒 Guarda o payload antes de limpar o form
+    const payload = {
+      nome: formData.nome.trim(),
+      cpf: formData.cpf.trim() || undefined,
+      cnpj: formData.cnpj.trim() || undefined,
+      whatsapp: formData.whatsapp.trim() || undefined,
+      vinculo: formData.vinculo.trim() || undefined,
+    };
+
     try {
-      await createTecnico({
-        nome: formData.nome.trim(),
-        cpf: formData.cpf.trim() || undefined,
-        cnpj: formData.cnpj.trim() || undefined,
-        whatsapp: formData.whatsapp.trim() || undefined,
-        vinculo: formData.vinculo.trim() || undefined,
+      const criado = await createTecnico(payload);
+
+      // ✅ Atualização otimista — aparece NA HORA
+      setTecnicos((prev) => {
+        // evita duplicar se o refetch em background já trouxe
+        if (prev.some((t) => t.nome === criado.nome)) return prev;
+        return [...prev, criado];
       });
+      invalidateConfigCache();
+      
       toast.success("Técnico criado com sucesso!");
       setIsFormOpen(false);
       setFormData(FORM_VAZIO);
-      await carregarTecnicos();
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Erro ao criar técnico";
       setFormError(msg);
@@ -192,7 +207,7 @@ export default function TecnicosPage() {
     } finally {
       setIsSubmitting(false);
     }
-  }, [formData, carregarTecnicos]);
+  }, [formData]);
 
   const handleUpdate = useCallback(async () => {
     if (!editingTecnico || !formData.nome.trim()) {
@@ -201,19 +216,39 @@ export default function TecnicosPage() {
     }
     setIsSubmitting(true);
     setFormError("");
+
+    const nomeAntigo = editingTecnico.nome;
+    const updates = {
+      nome: formData.nome.trim(),
+      cpf: formData.cpf.trim(),
+      cnpj: formData.cnpj.trim(),
+      whatsapp: formData.whatsapp.trim(),
+      vinculo: formData.vinculo.trim(),
+    };
+
     try {
-      await updateTecnico(editingTecnico.nome, {
-        nome: formData.nome.trim(),
-        cpf: formData.cpf.trim(),
-        cnpj: formData.cnpj.trim(),
-        whatsapp: formData.whatsapp.trim(),
-        vinculo: formData.vinculo.trim(),
-      });
+      await updateTecnico(nomeAntigo, updates);
+
+      // ✅ 1. Atualiza state local NA HORA (sem esperar refetch)
+      setTecnicos((prev) =>
+        prev.map((t) =>
+          t.nome === nomeAntigo
+            ? {
+                ...t,
+                nome: updates.nome,
+                cpf: updates.cpf || undefined,
+                cnpj: updates.cnpj || undefined,
+                whatsapp: updates.whatsapp || undefined,
+                vinculo: updates.vinculo || undefined,
+              }
+            : t,
+        ),
+      );
+      invalidateConfigCache();
       toast.success("Técnico atualizado!");
       setIsFormOpen(false);
       setEditingTecnico(null);
       setFormData(FORM_VAZIO);
-      await carregarTecnicos();
     } catch (err) {
       const msg =
         err instanceof Error ? err.message : "Erro ao atualizar técnico";
@@ -222,36 +257,59 @@ export default function TecnicosPage() {
     } finally {
       setIsSubmitting(false);
     }
-  }, [editingTecnico, formData, carregarTecnicos]);
+  }, [editingTecnico, formData]);
 
-  const handleToggleAtivo = useCallback(
-    async (tecnico: TecnicoStats) => {
-      try {
-        await updateTecnico(tecnico.nome, { ativo: !tecnico.ativo });
-        toast.success(tecnico.ativo ? "Técnico desativado" : "Técnico ativado");
-        await carregarTecnicos();
-      } catch (err) {
-        toast.error(
-          err instanceof Error ? err.message : "Erro ao atualizar status",
-        );
-      }
-    },
-    [carregarTecnicos],
-  );
+  const handleToggleAtivo = useCallback(async (tecnico: TecnicoStats) => {
+    const novoAtivo = !tecnico.ativo;
 
+    // ✅ Otimista
+    setTecnicos((prev) =>
+      prev.map((t) =>
+        t.nome === tecnico.nome ? { ...t, ativo: novoAtivo } : t,
+      ),
+    );
+
+    try {
+      await updateTecnico(tecnico.nome, { ativo: novoAtivo });
+      invalidateConfigCache();
+      toast.success(novoAtivo ? "Técnico ativado" : "Técnico desativado");
+      // sem refetch — toggle não altera stats
+    } catch (err) {
+      // 🔙 Rollback
+      setTecnicos((prev) =>
+        prev.map((t) =>
+          t.nome === tecnico.nome ? { ...t, ativo: tecnico.ativo } : t,
+        ),
+      );
+      toast.error(
+        err instanceof Error ? err.message : "Erro ao atualizar status",
+      );
+    }
+  }, []);
   const handleDelete = useCallback(async () => {
     if (!deletingTecnico) return;
+    const alvo = deletingTecnico;
+
+    // ✅ 1. Remove do state NA HORA (otimista)
+    setTecnicos((prev) => prev.filter((t) => t.nome !== alvo.nome));
+    setDeletingTecnico(null);
+
     try {
-      await deleteTecnico(deletingTecnico.nome);
+      await deleteTecnico(alvo.nome);
+      invalidateConfigCache();
       toast.success("Técnico removido!");
-      setDeletingTecnico(null);
-      await carregarTecnicos();
     } catch (err) {
+      // Rollback se falhar
+      setTecnicos((prev) => {
+        if (prev.some((t) => t.nome === alvo.nome)) return prev;
+        return [...prev, alvo];
+      });
+
       toast.error(
         err instanceof Error ? err.message : "Erro ao remover técnico",
       );
     }
-  }, [deletingTecnico, carregarTecnicos]);
+  }, [deletingTecnico]);
 
   const openEditForm = useCallback((tecnico: TecnicoStats) => {
     setEditingTecnico(tecnico);
@@ -685,7 +743,11 @@ export default function TecnicosPage() {
         <form
           onSubmit={(e) => {
             e.preventDefault();
-            editingTecnico ? handleUpdate() : handleCreate();
+            if (editingTecnico) {
+              handleUpdate();
+            } else {
+              handleCreate();
+            }
           }}
           className="space-y-6"
         >

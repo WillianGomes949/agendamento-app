@@ -31,3 +31,15 @@ export async function excluirServico<T = unknown>(
 ): Promise<GasResponse<T>> {
   return fetchGas<T>(GAS_ACTIONS.DELETE, payload);
 }
+
+export async function getHorariosOcupados(params: {
+  tecnico: string;
+  data: string;
+  excludeId?: string;
+}): Promise<string[]> {
+  const result = await fetchGas<string[]>(
+    GAS_ACTIONS.GET_HORARIOS_OCUPADOS,
+    params as Record<string, unknown>,
+  );
+  return result.data ?? [];
+}

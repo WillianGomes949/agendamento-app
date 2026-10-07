@@ -33,12 +33,22 @@ export async function createTecnico(input: {
   cnpj?: string;
   whatsapp?: string;
   vinculo?: string;
-}): Promise<Tecnico> {
+}): Promise<TecnicoStats> {
   const result = await fetchGas<Tecnico>(GAS_ACTIONS.CREATE_TECNICO, input);
-  revalidateTag("tecnicos", "max");
   const tecnico = normalizarTecnico(result.data);
   if (!tecnico) throw new Error("Resposta inválida ao criar técnico.");
-  return tecnico;
+  revalidateTag("tecnicos", "max");
+  return {
+    nome: input.nome,
+    ativo: true,
+    cpf: input.cpf,
+    cnpj: input.cnpj,
+    whatsapp: input.whatsapp,
+    vinculo: input.vinculo,
+    totalServicos: 0,
+    servicosConcluidos: 0,
+    servicosPendentes: 0,
+  };
 }
 
 export async function updateTecnico(

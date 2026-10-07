@@ -13,6 +13,7 @@ import {
 import { gasErrorToResponse } from "@/lib/gas/client";
 
 export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 function respondError(err: unknown) {
   const { body, status } = gasErrorToResponse(err);
@@ -25,7 +26,12 @@ export async function GET(request: NextRequest) {
   const comStats = searchParams.get("stats") === "1";
   try {
     const data = comStats ? await getTecnicosComStats() : await getTecnicos();
-    return NextResponse.json({ success: true, data });
+    return NextResponse.json(
+      { success: true, data },
+      {
+        headers: { "Cache-Control": "no-store" },
+      },
+    );
   } catch (err) {
     return respondError(err);
   }
@@ -58,6 +64,7 @@ export async function POST(request: NextRequest) {
       whatsapp: typeof body.whatsapp === "string" ? body.whatsapp : undefined,
       vinculo: typeof body.vinculo === "string" ? body.vinculo : undefined,
     });
+    console.log("POST /api/tecnicos retornou:", data);
     return NextResponse.json({ success: true, data }, { status: 201 });
   } catch (err) {
     return respondError(err);

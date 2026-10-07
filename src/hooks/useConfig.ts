@@ -3,6 +3,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { CACHE_TTL_CONFIG, CONFIG_API_BASE } from "@/lib/constants";
+import { CONFIG_UPDATED_EVENT } from "@/lib/config-cache";
 
 interface ConfigOptions {
   tecnicos: { value: string; label: string }[];
@@ -202,6 +203,12 @@ export function useConfig(): UseConfigReturn {
 
   useEffect(() => {
     load();
+  }, [load]);
+
+  useEffect(() => {
+    const handler = () => load(true); // força refresh
+    window.addEventListener(CONFIG_UPDATED_EVENT, handler);
+    return () => window.removeEventListener(CONFIG_UPDATED_EVENT, handler);
   }, [load]);
 
   return { options, loading, error, refresh: () => load(true) };
