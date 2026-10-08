@@ -60,14 +60,19 @@ const itemVariants: Variants = {
   },
 };
 
-const STATUS_COLORS: Record<
-  string,
-  { bg: string; border: string; text: string }
-> = {
-  pendente: { bg: "#fef3c7", border: "#f59e0b", text: "#92400e" },
-  "em andamento": { bg: "#e0e7ff", border: "#6366f1", text: "#3730a3" },
-  concluido: { bg: "#d1fae5", border: "#10b981", text: "#065f46" },
-  cancelado: { bg: "#fee2e2", border: "#ef4444", text: "#991b1b" },
+const normalizeStatus = (s?: string) =>
+  (s || "pendente")
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[\s_-]+/g, " ")
+    .trim();
+
+const STATUS_CLASS: Record<string, string> = {
+  pendente: "ev-pendente",
+  "em andamento": "ev-andamento",
+  concluido: "ev-concluido",
+  cancelado: "ev-cancelado",
 };
 
 const parseBrDate = (brDate: string): Date | null => {
@@ -102,6 +107,14 @@ export default function AgendamentosPage() {
   const [deletingServico, setDeletingServico] = useState<Servico | null>(null);
   const [selectedEvent, setSelectedEvent] = useState<Servico | null>(null);
   const { errorModal, showError, closeModal } = useErrorModal();
+
+  const eventStyleGetter = useCallback(
+    (event: any) => ({
+      className:
+        STATUS_CLASS[normalizeStatus(event.resource?.status)] ?? "ev-pendente",
+    }),
+    [],
+  );
 
   useEffect(() => {
     if (!selectedEvent) return;
@@ -174,37 +187,28 @@ export default function AgendamentosPage() {
     };
   }, [servicos]);
 
-  const eventStyleGetter = useCallback((event: any) => {
-    const status = (event.resource?.status || "pendente").toLowerCase();
-    const colors = STATUS_COLORS[status] || STATUS_COLORS.pendente;
-    return {
-      style: {
-        backgroundColor: colors.bg,
-        borderLeft: `4px solid ${colors.border}`,
-        color: colors.text,
-        borderRadius: "6px",
-        padding: "4px 8px",
-        fontSize: "12px",
-        fontWeight: 600,
-        border: "none",
-        boxShadow: "0 1px 2px rgba(0,0,0,0.05)",
-        overflow: "hidden",
-        whiteSpace: "nowrap",
-      },
-    };
-  }, []);
-
   const EventComponent = useCallback(
-    ({ event }: { event: any }) => (
+  ({ event }: { event: any }) => {
+    const tecnico: string = event.resource?.tecnico || "";
+    const inicial = tecnico.trim().charAt(0).toUpperCase() || "?";
+
+    return (
       <div className="flex items-center gap-1.5 overflow-hidden">
+        <span
+          title={tecnico || "Sem técnico"}
+          className="shrink-0 w-4 h-4 rounded-full bg-black/15 dark:bg-white/15 text-[9px] font-bold flex items-center justify-center"
+        >
+          {inicial}
+        </span>
         <span className="truncate flex-1">{event.title}</span>
-        <span className="text-[10px] opacity-80 font-mono bg-bg/30 px-1 rounded">
+        <span className="text-[10px] opacity-80 font-mono bg-black/10 dark:bg-white/10 px-1 rounded">
           {event.resource?.horario || "S/H"}
         </span>
       </div>
-    ),
-    [],
-  );
+    );
+  },
+  [],
+);
 
   const handleSelectEvent = useCallback(
     (event: any) => setSelectedEvent(event.resource as Servico),

@@ -5,28 +5,58 @@
 
 /* ===== Tokens de tema (claro por padrão) ===== */
 @theme {
+  /* Superfícies */
   --color-bg: #f8fafc;
   --color-bg-elevated: #ffffff;
   --color-bg-muted: #f1f5f9;
+  --color-bg-hover: #e8edf3;
+
+  /* Texto */
   --color-text: #0f172a;
   --color-text-muted: #64748b;
+
+  /* Bordas */
   --color-border: #e2e8f0;
   --color-border-strong: #cbd5e1;
+  --color-grid: #edf1f6;
+
+  /* Accent (botões primários, itens ativos) */
   --color-accent: #0f172a;
   --color-accent-foreground: #ffffff;
+
+  /* Destaque (hoje, seleção, foco) */
+  --color-primary: #2563eb;
+  --color-primary-soft: rgba(37, 99, 235, 0.1);
+  --color-primary-ring: rgba(37, 99, 235, 0.35);
 }
 
-/* ===== Tema escuro ===== */
+/* ===== Tema escuro (mesma família slate/navy) ===== */
 .dark {
-  --color-bg: #0b1020;
-  --color-bg-elevated: #111827;
-  --color-bg-muted: #1e293b;
+  --color-bg: #0b1220;
+  --color-bg-elevated: #111a2c;
+  --color-bg-muted: #1a2438;
+  --color-bg-hover: #222e45;
+
   --color-text: #f1f5f9;
   --color-text-muted: #94a3b8;
-  --color-border: #1f2937;
-  --color-border-strong: #334155;
+
+  --color-border: #263248;
+  --color-border-strong: #3a4863;
+  --color-grid: #1c273b;
+
   --color-accent: #f1f5f9;
-  --color-accent-foreground: #0f172a;
+  --color-accent-foreground: #0b1220;
+
+  --color-primary: #60a5fa;
+  --color-primary-soft: rgba(96, 165, 250, 0.14);
+  --color-primary-ring: rgba(96, 165, 250, 0.4);
+}
+
+@utility no-scrollbar {
+  scrollbar-width: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
 }
 
 /* ===== Base ===== */
@@ -46,6 +76,12 @@ body {
   @apply antialiased;
 }
 
+/* Seleção de texto */
+::selection {
+  background: var(--color-primary-soft);
+  color: var(--color-text);
+}
+
 /* Scrollbar global */
 ::-webkit-scrollbar {
   width: 10px;
@@ -60,11 +96,6 @@ body {
 }
 ::-webkit-scrollbar-thumb:hover {
   background: var(--color-text-muted);
-}
-
-/* Evita flash de tema errado no carregamento */
-html:not(.dark) body {
-  background-color: var(--color-bg);
 }
 
 /* ============================================================
@@ -83,7 +114,7 @@ html:not(.dark) body {
   display: none !important;
 }
 
-/* Cabeçalho dos dias da semana (Seg, Ter, Qua...) */
+/* Cabeçalho dos dias da semana */
 .rbc-custom .rbc-header {
   padding: 14px 8px;
   font-weight: 700;
@@ -95,7 +126,7 @@ html:not(.dark) body {
 }
 
 .rbc-custom .rbc-header + .rbc-header {
-  border-left: 1px solid var(--color-bg-muted);
+  border-left: 1px solid var(--color-grid);
 }
 
 /* Views: mês e time */
@@ -107,19 +138,16 @@ html:not(.dark) body {
 }
 
 .rbc-custom .rbc-month-row + .rbc-month-row {
-  border-top: 1px solid var(--color-bg-muted);
+  border-top: 1px solid var(--color-grid);
 }
 
 .rbc-custom .rbc-day-bg + .rbc-day-bg {
-  border-left: 1px solid var(--color-bg-muted);
+  border-left: 1px solid var(--color-grid);
 }
 
 /* Célula "Hoje" */
 .rbc-custom .rbc-today {
-  background-color: rgba(59, 130, 246, 0.08);
-}
-.dark .rbc-custom .rbc-today {
-  background-color: rgba(96, 165, 250, 0.12);
+  background-color: var(--color-primary-soft);
 }
 
 .rbc-custom .rbc-current {
@@ -135,18 +163,12 @@ html:not(.dark) body {
 }
 
 .rbc-custom .rbc-date-cell.rbc-now {
-  color: #2563eb;
+  color: var(--color-primary);
   font-weight: 800;
-}
-.dark .rbc-custom .rbc-date-cell.rbc-now {
-  color: #60a5fa;
 }
 
 .rbc-custom .rbc-date-cell.rbc-off-range {
   color: var(--color-border-strong);
-}
-.dark .rbc-custom .rbc-date-cell.rbc-off-range {
-  color: #475569;
 }
 
 .rbc-custom .rbc-date-cell > a {
@@ -159,41 +181,60 @@ html:not(.dark) body {
 }
 
 /* Eventos base */
+/* Eventos base */
 .rbc-custom .rbc-event {
+  background-color: var(--ev-bg, var(--color-bg-muted));
+  color: var(--ev-tx, var(--color-text));
+  border: none;
+  border-left: 4px solid var(--ev-bd, var(--color-border-strong));
   border-radius: 6px;
-  padding: 4px;
+  padding: 4px 8px;
   font-size: 12px;
   font-weight: 600;
-  border: none;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  overflow: hidden;
+  white-space: nowrap;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   margin-bottom: 2px;
 }
+.rbc-custom .rbc-event.rbc-selected {
+  background-color: var(--ev-bg, var(--color-bg-muted));
+}
+
+/* Cores por status (claro) */
+.rbc-custom .rbc-event.ev-pendente   { --ev-bg: #fef3c7; --ev-bd: #f59e0b; --ev-tx: #92400e; }
+.rbc-custom .rbc-event.ev-andamento  { --ev-bg: #e0e7ff; --ev-bd: #6366f1; --ev-tx: #3730a3; }
+.rbc-custom .rbc-event.ev-concluido  { --ev-bg: #d1fae5; --ev-bd: #10b981; --ev-tx: #065f46; }
+.rbc-custom .rbc-event.ev-cancelado  { --ev-bg: #fee2e2; --ev-bd: #ef4444; --ev-tx: #991b1b; }
+
+/* Cores por status (escuro) */
+.dark .rbc-custom .rbc-event.ev-pendente  { --ev-bg: rgba(245, 158, 11, 0.16); --ev-bd: #fbbf24; --ev-tx: #fcd34d; }
+.dark .rbc-custom .rbc-event.ev-andamento { --ev-bg: rgba(99, 102, 241, 0.2);  --ev-bd: #818cf8; --ev-tx: #c7d2fe; }
+.dark .rbc-custom .rbc-event.ev-concluido { --ev-bg: rgba(16, 185, 129, 0.16); --ev-bd: #34d399; --ev-tx: #6ee7b7; }
+.dark .rbc-custom .rbc-event.ev-cancelado { --ev-bg: rgba(239, 68, 68, 0.16);  --ev-bd: #f87171; --ev-tx: #fca5a5; }
 .dark .rbc-custom .rbc-event {
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
 }
 
 .rbc-custom .rbc-event:hover {
   transform: translateY(-1px);
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 8px -1px rgba(0, 0, 0, 0.15);
   z-index: 10;
 }
 .dark .rbc-custom .rbc-event:hover {
-  box-shadow: 0 4px 8px -1px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 4px 8px -1px rgba(0, 0, 0, 0.45);
 }
 
 .rbc-custom .rbc-event.rbc-selected {
-  box-shadow: 0 0 0 2px #3b82f6;
+  box-shadow: 0 0 0 2px var(--color-primary);
   outline: none;
-}
-.dark .rbc-custom .rbc-event.rbc-selected {
-  box-shadow: 0 0 0 2px #60a5fa;
 }
 
 /* View de Agenda (Lista) */
 .rbc-custom .rbc-agenda-view {
   border: none;
   background: var(--color-bg-elevated);
+  color: var(--color-text);
 }
 
 .rbc-custom .rbc-agenda-table {
@@ -207,12 +248,12 @@ html:not(.dark) body {
 }
 
 .rbc-custom .rbc-agenda-table tbody tr {
-  border-bottom: 1px solid var(--color-bg-muted);
+  border-bottom: 1px solid var(--color-grid);
   transition: background-color 0.2s;
 }
 
 .rbc-custom .rbc-agenda-table tbody tr:hover {
-  background-color: var(--color-bg);
+  background-color: var(--color-bg-muted);
 }
 
 .rbc-custom .rbc-agenda-table td {
@@ -241,7 +282,7 @@ html:not(.dark) body {
 }
 
 .rbc-custom .rbc-time-header-content {
-  border-left: 1px solid var(--color-bg-muted);
+  border-left: 1px solid var(--color-grid);
 }
 
 .rbc-custom .rbc-time-content {
@@ -256,19 +297,15 @@ html:not(.dark) body {
 }
 
 .rbc-custom .rbc-timeslot-group {
-  border-bottom: 1px solid var(--color-bg-muted);
+  border-bottom: 1px solid var(--color-grid);
   min-height: 56px;
 }
 
 /* Slot selecionável (drag para criar evento) */
 .rbc-custom .rbc-slot-selection {
-  background-color: rgba(59, 130, 246, 0.1);
-  border: 2px dashed #3b82f6;
+  background-color: var(--color-primary-soft);
+  border: 2px dashed var(--color-primary);
   border-radius: 8px;
-}
-.dark .rbc-custom .rbc-slot-selection {
-  background-color: rgba(96, 165, 250, 0.15);
-  border-color: #60a5fa;
 }
 
 /* Popup "+X mais" */
@@ -276,7 +313,7 @@ html:not(.dark) body {
   background: var(--color-bg-elevated);
   border: 1px solid var(--color-border);
   border-radius: 12px;
-  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.12);
   padding: 12px;
   z-index: 50;
   min-width: 200px;
@@ -290,11 +327,11 @@ html:not(.dark) body {
   font-size: 14px;
   color: var(--color-text);
   padding-bottom: 8px;
-  border-bottom: 1px solid var(--color-bg-muted);
+  border-bottom: 1px solid var(--color-grid);
   margin-bottom: 8px;
 }
 
-/* Botões e interações do calendário */
+/* Botões do calendário */
 .rbc-custom .rbc-btn-group button {
   background: var(--color-bg-elevated);
   color: var(--color-text);
@@ -306,7 +343,7 @@ html:not(.dark) body {
 }
 
 .rbc-custom .rbc-btn-group button:hover {
-  background: var(--color-bg-muted);
+  background: var(--color-bg-hover);
   color: var(--color-text);
 }
 

@@ -37,24 +37,28 @@ import {
 } from "recharts";
 import Link from "next/link";
 
-const COLORS = {
-  primary: "#0f172a",
-  secondary: "#3b82f6",
-  success: "#10b981",
-  warning: "#f59e0b",
-  danger: "#ef4444",
-  info: "#06b6d4",
-  slate: "#64748b",
+const PALETTE = {
+  light: ["#2563eb", "#10b981", "#f59e0b", "#6366f1", "#ef4444", "#06b6d4"],
+  dark: ["#60a5fa", "#34d399", "#fbbf24", "#818cf8", "#f87171", "#22d3ee"],
 };
 
-const PIE_COLORS = [
-  COLORS.primary,
-  COLORS.secondary,
-  COLORS.success,
-  COLORS.warning,
-  COLORS.danger,
-  COLORS.info,
-];
+const STATUS_META: Record<
+  string,
+  { label: string; light: string; dark: string }
+> = {
+  pendente: { label: "Pendente", light: "#f59e0b", dark: "#fbbf24" },
+  "em andamento": { label: "Em andamento", light: "#6366f1", dark: "#818cf8" },
+  concluido: { label: "Concluído", light: "#10b981", dark: "#34d399" },
+  cancelado: { label: "Cancelado", light: "#ef4444", dark: "#f87171" },
+};
+
+const normalizeStatus = (s?: string) =>
+  (s || "pendente")
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[\s_-]+/g, " ")
+    .trim();
 
 const containerVariants: Variants = {
   hidden: { opacity: 0 },
@@ -80,24 +84,28 @@ export default function RelatoriosPage() {
   const [periodo, setPeriodo] = useState<PeriodoFiltro>("30dias");
   const [filtroTecnico, setFiltroTecnico] = useState<string>("todos");
 
-  // Tooltips e eixos adaptados ao tema
+  const palette = isDark ? PALETTE.dark : PALETTE.light;
+  const statusColor = (key: string, i: number) =>
+    STATUS_META[key]?.[isDark ? "dark" : "light"] ??
+    palette[i % palette.length];
+
   const customTooltipStyle = {
     borderRadius: "12px",
-    border: "none",
+    border: "1px solid var(--color-border)",
     boxShadow: isDark
       ? "0 10px 15px -3px rgb(0 0 0 / 0.5), 0 4px 6px -4px rgb(0 0 0 / 0.3)"
       : "0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1)",
-    backgroundColor: isDark ? "#1e293b" : "#ffffff",
-    color: isDark ? "#f1f5f9" : "#334155",
+    backgroundColor: "var(--color-bg-elevated)",
+    color: "var(--color-text)",
     padding: "12px",
     fontWeight: 500,
     fontSize: "14px",
   };
 
-  const axisColor = isDark ? "#94a3b8" : "#94a3b8";
-  const gridColor = isDark ? "#334155" : "#f1f5f9";
-  const cursorColor = isDark ? "#1e293b" : "#f8fafc";
-  const legendColor = isDark ? "#f1f5f9" : "#0f172a";
+  const axisColor = "var(--color-text-muted)";
+  const gridColor = "var(--color-border)";
+  const cursorColor = "var(--color-bg-muted)";
+  const legendColor = "var(--color-text)";
 
   const servicosFiltrados = useMemo(() => {
     if (!servicos.length) return [];
@@ -162,16 +170,18 @@ export default function RelatoriosPage() {
   }, [servicosPorTecnico]);
 
   const dadosStatus = useMemo(() => {
-    const ativos = servicosPorTecnico.filter(
-      (s) => s.status?.toLowerCase() !== "deletado",
-    );
     const grupos: Record<string, number> = {};
-    ativos.forEach((s) => {
-      grupos[s.status || "Pendente"] =
-        (grupos[s.status || "Pendente"] || 0) + 1;
+    servicosPorTecnico.forEach((s) => {
+      const key = normalizeStatus(s.status);
+      if (key === "deletado") return;
+      grupos[key] = (grupos[key] || 0) + 1;
     });
     return Object.entries(grupos)
-      .map(([name, value]) => ({ name, value }))
+      .map(([key, value]) => ({
+        key,
+        name: STATUS_META[key]?.label ?? key,
+        value,
+      }))
       .sort((a, b) => b.value - a.value);
   }, [servicosPorTecnico]);
 
@@ -474,10 +484,10 @@ export default function RelatoriosPage() {
                       dataKey="value"
                       stroke="none"
                     >
-                      {dadosStatus.map((_, index) => (
+                      {dadosStatus.map((d, index) => (
                         <Cell
-                          key={`cell-${index}`}
-                          fill={PIE_COLORS[index % PIE_COLORS.length]}
+                          key={d.key}
+                          fill={statusColor(d.key, index)}
                           className="hover:opacity-80 transition-opacity outline-none"
                         />
                       ))}
@@ -546,19 +556,24 @@ export default function RelatoriosPage() {
                     />
                     <Legend
                       iconType="circle"
-                      wrapperStyle={{ fontSize: "13px", color: legendColor }}
+                      wrapperStyle={{ fontSize: "13px", paddingTop: "10px" }}
+                      formatter={(value) => (
+                        <span style={{ color: "var(--color-text)" }}>
+                          {value}
+                        </span>
+                      )}
                     />
                     <Bar
                       dataKey="total"
                       name="Total"
-                      fill={COLORS.slate}
+                      fill={isDark ? "#94a3b8" : "#64748b"}
                       radius={[0, 4, 4, 0]}
                       barSize={12}
                     />
                     <Bar
                       dataKey="concluidos"
                       name="Concluídos"
-                      fill={COLORS.success}
+                      fill={statusColor("concluido", 0)}
                       radius={[0, 4, 4, 0]}
                       barSize={12}
                     />
@@ -617,7 +632,7 @@ export default function RelatoriosPage() {
                     <Bar
                       dataKey="quantidade"
                       name="Quantidade"
-                      fill={COLORS.secondary}
+                      fill="var(--color-primary)"
                       radius={[6, 6, 0, 0]}
                       barSize={32}
                     />
@@ -742,7 +757,7 @@ export default function RelatoriosPage() {
                     {dadosPorTipo.map((_, index) => (
                       <Cell
                         key={`cell-${index}`}
-                        fill={PIE_COLORS[index % PIE_COLORS.length]}
+                        fill={palette[index % palette.length]}
                         className="hover:opacity-80 transition-opacity"
                       />
                     ))}
