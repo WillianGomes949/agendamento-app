@@ -10,11 +10,10 @@ import {
 } from "@/lib/gas-api";
 import { sanitizarDadosGAS } from "@/lib/utils-format";
 import type { Servico, FormularioServico, FiltrosServicos } from "@/lib/types";
-import { CACHE_TTL_SERVICOS, DEFAULT_PAGE_SIZE } from '@/lib/constants';
+import { CACHE_TTL_SERVICOS, DEFAULT_PAGE_SIZE } from "@/lib/constants";
 
 const CACHE_KEY = "@TrackApp:servicos";
 const CACHE_TTL = CACHE_TTL_SERVICOS;
-
 
 // Variável global para impedir requisições simultâneas aos serviços
 let globalServicosPromise: Promise<any> | null = null;
@@ -192,6 +191,7 @@ export function useServicos(initialFilters?: FiltrosServicos) {
           err instanceof Error ? err.message : "Falha ao criar serviço";
         setError(msg);
         console.error(err);
+        // Retorna a mensagem bruta para o modal parsear
         return { success: false as const, error: msg };
       } finally {
         setIsCreating(false);

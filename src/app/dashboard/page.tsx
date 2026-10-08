@@ -14,7 +14,6 @@ import {
   Loader2,
   Wrench,
   FileText,
-  Plus,
 } from "lucide-react";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
@@ -147,17 +146,6 @@ export default function DashboardPage() {
           <p className="text-text-muted text-sm md:text-base">
             Aqui está o resumo da sua operação de hoje.
           </p>
-        </div>
-        <div className="flex gap-3 mt-2 sm:mt-0">
-          {/* <Link href="/agendamentos" className="w-full sm:w-auto">
-            <Button
-              variant="primary"
-              className="w-full shadow-md hover:shadow-lg transition-shadow"
-            >
-              <Plus className="w-4 h-4 mr-2" />
-              Novo Serviço
-            </Button>
-          </Link> */}
         </div>
       </motion.div>
 

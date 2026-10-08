@@ -15,7 +15,6 @@ import {
   Car,
   User,
   CheckCircle,
-  AlertCircle,
   Loader2,
   ChevronDown,
   X,
@@ -35,6 +34,8 @@ import { DeleteConfirmModal } from "@/components/modals/DeleteConfirmModal";
 import ServicoDetalhesModal from "@/components/modals/ServicoDetalhesModal";
 import { Toaster, toast } from "react-hot-toast";
 import { ServicoCard } from "@/components/features/ServiceCard";
+import { ErrorModal } from "@/components/modals/ErrorModal";
+import { useErrorModal } from "@/hooks/useErrorModal";
 
 const containerVariants: Variants = {
   hidden: { opacity: 0 },
@@ -56,8 +57,6 @@ export default function ServicosPage() {
   const {
     servicos,
     loading,
-    error,
-    refresh,
     datasDisponiveis,
     tecnicos,
     create,
@@ -81,6 +80,7 @@ export default function ServicosPage() {
     null,
   );
   const [visualizacao, setVisualizacao] = useState<"cards" | "lista">("cards");
+  const { errorModal, showError, closeModal } = useErrorModal();
 
   const servicosFiltrados = useMemo(() => {
     let resultado = [...servicos];
@@ -173,9 +173,12 @@ export default function ServicosPage() {
       if (result.success) {
         toast.success("Serviço criado com sucesso!");
         setIsFormOpen(false);
-      } else toast.error(result.error || "Erro ao criar serviço");
+      } else {
+        // Mostra o modal estilizado em vez do toast
+        showError(result.error || "Erro ao criar serviço");
+      }
     },
-    [create],
+    [create, showError],
   );
 
   const handleUpdate = useCallback(
@@ -185,9 +188,11 @@ export default function ServicosPage() {
         toast.success("Serviço atualizado!");
         setEditingServico(null);
         setIsFormOpen(false);
-      } else toast.error(result.error || "Erro ao atualizar");
+      } else {
+        showError(result.error || "Erro ao atualizar");
+      }
     },
-    [update],
+    [update, showError],
   );
 
   const handleDelete = useCallback(async () => {
@@ -196,8 +201,10 @@ export default function ServicosPage() {
     if (result.success) {
       toast.success("Serviço removido!");
       setDeletingServico(null);
-    } else toast.error(result.error || "Erro ao remover");
-  }, [remove, deletingServico]);
+    } else {
+      showError(result.error || "Erro ao remover");
+    }
+  }, [remove, deletingServico, showError]);
 
   const limparFiltros = useCallback(() => {
     setBuscaLocal("");
@@ -224,29 +231,6 @@ export default function ServicosPage() {
         <p className="text-text-muted font-medium animate-pulse text-lg mt-2">
           A carregar serviços...
         </p>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="min-h-[80vh] flex flex-col items-center justify-center p-6 text-center">
-        <div className="w-24 h-24 bg-rose-50 dark:bg-rose-950/30 rounded-3xl flex items-center justify-center border border-rose-200 dark:border-rose-900 mb-6 shadow-sm">
-          <AlertCircle className="w-12 h-12 text-rose-500 dark:text-rose-400" />
-        </div>
-        <h2 className="text-2xl md:text-3xl font-extrabold text-text tracking-tight">
-          Não foi possível carregar os dados
-        </h2>
-        <p className="text-text-muted mt-3 max-w-md leading-relaxed text-base">
-          {error}
-        </p>
-        <Button
-          variant="outline"
-          className="mt-8 px-8 py-3"
-          onClick={() => refresh()}
-        >
-          Tentar Novamente
-        </Button>
       </div>
     );
   }
@@ -700,6 +684,14 @@ export default function ServicosPage() {
         onClose={() => setDetalhesServicoId(null)}
         onEdit={openEditForm}
         onDelete={openDeleteConfirm}
+      />
+      <ErrorModal
+        isOpen={errorModal.isOpen}
+        onClose={closeModal}
+        title={errorModal.title}
+        message={errorModal.message}
+        details={errorModal.details}
+        httpStatus={errorModal.httpStatus}
       />
     </motion.div>
   );

@@ -34,6 +34,8 @@ import { startOfWeek } from "date-fns/startOfWeek";
 import { getDay } from "date-fns/getDay";
 import { ptBR } from "date-fns/locale/pt-BR";
 import "react-big-calendar/lib/css/react-big-calendar.css";
+import { useErrorModal } from "@/hooks/useErrorModal";
+import { ErrorModal } from "@/components/modals/ErrorModal";
 
 const locales = { "pt-BR": ptBR };
 const localizer = dateFnsLocalizer({
@@ -91,7 +93,6 @@ export default function AgendamentosPage() {
     isCreating,
     isUpdating,
     isDeleting,
-    setFilters,
   } = useServicos();
 
   const [view, setView] = useState<ViewType>("month");
@@ -100,22 +101,23 @@ export default function AgendamentosPage() {
   const [editingServico, setEditingServico] = useState<Servico | null>(null);
   const [deletingServico, setDeletingServico] = useState<Servico | null>(null);
   const [selectedEvent, setSelectedEvent] = useState<Servico | null>(null);
+  const { errorModal, showError, closeModal } = useErrorModal();
 
   useEffect(() => {
-  if (!selectedEvent) return;
+    if (!selectedEvent) return;
 
-  const handleEsc = (e: KeyboardEvent) => {
-    if (e.key === "Escape") setSelectedEvent(null);
-  };
+    const handleEsc = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setSelectedEvent(null);
+    };
 
-  window.addEventListener("keydown", handleEsc);
-  document.body.style.overflow = "hidden";
+    window.addEventListener("keydown", handleEsc);
+    document.body.style.overflow = "hidden";
 
-  return () => {
-    window.removeEventListener("keydown", handleEsc);
-    document.body.style.overflow = "";
-  };
-}, [selectedEvent]);
+    return () => {
+      window.removeEventListener("keydown", handleEsc);
+      document.body.style.overflow = "";
+    };
+  }, [selectedEvent]);
 
   const events = useMemo(() => {
     return servicos
@@ -227,36 +229,41 @@ export default function AgendamentosPage() {
   const handleCreate = useCallback(
     async (data: FormularioServico) => {
       const result = await create(data);
-      result.success
-        ? toast.success("Serviço criado com sucesso!")
-        : toast.error(result.error || "Erro ao criar");
-      setIsFormOpen(false);
+      if (result.success) {
+        toast.success("Serviço criado com sucesso!");
+        setIsFormOpen(false);
+      } else {
+        // Mostra o modal estilizado em vez do toast
+        showError(result.error || "Erro ao criar serviço");
+      }
     },
-    [create],
+    [create, showError],
   );
 
   const handleUpdate = useCallback(
     async (id: string, data: Partial<Servico>) => {
       const result = await update(id, data);
-      result.success
-        ? toast.success("Serviço atualizado!")
-        : toast.error(result.error || "Erro ao atualizar");
-      setEditingServico(null);
-      setIsFormOpen(false);
+      if (result.success) {
+        toast.success("Serviço atualizado!");
+        setEditingServico(null);
+        setIsFormOpen(false);
+      } else {
+        showError(result.error || "Erro ao atualizar");
+      }
     },
-    [update],
+    [update, showError],
   );
 
   const handleDelete = useCallback(async () => {
     if (!deletingServico) return;
     const result = await remove(deletingServico.id);
-    result.success
-      ? toast.success("Serviço removido!")
-      : toast.error(result.error || "Erro ao remover");
-    setDeletingServico(null);
-    setSelectedEvent(null);
-  }, [remove, deletingServico]);
-
+    if (result.success) {
+      toast.success("Serviço removido!");
+      setDeletingServico(null);
+    } else {
+      showError(result.error || "Erro ao remover");
+    }
+  }, [remove, deletingServico, showError]);
   const openEditForm = useCallback((servico: Servico) => {
     setEditingServico(servico);
     setIsFormOpen(true);
@@ -296,8 +303,6 @@ export default function AgendamentosPage() {
     day: "Dia",
     agenda: "Lista",
   };
-
-  
 
   return (
     <motion.div
@@ -510,137 +515,137 @@ export default function AgendamentosPage() {
         </Card>
       </motion.div>
 
-    {/* Modal (Mobile + Desktop) */}
-<AnimatePresence>
-  {selectedEvent && (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      transition={{ duration: 0.2 }}
-      onClick={() => setSelectedEvent(null)}
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 dark:bg-black/60 backdrop-blur-sm"
-      role="dialog"
-      aria-modal="true"
-    >
-      <motion.div
-        initial={{ scale: 0.95, opacity: 0, y: 20 }}
-        animate={{ scale: 1, opacity: 1, y: 0 }}
-        exit={{ scale: 0.95, opacity: 0, y: 20 }}
-        transition={{ type: "spring", stiffness: 300, damping: 25 }}
-        onClick={(e) => e.stopPropagation()}
-        className="w-full max-w-2xl max-h-[90vh] flex flex-col bg-bg-elevated rounded-2xl border border-border shadow-2xl overflow-hidden"
-      >
-        {/* Header */}
-        <div className="flex items-center justify-between px-5 sm:px-6 py-4 border-b border-border bg-bg-elevated/80 backdrop-blur-sm shrink-0">
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-bg-muted border border-border rounded-xl">
-              <Car className="w-5 h-5 text-text-muted" />
-            </div>
-            <div>
-              <h3 className="text-base sm:text-lg font-bold text-text leading-tight">
-                {selectedEvent.cliente?.nome || "Cliente não informado"}
-              </h3>
-              <p className="text-xs sm:text-sm text-text-muted font-mono font-medium tracking-wide">
-                {selectedEvent.veiculo?.placa || "S/ PLACA"}
-              </p>
-            </div>
-          </div>
-          <button
+      {/* Modal (Mobile + Desktop) */}
+      <AnimatePresence>
+        {selectedEvent && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
             onClick={() => setSelectedEvent(null)}
-            className="p-2 rounded-xl hover:bg-bg-muted transition-colors text-text-muted hover:text-text focus:outline-none focus:ring-2 focus:ring-accent"
-            aria-label="Fechar"
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 dark:bg-black/60 backdrop-blur-sm"
+            role="dialog"
+            aria-modal="true"
           >
-            <X className="w-5 h-5" />
-          </button>
-        </div>
-
-        {/* Body */}
-        <div className="p-5 sm:p-6 overflow-y-auto flex-1 custom-scrollbar space-y-5">
-          <div className="flex justify-end">
-            <StatusBadge status={selectedEvent.status || "pendente"} />
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 bg-bg-muted p-4 rounded-2xl border border-border">
-            <div className="flex items-center gap-3 text-text">
-              <CalendarIcon className="w-5 h-5 text-blue-500 dark:text-blue-400 shrink-0" />
-              <div className="flex flex-col">
-                <span className="text-xs font-semibold text-text-muted uppercase">
-                  Data & Hora
-                </span>
-                <span className="font-semibold text-sm">
-                  {selectedEvent.data} às {selectedEvent.horario}
-                </span>
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0, y: 20 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.95, opacity: 0, y: 20 }}
+              transition={{ type: "spring", stiffness: 300, damping: 25 }}
+              onClick={(e) => e.stopPropagation()}
+              className="w-full max-w-2xl max-h-[90vh] flex flex-col bg-bg-elevated rounded-2xl border border-border shadow-2xl overflow-hidden"
+            >
+              {/* Header */}
+              <div className="flex items-center justify-between px-5 sm:px-6 py-4 border-b border-border bg-bg-elevated/80 backdrop-blur-sm shrink-0">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-bg-muted border border-border rounded-xl">
+                    <Car className="w-5 h-5 text-text-muted" />
+                  </div>
+                  <div>
+                    <h3 className="text-base sm:text-lg font-bold text-text leading-tight">
+                      {selectedEvent.cliente?.nome || "Cliente não informado"}
+                    </h3>
+                    <p className="text-xs sm:text-sm text-text-muted font-mono font-medium tracking-wide">
+                      {selectedEvent.veiculo?.placa || "S/ PLACA"}
+                    </p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setSelectedEvent(null)}
+                  className="p-2 rounded-xl hover:bg-bg-muted transition-colors text-text-muted hover:text-text focus:outline-none focus:ring-2 focus:ring-accent"
+                  aria-label="Fechar"
+                >
+                  <X className="w-5 h-5" />
+                </button>
               </div>
-            </div>
-            <div className="flex items-center gap-3 text-text">
-              <User className="w-5 h-5 text-emerald-500 dark:text-emerald-400 shrink-0" />
-              <div className="flex flex-col">
-                <span className="text-xs font-semibold text-text-muted uppercase">
-                  Técnico
-                </span>
-                <span className="font-semibold text-sm">
-                  {selectedEvent.tecnico || "Não atribuído"}
-                </span>
-              </div>
-            </div>
-            <div className="flex items-center gap-3 text-text">
-              <MapPin className="w-5 h-5 text-rose-500 dark:text-rose-400 shrink-0" />
-              <div className="flex flex-col">
-                <span className="text-xs font-semibold text-text-muted uppercase">
-                  Local
-                </span>
-                <span className="font-semibold text-sm">
-                  {selectedEvent.endereco?.cidade || "Não informada"}
-                </span>
-              </div>
-            </div>
-            <div className="flex items-center gap-3 text-text">
-              <Wrench className="w-5 h-5 text-amber-500 dark:text-amber-400 shrink-0" />
-              <div className="flex flex-col">
-                <span className="text-xs font-semibold text-text-muted uppercase">
-                  Serviço
-                </span>
-                <span className="font-semibold text-sm">
-                  {selectedEvent.tipoServico || "Não especificado"}
-                </span>
-              </div>
-            </div>
-          </div>
 
-          {selectedEvent.observacao && (
-            <div className="p-4 bg-amber-50/50 dark:bg-amber-950/20 border border-amber-200/60 dark:border-amber-800/60 rounded-2xl text-sm text-amber-900 dark:text-amber-200">
-              <span className="font-bold text-amber-800 dark:text-amber-300 block mb-1">
-                Observações:
-              </span>
-              {selectedEvent.observacao}
-            </div>
-          )}
-        </div>
+              {/* Body */}
+              <div className="p-5 sm:p-6 overflow-y-auto flex-1 custom-scrollbar space-y-5">
+                <div className="flex justify-end">
+                  <StatusBadge status={selectedEvent.status || "pendente"} />
+                </div>
 
-        {/* Footer */}
-        <div className="px-5 sm:px-6 py-4 border-t border-border bg-bg-muted shrink-0 flex flex-col-reverse sm:flex-row justify-end gap-3">
-          <Button
-            variant="outline"
-            onClick={() => {
-              setDeletingServico(selectedEvent);
-              setSelectedEvent(null);
-            }}
-            className="w-full sm:w-auto flex items-center justify-center gap-2 text-rose-600 dark:text-rose-400 border-rose-200 dark:border-rose-800 hover:bg-rose-50 dark:hover:bg-rose-950/20 hover:text-rose-700 dark:hover:text-rose-300"
-          >
-            <Trash2 className="w-4 h-4" /> Excluir Registro
-          </Button>
-          <Button
-            onClick={() => openEditForm(selectedEvent)}
-            className="w-full sm:w-auto flex items-center justify-center gap-2"
-          >
-            <Wrench className="w-4 h-4" /> Editar Serviço
-          </Button>
-        </div>
-      </motion.div>
-    </motion.div>
-  )}
-</AnimatePresence>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 bg-bg-muted p-4 rounded-2xl border border-border">
+                  <div className="flex items-center gap-3 text-text">
+                    <CalendarIcon className="w-5 h-5 text-blue-500 dark:text-blue-400 shrink-0" />
+                    <div className="flex flex-col">
+                      <span className="text-xs font-semibold text-text-muted uppercase">
+                        Data & Hora
+                      </span>
+                      <span className="font-semibold text-sm">
+                        {selectedEvent.data} às {selectedEvent.horario}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3 text-text">
+                    <User className="w-5 h-5 text-emerald-500 dark:text-emerald-400 shrink-0" />
+                    <div className="flex flex-col">
+                      <span className="text-xs font-semibold text-text-muted uppercase">
+                        Técnico
+                      </span>
+                      <span className="font-semibold text-sm">
+                        {selectedEvent.tecnico || "Não atribuído"}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3 text-text">
+                    <MapPin className="w-5 h-5 text-rose-500 dark:text-rose-400 shrink-0" />
+                    <div className="flex flex-col">
+                      <span className="text-xs font-semibold text-text-muted uppercase">
+                        Local
+                      </span>
+                      <span className="font-semibold text-sm">
+                        {selectedEvent.endereco?.cidade || "Não informada"}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3 text-text">
+                    <Wrench className="w-5 h-5 text-amber-500 dark:text-amber-400 shrink-0" />
+                    <div className="flex flex-col">
+                      <span className="text-xs font-semibold text-text-muted uppercase">
+                        Serviço
+                      </span>
+                      <span className="font-semibold text-sm">
+                        {selectedEvent.tipoServico || "Não especificado"}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {selectedEvent.observacao && (
+                  <div className="p-4 bg-amber-50/50 dark:bg-amber-950/20 border border-amber-200/60 dark:border-amber-800/60 rounded-2xl text-sm text-amber-900 dark:text-amber-200">
+                    <span className="font-bold text-amber-800 dark:text-amber-300 block mb-1">
+                      Observações:
+                    </span>
+                    {selectedEvent.observacao}
+                  </div>
+                )}
+              </div>
+
+              {/* Footer */}
+              <div className="px-5 sm:px-6 py-4 border-t border-border bg-bg-muted shrink-0 flex flex-col-reverse sm:flex-row justify-end gap-3">
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setDeletingServico(selectedEvent);
+                    setSelectedEvent(null);
+                  }}
+                  className="w-full sm:w-auto flex items-center justify-center gap-2 text-rose-600 dark:text-rose-400 border-rose-200 dark:border-rose-800 hover:bg-rose-50 dark:hover:bg-rose-950/20 hover:text-rose-700 dark:hover:text-rose-300"
+                >
+                  <Trash2 className="w-4 h-4" /> Excluir Registro
+                </Button>
+                <Button
+                  onClick={() => openEditForm(selectedEvent)}
+                  className="w-full sm:w-auto flex items-center justify-center gap-2"
+                >
+                  <Wrench className="w-4 h-4" /> Editar Serviço
+                </Button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* FAB (Apenas Mobile) */}
       <div className="sm:hidden fixed bottom-6 right-6 z-30">
@@ -675,6 +680,14 @@ export default function AgendamentosPage() {
         message="Tem certeza que deseja excluir este serviço? Esta ação não pode ser desfeita."
         itemName={deletingServico?.cliente?.nome || "este serviço"}
         isLoading={isDeleting}
+      />
+      <ErrorModal
+        isOpen={errorModal.isOpen}
+        onClose={closeModal}
+        title={errorModal.title}
+        message={errorModal.message}
+        details={errorModal.details}
+        httpStatus={errorModal.httpStatus}
       />
     </motion.div>
   );

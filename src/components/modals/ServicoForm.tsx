@@ -74,38 +74,44 @@ export default function ServicoForm({
   const [touched, setTouched] = useState<Record<string, boolean>>({});
   const [manualAddress, setManualAddress] = useState(false);
   const { options: configOptions, loading: configLoading } = useConfig();
-  const [horariosOcupados, setHorariosOcupados] = useState<Set<string>>(new Set());
+  const [horariosOcupados, setHorariosOcupados] = useState<Set<string>>(
+    new Set(),
+  );
 
-useEffect(() => {
-  if (!form.tecnico || !form.data || form.data.length !== 10) {
-    setHorariosOcupados(new Set());
-    return;
-  }
-
-  let cancelled = false;
-
-  const fetchOcupados = async () => {
-    try {
-      const url = new URL("/api/servicos/horarios-ocupados", window.location.origin);
-      url.searchParams.set("tecnico", form.tecnico);
-      url.searchParams.set("data", form.data);
-      if (initialData?.id) url.searchParams.set("excludeId", String(initialData.id));
-
-      const res = await fetch(url.toString(), { cache: "no-store" });
-      const json = await res.json();
-      if (!cancelled && json.success) {
-        setHorariosOcupados(new Set<string>(json.data ?? []));
-      }
-    } catch (err) {
-      console.error("Erro ao buscar horários ocupados:", err);
+  useEffect(() => {
+    if (!form.tecnico || !form.data || form.data.length !== 10) {
+      setHorariosOcupados(new Set());
+      return;
     }
-  };
 
-  fetchOcupados();
-  return () => {
-    cancelled = true;
-  };
-}, [form.tecnico, form.data, initialData?.id]);
+    let cancelled = false;
+
+    const fetchOcupados = async () => {
+      try {
+        const url = new URL(
+          "/api/servicos/horarios-ocupados",
+          window.location.origin,
+        );
+        url.searchParams.set("tecnico", form.tecnico);
+        url.searchParams.set("data", form.data);
+        if (initialData?.id)
+          url.searchParams.set("excludeId", String(initialData.id));
+
+        const res = await fetch(url.toString(), { cache: "no-store" });
+        const json = await res.json();
+        if (!cancelled && json.success) {
+          setHorariosOcupados(new Set<string>(json.data ?? []));
+        }
+      } catch (err) {
+        console.error("Erro ao buscar horários ocupados:", err);
+      }
+    };
+
+    fetchOcupados();
+    return () => {
+      cancelled = true;
+    };
+  }, [form.tecnico, form.data, initialData?.id]);
 
   useEffect(() => {
     if (initialData) {
@@ -146,6 +152,12 @@ useEffect(() => {
     setTouched({});
     setManualAddress(false);
   }, [initialData, isOpen]);
+
+  useEffect(() => {
+  if (form.horario && horariosOcupados.has(form.horario)) {
+    setForm((prev) => ({ ...prev, horario: "" }));
+  }
+}, [horariosOcupados, form.horario]);
 
   const updateField = useCallback(
     (section: string, field: string, value: string) => {
@@ -259,10 +271,20 @@ useEffect(() => {
       : [{ value: "", label: "Nenhum tipo" }];
 
   const horariosOptions = configLoading
-    ? [{ value: "", label: "Carregando..." }]
+    ? [{ value: "", label: "Carregando...", disabled: false }]
     : configOptions.horarios.length > 0
-      ? [{ value: "", label: "Selecione..." }, ...configOptions.horarios]
-      : [{ value: "", label: "Nenhum horário" }];
+      ? [
+          { value: "", label: "Selecione...", disabled: false },
+          ...configOptions.horarios.map((h) => {
+            const ocupado = horariosOcupados.has(h.value);
+            return {
+              ...h,
+              label: ocupado ? `${h.label} (ocupado)` : h.label,
+              disabled: ocupado,
+            };
+          }),
+        ]
+      : [{ value: "", label: "Nenhum horário", disabled: false }];
 
   const statusOptions = configLoading
     ? [{ value: "", label: "Carregando..." }]
