@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getHorariosOcupados } from "@/lib/api/servicos.server";
-import { gasErrorToResponse } from "@/lib/gas/client";
+import { apiErrorToResponse } from "@/lib/Api-agendamento/client";
 
 export const dynamic = "force-dynamic";
 
@@ -21,7 +21,7 @@ export async function GET(request: NextRequest) {
     const ocupados = await getHorariosOcupados({ tecnico, data, excludeId });
     return NextResponse.json({ success: true, data: ocupados });
   } catch (err) {
-    const { body, status } = gasErrorToResponse(err);
+    const { body, status } = apiErrorToResponse(err);
     return NextResponse.json(body, { status });
   }
 }

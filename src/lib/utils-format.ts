@@ -2,7 +2,7 @@
 // Utilitários de formatação de data e hora
 
 /**
- * Formata uma string de data do GAS (DD/MM/YYYY) para exibição
+ * Formata uma string de data da API (DD/MM/YYYY) para exibição
  */
 export function formatarDataExibicao(
   dataInput: string | null | undefined,
@@ -76,10 +76,10 @@ export function formatarDataHoraCompleta(
 }
 
 /**
- * Sanitiza dados do GAS garantindo que data e horário permaneçam como strings
+ * Sanitiza dados do API garantindo que data e horário permaneçam como strings
  * Usado no useServicos para evitar que o JavaScript converta para Date
  */
-export function sanitizarDadosGAS(
+export function sanitizarDadosAPI(
   servico: Record<string, unknown>,
 ): Record<string, unknown> {
   const sanitizado = { ...servico };

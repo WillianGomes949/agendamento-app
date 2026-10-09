@@ -4,7 +4,7 @@
 import { revalidatePath } from "next/cache";
 
 // ✅ Server Actions agora apenas revalidam cache
-// O fetch real é feito pelo Client Component via gas-api.ts
+// O fetch real é feito pelo Client Component via api.ts
 
 export async function revalidateServicos() {
   revalidatePath("/agendamentos");

@@ -1,15 +1,15 @@
-// src/lib/gas/types.ts
+// src/lib/API/types.ts
 // Tipos compartilhados entre handlers e clientes.
 
-/** Payload aceito pelo GAS. */
-export interface GasRequestPayload {
+/** Payload aceito pelo API. */
+export interface ApiRequestPayload {
   action: string;
   data?: Record<string, unknown>;
   apiKey: string;
 }
 
-/** Resposta padrão do GAS (sempre HTTP 200 no transporte). */
-export interface GasResponse<T = unknown> {
+/** Resposta padrão do API (sempre HTTP 200 no transporte). */
+export interface ApiResponse<T = unknown> {
   success: boolean;
   requestId?: string;
   data?: T;
@@ -27,7 +27,7 @@ export interface GasResponse<T = unknown> {
 }
 
 /** Ações suportadas pela API. */
-export const GAS_ACTIONS = {
+export const API_ACTIONS = {
   // CRUD de serviços
   GET: "GET",
   CREATE: "CREATE",
@@ -47,4 +47,4 @@ export const GAS_ACTIONS = {
   GET_HORARIOS_OCUPADOS: "GET_HORARIOS_OCUPADOS",
 } as const;
 
-export type GasAction = (typeof GAS_ACTIONS)[keyof typeof GAS_ACTIONS];
+export type APIAction = (typeof API_ACTIONS)[keyof typeof API_ACTIONS];

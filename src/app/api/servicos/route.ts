@@ -8,12 +8,12 @@ import {
   listarServicos,
 } from "@/lib/api/servicos.server";
 import type { ServicoFiltros } from "@/lib/api/servicos.types";
-import { gasErrorToResponse } from "@/lib/gas/client";
+import { apiErrorToResponse } from "@/lib/Api-agendamento/client";
 
 export const dynamic = "force-dynamic";
 
 function respondError(err: unknown) {
-  const { body, status } = gasErrorToResponse(err);
+  const { body, status } = apiErrorToResponse(err);
   return NextResponse.json(body, { status });
 }
 

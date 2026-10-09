@@ -1,71 +1,43 @@
+// src/lib/api/tecnicos.server.ts
+// Operações server-side de técnicos.
 import "server-only";
-import { unstable_cache, revalidateTag } from "next/cache";
-import { fetchGas } from "@/lib/gas/client";
-import { GAS_ACTIONS } from "@/lib/gas/types";
-import {
-  normalizarListaTecnicos,
-  normalizarTecnico,
-  type Tecnico,
-  type TecnicoStats,
-} from "./tecnicos.types";
+import { unstable_cache } from "next/cache";
+import { fetchApi } from "@/lib/Api-agendamento/client";
+import { API_ACTIONS } from "@/lib/Api-agendamento/types";
+import type { ApiResponse } from "@/lib/Api-agendamento/types";
 
-export const getTecnicosComStats = unstable_cache(
-  async (): Promise<TecnicoStats[]> => {
-    const result = await fetchGas<TecnicoStats[]>("GET_TECNICOS_COM_STATS");
+export async function getTecnicosComStats(): Promise<ApiResponse<unknown[]>> {
+  return fetchApi<unknown[]>(API_ACTIONS.GET_TECNICOS_COM_STATS);
+}
+
+export async function getTecnicos(): Promise<ApiResponse<unknown[]>> {
+  return fetchApi<unknown[]>(API_ACTIONS.GET_TECNICOS);
+}
+
+export async function createTecnico<T = unknown>(
+  payload: Record<string, unknown>,
+): Promise<ApiResponse<T>> {
+  return fetchApi<T>(API_ACTIONS.CREATE_TECNICO, payload);
+}
+
+export async function updateTecnico<T = unknown>(
+  payload: Record<string, unknown>,
+): Promise<ApiResponse<T>> {
+  return fetchApi<T>(API_ACTIONS.UPDATE_TECNICO, payload);
+}
+
+export async function deleteTecnico<T = unknown>(
+  payload: Record<string, unknown>,
+): Promise<ApiResponse<T>> {
+  return fetchApi<T>(API_ACTIONS.DELETE_TECNICO, payload);
+}
+
+// Cache para lista de técnicos com stats (usado em páginas que precisam de dados frescos)
+export const getTecnicosComStatsCached = unstable_cache(
+  async (): Promise<unknown[]> => {
+    const result = await getTecnicosComStats();
     return result.data ?? [];
   },
   ["tecnicos-com-stats"],
   { revalidate: 30, tags: ["tecnicos"] },
 );
-
-export async function getTecnicos(): Promise<Tecnico[]> {
-  return normalizarListaTecnicos(
-    (await getTecnicosComStats()).map((t) => ({
-      nome: t.nome,
-      ativo: t.ativo,
-    })),
-  );
-}
-
-export async function createTecnico(input: {
-  nome: string;
-  cpf?: string;
-  cnpj?: string;
-  whatsapp?: string;
-  vinculo?: string;
-}): Promise<TecnicoStats> {
-  const result = await fetchGas<Tecnico>(GAS_ACTIONS.CREATE_TECNICO, input);
-  const tecnico = normalizarTecnico(result.data);
-  if (!tecnico) throw new Error("Resposta inválida ao criar técnico.");
-  revalidateTag("tecnicos", "max");
-  return {
-    nome: input.nome,
-    ativo: true,
-    cpf: input.cpf,
-    cnpj: input.cnpj,
-    whatsapp: input.whatsapp,
-    vinculo: input.vinculo,
-    totalServicos: 0,
-    servicosConcluidos: 0,
-    servicosPendentes: 0,
-  };
-}
-
-export async function updateTecnico(
-  nomeAntigo: string,
-  updates: Partial<Omit<Tecnico, "nome">> & { nome?: string },
-): Promise<Tecnico> {
-  const result = await fetchGas<Tecnico>(GAS_ACTIONS.UPDATE_TECNICO, {
-    nomeAntigo,
-    ...updates,
-  });
-  revalidateTag("tecnicos", "max");
-  const tecnico = normalizarTecnico(result.data);
-  if (!tecnico) throw new Error("Resposta inválida ao atualizar técnico.");
-  return tecnico;
-}
-
-export async function deleteTecnico(nome: string): Promise<void> {
-  await fetchGas(GAS_ACTIONS.DELETE_TECNICO, { nome });
-  revalidateTag("tecnicos", "max");
-}

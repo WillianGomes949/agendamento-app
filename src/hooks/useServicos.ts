@@ -7,8 +7,8 @@ import {
   createServico,
   updateServico,
   deleteServico,
-} from "@/lib/gas-api";
-import { sanitizarDadosGAS } from "@/lib/utils-format";
+} from "@/lib/api-agendamento";
+import { sanitizarDadosAPI } from "@/lib/utils-format";
 import type { Servico, FormularioServico, FiltrosServicos } from "@/lib/types";
 import { CACHE_TTL_SERVICOS, DEFAULT_PAGE_SIZE } from "@/lib/constants";
 
@@ -106,7 +106,7 @@ export function useServicos(initialFilters?: FiltrosServicos) {
         }
 
         const sanitizedData = (result.data || []).map((servico: any) => {
-          const limpo = sanitizarDadosGAS(servico as Record<string, unknown>);
+          const limpo = sanitizarDadosAPI(servico as Record<string, unknown>);
 
           const cliente = limpo.cliente as Record<string, unknown> | undefined;
           const veiculo = limpo.veiculo as Record<string, unknown> | undefined;

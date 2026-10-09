@@ -1,6 +1,6 @@
 // src/app/tecnicos/page.tsx
 "use client";
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { motion, AnimatePresence, Variants } from "framer-motion";
 import {
   Users,
@@ -45,7 +45,6 @@ async function apiFetch<T>(input: string, init?: RequestInit): Promise<T> {
     ...init,
     headers: { "Content-Type": "application/json", ...(init?.headers ?? {}) },
     cache: "no-store",
-    next: { revalidate: 0 },
   });
   let json: unknown = null;
   try {
@@ -135,20 +134,24 @@ export default function TecnicosPage() {
   const [formError, setFormError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // ✅ Evita race condition: respostas antigas não sobrescrevem dados novos
+  const fetchSeq = useRef(0);
+
   const carregarTecnicos = useCallback(async () => {
+    const seq = ++fetchSeq.current;
     setLoading(true);
     setError(null);
     try {
       const dados = await getTecnicosComStats();
-      console.log("🔍 carregarTecnicos retornou:", dados);
-      setTecnicos(dados);
+      if (seq !== fetchSeq.current) return;
+      setTecnicos(Array.isArray(dados) ? dados : []);
     } catch (err) {
+      if (seq !== fetchSeq.current) return;
       const msg =
         err instanceof Error ? err.message : "Falha ao carregar técnicos";
       setError(msg);
-      toast.error(msg);
     } finally {
-      setLoading(false);
+      if (seq === fetchSeq.current) setLoading(false);
     }
   }, []);
 
@@ -157,7 +160,9 @@ export default function TecnicosPage() {
   }, [carregarTecnicos]);
 
   const tecnicosFiltrados = tecnicos.filter((t) => {
-    const matchBusca = t.nome.toLowerCase().includes(busca.toLowerCase());
+    const matchBusca = (t.nome ?? "")
+      .toLowerCase()
+      .includes(busca.toLowerCase());
     const matchStatus =
       filtroStatus === "todos" ||
       (filtroStatus === "ativos" && t.ativo) ||
@@ -167,7 +172,53 @@ export default function TecnicosPage() {
 
   const totalAtivos = tecnicos.filter((t) => t.ativo).length;
   const totalInativos = tecnicos.filter((t) => !t.ativo).length;
-  const totalServicos = tecnicos.reduce((acc, t) => acc + t.totalServicos, 0);
+  // ✅ Evita NaN se a API não retornar os campos de stats
+  const totalServicos = tecnicos.reduce(
+    (acc, t) => acc + (t.totalServicos ?? 0),
+    0,
+  );
+
+  const handleDelete = useCallback(async () => {
+    if (!deletingTecnico) return;
+    const alvo = deletingTecnico;
+
+    // Remove do state NA HORA (otimista)
+    setTecnicos((prev) => prev.filter((t) => t.nome !== alvo.nome));
+    setDeletingTecnico(null);
+
+    try {
+      await deleteTecnico(alvo.nome);
+      invalidateConfigCache();
+      toast.success("Técnico removido!");
+    } catch (err) {
+      // Rollback se falhar
+      setTecnicos((prev) => {
+        if (prev.some((t) => t.nome === alvo.nome)) return prev;
+        return [...prev, alvo];
+      });
+
+      const errorMsg =
+        err instanceof Error ? err.message : "Erro ao remover técnico";
+
+      // Detecta erro específico de técnico com serviços
+      if (errorMsg.includes("possui") && errorMsg.includes("serviço")) {
+        toast.error(
+          <div className="flex flex-col gap-1">
+            <span className="font-semibold">Não é possível excluir</span>
+            <span className="text-sm">
+              Este técnico possui serviços vinculados. Desative-o primeiro.
+            </span>
+          </div>,
+          {
+            icon: "⚠️",
+            duration: 5000,
+          },
+        );
+      } else {
+        toast.error(errorMsg);
+      }
+    }
+  }, [deletingTecnico]);
 
   const handleCreate = useCallback(async () => {
     if (!formData.nome.trim()) {
@@ -177,7 +228,6 @@ export default function TecnicosPage() {
     setIsSubmitting(true);
     setFormError("");
 
-    // 🔒 Guarda o payload antes de limpar o form
     const payload = {
       nome: formData.nome.trim(),
       cpf: formData.cpf.trim() || undefined,
@@ -188,22 +238,35 @@ export default function TecnicosPage() {
 
     try {
       const criado = await createTecnico(payload);
-
-      // ✅ Atualização otimista — aparece NA HORA
+      // ✅ Garante defaults de stats para não renderizar undefined/NaN
+      const novo: TecnicoStats = {
+        ...criado,
+        ativo: criado.ativo ?? true,
+        totalServicos: criado.totalServicos ?? 0,
+        servicosConcluidos: criado.servicosConcluidos ?? 0,
+        servicosPendentes: criado.servicosPendentes ?? 0,
+      };
       setTecnicos((prev) => {
-        // evita duplicar se o refetch em background já trouxe
-        if (prev.some((t) => t.nome === criado.nome)) return prev;
-        return [...prev, criado];
+        if (prev.some((t) => t.nome === novo.nome)) return prev;
+        return [...prev, novo];
       });
       invalidateConfigCache();
-      
       toast.success("Técnico criado com sucesso!");
       setIsFormOpen(false);
       setFormData(FORM_VAZIO);
     } catch (err) {
-      const msg = err instanceof Error ? err.message : "Erro ao criar técnico";
-      setFormError(msg);
-      toast.error(msg);
+      const errorMsg =
+        err instanceof Error ? err.message : "Erro ao criar técnico";
+
+      if (errorMsg.includes("já existe")) {
+        setFormError("Já existe um técnico com este nome");
+        toast.error("Técnico já cadastrado", {
+          icon: "⚠️",
+        });
+      } else {
+        setFormError(errorMsg);
+        toast.error(errorMsg);
+      }
     } finally {
       setIsSubmitting(false);
     }
@@ -218,32 +281,33 @@ export default function TecnicosPage() {
     setFormError("");
 
     const nomeAntigo = editingTecnico.nome;
+    // ✅ Campos vazios viram undefined (não sobrescrevem com "" no banco)
     const updates = {
       nome: formData.nome.trim(),
-      cpf: formData.cpf.trim(),
-      cnpj: formData.cnpj.trim(),
-      whatsapp: formData.whatsapp.trim(),
-      vinculo: formData.vinculo.trim(),
+      cpf: formData.cpf.trim() || undefined,
+      cnpj: formData.cnpj.trim() || undefined,
+      whatsapp: formData.whatsapp.trim() || undefined,
+      vinculo: formData.vinculo.trim() || undefined,
     };
 
     try {
       await updateTecnico(nomeAntigo, updates);
 
-      // ✅ 1. Atualiza state local NA HORA (sem esperar refetch)
       setTecnicos((prev) =>
         prev.map((t) =>
           t.nome === nomeAntigo
             ? {
                 ...t,
-                nome: updates.nome,
-                cpf: updates.cpf || undefined,
-                cnpj: updates.cnpj || undefined,
-                whatsapp: updates.whatsapp || undefined,
-                vinculo: updates.vinculo || undefined,
+                nome: updates.nome ?? t.nome,
+                cpf: updates.cpf,
+                cnpj: updates.cnpj,
+                whatsapp: updates.whatsapp,
+                vinculo: updates.vinculo,
               }
             : t,
         ),
       );
+
       invalidateConfigCache();
       toast.success("Técnico atualizado!");
       setIsFormOpen(false);
@@ -261,8 +325,6 @@ export default function TecnicosPage() {
 
   const handleToggleAtivo = useCallback(async (tecnico: TecnicoStats) => {
     const novoAtivo = !tecnico.ativo;
-
-    // ✅ Otimista
     setTecnicos((prev) =>
       prev.map((t) =>
         t.nome === tecnico.nome ? { ...t, ativo: novoAtivo } : t,
@@ -273,43 +335,18 @@ export default function TecnicosPage() {
       await updateTecnico(tecnico.nome, { ativo: novoAtivo });
       invalidateConfigCache();
       toast.success(novoAtivo ? "Técnico ativado" : "Técnico desativado");
-      // sem refetch — toggle não altera stats
     } catch (err) {
-      // 🔙 Rollback
       setTecnicos((prev) =>
         prev.map((t) =>
           t.nome === tecnico.nome ? { ...t, ativo: tecnico.ativo } : t,
         ),
       );
-      toast.error(
-        err instanceof Error ? err.message : "Erro ao atualizar status",
-      );
+
+      const errorMsg =
+        err instanceof Error ? err.message : "Erro ao atualizar status";
+      toast.error(errorMsg);
     }
   }, []);
-  const handleDelete = useCallback(async () => {
-    if (!deletingTecnico) return;
-    const alvo = deletingTecnico;
-
-    // ✅ 1. Remove do state NA HORA (otimista)
-    setTecnicos((prev) => prev.filter((t) => t.nome !== alvo.nome));
-    setDeletingTecnico(null);
-
-    try {
-      await deleteTecnico(alvo.nome);
-      invalidateConfigCache();
-      toast.success("Técnico removido!");
-    } catch (err) {
-      // Rollback se falhar
-      setTecnicos((prev) => {
-        if (prev.some((t) => t.nome === alvo.nome)) return prev;
-        return [...prev, alvo];
-      });
-
-      toast.error(
-        err instanceof Error ? err.message : "Erro ao remover técnico",
-      );
-    }
-  }, [deletingTecnico]);
 
   const openEditForm = useCallback((tecnico: TecnicoStats) => {
     setEditingTecnico(tecnico);
@@ -587,7 +624,7 @@ export default function TecnicosPage() {
                               : "bg-bg-muted text-text-muted"
                           }`}
                         >
-                          {tecnico.nome.charAt(0).toUpperCase()}
+                          {(tecnico.nome ?? "?").charAt(0).toUpperCase()}
                         </div>
                         <div>
                           <h3 className="font-extrabold text-lg text-text uppercase tracking-tight leading-tight">
@@ -624,7 +661,7 @@ export default function TecnicosPage() {
                             Total
                           </p>
                           <p className="text-xl font-extrabold text-text">
-                            {tecnico.totalServicos}
+                            {tecnico.totalServicos ?? 0}
                           </p>
                         </div>
                         <div>
@@ -632,7 +669,7 @@ export default function TecnicosPage() {
                             Concluídos
                           </p>
                           <p className="text-xl font-extrabold text-emerald-600 dark:text-emerald-400">
-                            {tecnico.servicosConcluidos}
+                            {tecnico.servicosConcluidos ?? 0}
                           </p>
                         </div>
                         <div>
@@ -640,7 +677,7 @@ export default function TecnicosPage() {
                             Pendentes
                           </p>
                           <p className="text-xl font-extrabold text-amber-600 dark:text-amber-400">
-                            {tecnico.servicosPendentes}
+                            {tecnico.servicosPendentes ?? 0}
                           </p>
                         </div>
                       </div>
@@ -812,12 +849,7 @@ export default function TecnicosPage() {
               </div>
             </div>
           </div>
-          {formError && (
-            <div className="flex items-center gap-2 text-sm font-medium text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/30 p-3 rounded-xl border border-rose-200 dark:border-rose-800">
-              <AlertCircle size={16} />
-              {formError}
-            </div>
-          )}
+          {/* ✅ Erro removido daqui: o formError já é exibido inline no campo Nome via prop `error` do Input */}
           <div className="flex flex-col-reverse sm:flex-row justify-end gap-3 pt-6 border-t border-border">
             <Button
               type="button"

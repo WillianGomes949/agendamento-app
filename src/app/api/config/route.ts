@@ -2,7 +2,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
 import { isTipoConfig, TIPO_TO_ACTION } from "@/lib/api/config.server";
-import { fetchGas, gasErrorToResponse } from "@/lib/gas/client";
+import { fetchApi, apiErrorToResponse } from "@/lib/Api-agendamento/client";
 
 export const dynamic = "force-dynamic";
 
@@ -23,10 +23,10 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    const result = await fetchGas(TIPO_TO_ACTION[tipo]);
+    const result = await fetchApi(TIPO_TO_ACTION[tipo]);
     return NextResponse.json(result);
   } catch (err) {
-    const { body, status } = gasErrorToResponse(err);
+    const { body, status } = apiErrorToResponse(err);
     return NextResponse.json(body, { status });
   }
 }
@@ -84,10 +84,10 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const result = await fetchGas(action.toUpperCase(), data ?? {});
+    const result = await fetchApi(action.toUpperCase(), data ?? {});
     return NextResponse.json(result);
   } catch (err) {
-    const { body: errBody, status } = gasErrorToResponse(err);
+    const { body: errBody, status } = apiErrorToResponse(err);
     return NextResponse.json(errBody, { status });
   }
 }
