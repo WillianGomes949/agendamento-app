@@ -37,8 +37,6 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
     const result = await createTecnico(body);
-    // ✅ CORRIGIDO: removido o segundo argumento " " (profile inexistente),
-    // que fazia a invalidação NUNCA atingir o cache com a tag "tecnicos"
     revalidateTag("tecnicos", "max");
     return NextResponse.json(
       {
