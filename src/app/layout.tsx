@@ -8,7 +8,7 @@ import { ThemeInitScript } from "./theme-init";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "TrackApp | Gestão de Serviços",
+  title: "AgendaApp | Gestão de Serviços",
   description: "Sistema de agendamento e rastreamento técnico",
 };
 

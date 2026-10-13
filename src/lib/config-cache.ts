@@ -1,11 +1,11 @@
 // src/lib/config-cache.ts
-export const CONFIG_CACHE_KEY = "@TrackApp:config";
-export const CONFIG_UPDATED_EVENT = "trackapp:config-updated";
+export const CONFIG_CACHE_KEY = "@AgendaApp:config";
+export const CONFIG_UPDATED_EVENT = "agendaapp:config-updated";
 
 // ✅ Versão do cache: incrementada a cada invalidação. Leitores guardam a
 // versão junto com os dados; se a versão mudou, o dado em memória é descartado.
 // Funciona inclusive entre abas (a versão fica no localStorage).
-const CONFIG_CACHE_VERSION_KEY = "@TrackApp:config-version";
+const CONFIG_CACHE_VERSION_KEY = "@AgendaApp:config-version";
 
 function getVersion(): number {
   try {

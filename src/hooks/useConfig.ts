@@ -3,7 +3,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { CACHE_TTL_CONFIG, CONFIG_API_BASE } from "@/lib/constants";
-import { CONFIG_UPDATED_EVENT } from "@/lib/config-cache";
+import { CONFIG_CACHE_KEY, CONFIG_UPDATED_EVENT } from "@/lib/config-cache";
 
 interface ConfigOptions {
   tecnicos: { value: string; label: string }[];
@@ -20,7 +20,6 @@ interface UseConfigReturn {
 }
 
 const API_BASE = CONFIG_API_BASE;
-const CACHE_KEY = "@TrackApp:config";
 const CACHE_TTL = CACHE_TTL_CONFIG;
 
 // Variável global para impedir requisições simultâneas
@@ -139,7 +138,7 @@ export function useConfig(): UseConfigReturn {
     try {
       // 1. Tenta ler do LocalStorage
       if (!forceRefresh) {
-        const cached = localStorage.getItem(CACHE_KEY);
+        const cached = localStorage.getItem(CONFIG_CACHE_KEY);
         if (cached) {
           const { data, timestamp } = JSON.parse(cached);
           if (Date.now() - timestamp < CACHE_TTL) {
@@ -159,7 +158,7 @@ export function useConfig(): UseConfigReturn {
 
       // 3. Guarda no LocalStorage
       localStorage.setItem(
-        CACHE_KEY,
+        CONFIG_CACHE_KEY,
         JSON.stringify({
           data: newOptions,
           timestamp: Date.now(),
