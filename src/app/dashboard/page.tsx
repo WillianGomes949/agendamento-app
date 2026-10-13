@@ -152,14 +152,14 @@ export default function DashboardPage() {
       {/* Cartões de KPI (Métricas Principais) */}
       <motion.div
         variants={itemVariants}
-        className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6"
+        className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6"
       >
         <Card className="p-5 flex items-center gap-4 hover:shadow-md transition-shadow group cursor-default">
           <div className="p-3.5 bg-blue-50 dark:bg-blue-950/30 text-blue-600 dark:text-blue-400 rounded-2xl group-hover:scale-110 group-hover:bg-blue-100 dark:group-hover:bg-blue-950/50 transition-all duration-300">
             <FileText className="w-6 h-6" />
           </div>
           <div>
-            <p className="text-sm font-bold text-text-muted uppercase tracking-wider">
+            <p className="text-xs md:text-sm font-bold text-text-muted uppercase tracking-wider">
               Total
             </p>
             <h3 className="text-2xl font-extrabold text-text mt-0.5">
@@ -173,7 +173,7 @@ export default function DashboardPage() {
             <Clock className="w-6 h-6" />
           </div>
           <div>
-            <p className="text-sm font-bold text-text-muted uppercase tracking-wider">
+            <p className="text-xs md:text-sm font-bold text-text-muted uppercase tracking-wider">
               Pendentes
             </p>
             <h3 className="text-2xl font-extrabold text-text mt-0.5">
@@ -187,7 +187,7 @@ export default function DashboardPage() {
             <Wrench className="w-6 h-6" />
           </div>
           <div>
-            <p className="text-sm font-bold text-text-muted uppercase tracking-wider">
+            <p className="text-xs md:text-sm font-bold text-text-muted uppercase tracking-wider">
               Em Andamento
             </p>
             <h3 className="text-2xl font-extrabold text-text mt-0.5">
@@ -201,7 +201,7 @@ export default function DashboardPage() {
             <CheckCircle className="w-6 h-6" />
           </div>
           <div>
-            <p className="text-sm font-bold text-text-muted uppercase tracking-wider">
+            <p className="text-xs md:text-sm font-bold text-text-muted uppercase tracking-wider">
               Concluídos
             </p>
             <h3 className="text-2xl font-extrabold text-text mt-0.5">

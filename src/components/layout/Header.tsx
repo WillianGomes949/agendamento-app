@@ -2,19 +2,16 @@
 "use client";
 import {
   Menu,
-  Bell,
-  ChevronDown,
-  LogOut,
-  User,
-  Settings as SettingsIcon,
   Wifi,
   WifiOff,
   Loader2,
 } from "lucide-react";
 import { useState, useRef } from "react";
-import Link from "next/link";
+
 import { useClickOutside } from "@/hooks/useClickOutside";
 import { useApiHealth, type ApiStatus } from "@/hooks/useApiHealth";
+import Image from "next/image";
+import { ThemeToggle } from "../ui/ThemeToggle";
 
 interface HeaderProps {
   onToggleSidebar: () => void;
@@ -98,13 +95,10 @@ export default function Header({
         </button>
 
         <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 sm:w-9 sm:h-9 bg-accent rounded-xl flex items-center justify-center shadow-sm">
-            <span className="text-accent-foreground font-bold text-sm sm:text-base">
-              TA
-            </span>
-          </div>
+          <Image src="/calendar.png" width={40} height={40} alt="calendario" />
+
           <h1 className="hidden sm:block text-lg font-extrabold tracking-tight text-text">
-            TrackApp
+            AgendaApp
           </h1>
         </div>
       </div>
@@ -113,7 +107,7 @@ export default function Header({
       <div className="flex items-center gap-1 sm:gap-2">
         {/* Indicador de Status da API */}
         <div
-          className="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-xl bg-bg-muted border border-border"
+          className="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-xl bg-bg-muted border border-border h-11"
           title={apiConfig.label}
         >
           <ApiIcon
@@ -149,8 +143,10 @@ export default function Header({
           />
         </div>
 
+        <ThemeToggle />
+
         {/* Notificações */}
-        <div className="relative" ref={notificationsRef}>
+        {/* <div className="relative" ref={notificationsRef}>
           <button
             onClick={() => setNotificationsOpen(!notificationsOpen)}
             className="relative p-2.5 hover:bg-bg-muted rounded-xl transition-colors text-text-muted"
@@ -187,10 +183,10 @@ export default function Header({
               </div>
             </div>
           )}
-        </div>
+        </div> */}
 
         {/* Menu do Usuário */}
-        <div className="relative ml-1 sm:ml-2" ref={userMenuRef}>
+        {/* <div className="relative ml-1 sm:ml-2" ref={userMenuRef}>
           <button
             onClick={() => setUserMenuOpen(!userMenuOpen)}
             className="flex items-center gap-2 pl-2 pr-1.5 py-1.5 hover:bg-bg-muted rounded-xl transition-colors group"
@@ -238,7 +234,7 @@ export default function Header({
               </div>
             </div>
           )}
-        </div>
+        </div> */}
       </div>
     </header>
   );

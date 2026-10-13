@@ -6,8 +6,8 @@ import { useTheme, type Theme } from "@/hooks/useTheme";
 
 const options: { value: Theme; icon: typeof Sun; label: string }[] = [
   { value: "light", icon: Sun, label: "Claro" },
-  { value: "system", icon: Monitor, label: "Sistema" },
   { value: "dark", icon: Moon, label: "Escuro" },
+   { value: "system", icon: Monitor, label: "Sistema" },
 ];
 
 export function ThemeToggle() {
