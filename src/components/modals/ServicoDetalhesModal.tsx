@@ -1,5 +1,6 @@
 // src/components/modals/ServicoDetalhesModal.tsx
 "use client";
+
 import { useEffect } from "react";
 import { useServicos } from "@/hooks/useServicos";
 import { motion, AnimatePresence } from "framer-motion";
@@ -15,13 +16,17 @@ import {
   Pencil,
   Trash2,
   NotepadText,
+  Map,
+  MessageCircle,
+  Hash,
+  Clock,
 } from "lucide-react";
 import { formatarContato } from "@/lib/utils";
 import { StatusBadge } from "@/components/features/StatusBadge";
-import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Spinner } from "@/components/ui/Spinner";
 import type { Servico } from "@/lib/types";
+import Link from "next/link";
 
 interface ServicoDetalhesModalProps {
   id: string;
@@ -41,30 +46,33 @@ export default function ServicoDetalhesModal({
   const { servicos, loading, error } = useServicos();
   const servico = servicos.find((s) => String(s.id) === id);
 
-  const getClienteNome = () =>
-    servico?.cliente?.nome || "Cliente não informado";
-  const getClienteContato = () => servico?.cliente?.contato || "";
-  const getOrdemServico = () => servico?.ordemServico || "N/A";
-  const getVeiculoPlaca = () => servico?.veiculo?.placa || "N/A";
-  const getVeiculoModelo = () => servico?.veiculo?.marcaModelo || "N/A";
-  const getTipoServico = () => servico?.tipoServico || "N/A";
-  const getEnderecoRua = () => servico?.endereco?.rua || "";
-  const getEnderecoNumero = () => servico?.endereco?.numero || "";
-  const getEnderecoBairro = () => servico?.endereco?.bairro || "";
-  const getEnderecoCidade = () => servico?.endereco?.cidade || "";
-  const getEnderecoEstado = () => servico?.endereco?.estado || "";
-  const getEnderecoCep = () => servico?.endereco?.cep || "";
-  const getData = () => servico?.data || "Data não informada";
-  const getDiaSemana = () => servico?.diaSemana || "";
-  const getHorario = () => {
-    const h = servico?.horario;
-    if (!h) return "Horário não informado";
-    const m = h.match(/(\d{2}):(\d{2})/);
-    return m ? `${m[1]}:${m[2]}` : h;
+  // Acesso seguro e limpo aos dados
+  const cliente = servico?.cliente || {
+    nome: "Cliente não informado",
+    contato: "",
   };
-  const getObservacao = () => servico?.observacao || "";
-  const getStatus = () => servico?.status || "pendente";
-  const getTecnico = () => servico?.tecnico || "Não informado";
+  const veiculo = servico?.veiculo || { placa: "N/A", marcaModelo: "N/A" };
+  const endereco = servico?.endereco || {
+    rua: "",
+    numero: "",
+    bairro: "",
+    cidade: "",
+    estado: "",
+    cep: "",
+  };
+
+  const horarioFormatado = servico?.horario?.match(/(\d{2}):(\d{2})/)
+    ? `${servico.horario.match(/(\d{2}):(\d{2})/)![1]}:${servico.horario.match(/(\d{2}):(\d{2})/)![2]}`
+    : servico?.horario || "Horário não informado";
+
+  const termoBusca = `${endereco.rua}, ${endereco.numero} - ${endereco.cidade}, ${endereco.cep}`;
+  const googleMapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(termoBusca)}`;
+
+  // Limpa o número para o link do WhatsApp (remove tudo que não é dígito)
+  const contatoLimpo = (cliente.contato || "").replace(/\D/g, "");
+  const whatsappUrl = contatoLimpo
+    ? `https://wa.me/55${contatoLimpo}?text=${encodeURIComponent(`Olá! Gostaria de falar sobre o serviço agendado: ${servico?.tipoServico || "N/A"}`)}`
+    : "#";
 
   useEffect(() => {
     const handleEsc = (e: KeyboardEvent) => {
@@ -93,30 +101,58 @@ export default function ServicoDetalhesModal({
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
         transition={{ duration: 0.2 }}
-        className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 dark:bg-black/60 backdrop-blur-sm"
+        className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 dark:bg-black/70 backdrop-blur-sm"
         onClick={onClose}
         role="dialog"
+        aria-modal="true"
       >
         <motion.div
           initial={{ scale: 0.95, opacity: 0, y: 20 }}
           animate={{ scale: 1, opacity: 1, y: 0 }}
           exit={{ scale: 0.95, opacity: 0, y: 20 }}
           transition={{ duration: 0.3, ease: "easeOut" }}
-          className="bg-bg-elevated rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col border border-border"
+          className="bg-bg-elevated rounded-3xl shadow-2xl w-full max-w-3xl max-h-[90vh] overflow-hidden flex flex-col border border-border/50"
           onClick={(e) => e.stopPropagation()}
         >
-          <div className="flex items-center justify-between px-6 py-4 border-b border-border bg-bg-elevated/80 backdrop-blur-sm shrink-0">
-            <h3 className="text-lg font-bold text-text">Detalhes do Serviço</h3>
-            <button
-              onClick={onClose}
-              className="p-2 rounded-xl hover:bg-bg-muted transition-colors"
-            >
-              <X className="w-5 h-5 text-text-muted" />
-            </button>
+          {/* --- CABEÇALHO --- */}
+          <div className="flex items-start justify-between px-6 py-5 border-b border-border/50 bg-bg-muted/30 backdrop-blur-sm shrink-0">
+            <div className="flex-1 min-w-0 pr-4">
+              <div className="flex items-center gap-3 mb-2">
+                <h2 className="text-2xl font-extrabold tracking-tight text-text truncate">
+                  {cliente.nome}
+                </h2>
+                {servico?.ordemServico && (
+                  <span className="shrink-0 inline-flex items-center gap-1.5 bg-primary/10 text-primary px-2.5 py-1 rounded-lg text-xs font-bold uppercase tracking-wider border border-primary/20">
+                    <Hash size={12} />
+                    OS {servico.ordemServico}
+                  </span>
+                )}
+              </div>
+              <div className="flex items-center gap-2 text-sm text-text-muted">
+                <Calendar size={14} />
+                <span>{servico?.data || "Data não informada"}</span>
+                {servico?.diaSemana && <span>• {servico.diaSemana}</span>}
+                <span className="mx-1">•</span>
+                <Clock size={14} />
+                <span>{horarioFormatado}</span>
+              </div>
+            </div>
+            <div className="flex items-center gap-3 shrink-0">
+              {servico && <StatusBadge status={servico.status} />}
+              <button
+                onClick={onClose}
+                className="p-2 rounded-xl hover:bg-bg-muted transition-colors text-text-muted hover:text-text"
+                aria-label="Fechar modal"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
           </div>
-          <div className="p-5 sm:p-6 overflow-y-auto flex-1 custom-scrollbar">
+
+          {/* --- CONTEÚDO --- */}
+          <div className="p-6 overflow-y-auto flex-1 custom-scrollbar">
             {loading && (
-              <div className="flex flex-col items-center justify-center py-12">
+              <div className="flex flex-col items-center justify-center py-16">
                 <Spinner
                   size="lg"
                   variant="primary"
@@ -125,178 +161,197 @@ export default function ServicoDetalhesModal({
                 />
               </div>
             )}
+
             {!loading && (error || !servico) && (
-              <div className="flex flex-col items-center justify-center py-12 text-center bg-bg-muted rounded-2xl border border-border">
-                <div className="w-16 h-16 bg-rose-50 dark:bg-rose-950/30 rounded-2xl flex items-center justify-center mb-4">
-                  <AlertCircle className="w-8 h-8 text-rose-500 dark:text-rose-400" />
+              <div className="flex flex-col items-center justify-center py-16 text-center bg-rose-500/5 rounded-2xl border border-rose-500/20">
+                <div className="w-16 h-16 bg-rose-500/10 rounded-2xl flex items-center justify-center mb-4">
+                  <AlertCircle className="w-8 h-8 text-rose-500" />
                 </div>
-                <h2 className="text-xl font-bold text-text mb-2">
+                <h3 className="text-lg font-bold text-text mb-2">
                   {error ? "Erro ao carregar" : "Serviço não encontrado"}
-                </h2>
-                <p className="text-text-muted max-w-md">
+                </h3>
+                <p className="text-text-muted max-w-md text-sm mb-6">
                   {error ||
                     "O agendamento solicitado foi removido ou o ID está incorreto."}
                 </p>
-                <Button variant="outline" className="mt-6" onClick={onClose}>
+                <Button variant="outline" onClick={onClose}>
                   Fechar
                 </Button>
               </div>
             )}
+
             {!loading && !error && servico && (
               <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.1 }}
+                className="space-y-6"
               >
-                <div className="flex flex-col md:flex-row md:items-start justify-between gap-4 mb-8">
-                  <div>
-                    <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight text-text mb-2">
-                      {getClienteNome()}
-                    </h1>
-                    <span className="bg-bg-muted text-text px-2.5 py-1 rounded-md text-xs font-bold uppercase tracking-wider border border-border">
-                      OS: {getOrdemServico()}
-                    </span>
-                  </div>
-                  <StatusBadge status={getStatus()} className="shadow-sm" />
-                </div>
+                {/* Grid Principal */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                  <Card className="p-5">
-                    <div className="flex items-center gap-3 mb-4">
-                      <div className="p-2 bg-blue-50 dark:bg-blue-950/30 text-blue-600 dark:text-blue-400 rounded-lg">
+                  {/* Card: Cliente e Contato */}
+                  <div className="bg-bg-muted/40 rounded-2xl border border-border/50 p-5 space-y-4">
+                    <div className="flex items-center gap-2.5 mb-1">
+                      <div className="p-2 bg-blue-500/10 text-blue-500 rounded-lg">
                         <User className="w-4 h-4" />
                       </div>
-                      <h2 className="text-base font-bold text-text">Contato</h2>
+                      <h3 className="text-sm font-bold uppercase tracking-wider text-text-muted">
+                        Cliente & Contato
+                      </h3>
                     </div>
-                    <div className="flex items-center gap-3 text-text">
-                      <Phone className="w-4 h-4 text-text-muted" />
-                      <span className="font-medium">
-                        {formatarContato(getClienteContato())}
-                      </span>
+                    <div className="space-y-3">
+                      <div className="flex items-center gap-3 text-text">
+                        <Phone className="w-4 h-4 text-text-muted shrink-0" />
+                        <span className="font-medium">
+                          {formatarContato(cliente.contato) || "Não informado"}
+                        </span>
+                      </div>
+                      {contatoLimpo && (
+                        <Link
+                          href={whatsappUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center justify-center gap-2 w-full py-2.5 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 font-semibold text-sm transition-all hover:bg-emerald-500/20 hover:scale-[1.02]"
+                        >
+                          <MessageCircle size={16} />
+                          Conversar no WhatsApp
+                        </Link>
+                      )}
                     </div>
-                  </Card>
-                  <Card className="p-5">
-                    <div className="flex items-center gap-3 mb-4">
-                      <div className="p-2 bg-purple-50 dark:bg-purple-950/30 text-purple-600 dark:text-purple-400 rounded-lg">
+                  </div>
+
+                  {/* Card: Veículo */}
+                  <div className="bg-bg-muted/40 rounded-2xl border border-border/50 p-5 space-y-4">
+                    <div className="flex items-center gap-2.5 mb-1">
+                      <div className="p-2 bg-purple-500/10 text-purple-500 rounded-lg">
                         <Car className="w-4 h-4" />
                       </div>
-                      <h2 className="text-base font-bold text-text">
-                        Veículo & Serviço
-                      </h2>
+                      <h3 className="text-sm font-bold uppercase tracking-wider text-text-muted">
+                        Veículo
+                      </h3>
                     </div>
-                    <div className="space-y-2.5 text-sm">
-                      <div className="flex justify-between items-center border-b border-border pb-2">
-                        <span className="font-medium text-text-muted">
-                          Placa
-                        </span>
-                        <span className="font-mono font-bold uppercase bg-bg-muted px-1.5 py-0.5 rounded text-text border border-border">
-                          {getVeiculoPlaca()}
-                        </span>
-                      </div>
-                      <div className="flex justify-between items-center border-b border-border pb-2">
-                        <span className="font-medium text-text-muted">
-                          Modelo
-                        </span>
-                        <span className="font-medium text-text">
-                          {getVeiculoModelo()}
+                    <div className="space-y-3">
+                      <div className="flex justify-between items-center pb-3 border-b border-border/50">
+                        <span className="text-sm text-text-muted">Placa</span>
+                        <span className="font-mono font-bold uppercase bg-bg-elevated px-2 py-1 rounded text-text border border-border/50 text-sm">
+                          {veiculo.placa}
                         </span>
                       </div>
                       <div className="flex justify-between items-center">
-                        <span className="font-medium text-text-muted">
-                          Tipo
-                        </span>
-                        <span className="font-medium text-text">
-                          {getTipoServico()}
+                        <span className="text-sm text-text-muted">Modelo</span>
+                        <span className="font-medium text-text text-sm text-right">
+                          {veiculo.marcaModelo}
                         </span>
                       </div>
                     </div>
-                  </Card>
-                  <Card className="p-5 md:col-span-2">
-                    <div className="flex items-center gap-3 mb-4">
-                      <div className="p-2 bg-rose-50 dark:bg-rose-950/30 text-rose-600 dark:text-rose-400 rounded-lg">
+                  </div>
+
+                  {/* Card: Localização (Full width no mobile, span 2 no desktop se quiser, mas aqui deixamos 1) */}
+                  <div className="md:col-span-2 bg-bg-muted/40 rounded-2xl border border-border/50 p-5">
+                    <div className="flex items-center gap-2.5 mb-4">
+                      <div className="p-2 bg-rose-500/10 text-rose-500 rounded-lg">
                         <MapPin className="w-4 h-4" />
                       </div>
-                      <h2 className="text-base font-bold text-text">
-                        Localização
-                      </h2>
+                      <h3 className="text-sm font-bold uppercase tracking-wider text-text-muted">
+                        Localização do Serviço
+                      </h3>
                     </div>
-                    <address className="not-italic flex flex-col gap-1 text-text bg-bg-muted p-3 rounded-xl border border-border">
-                      <p className="font-medium text-text">
-                        {getEnderecoRua()}
-                        {getEnderecoNumero() ? `, ${getEnderecoNumero()}` : ""}
-                      </p>
-                      <p className="text-text-muted">
-                        {getEnderecoBairro()}
-                        {getEnderecoBairro() && getEnderecoCidade()
-                          ? " - "
-                          : ""}
-                        {getEnderecoCidade()}
-                        {getEnderecoEstado()
-                          ? ` / ${getEnderecoEstado().toUpperCase()}`
-                          : ""}
-                      </p>
-                      {getEnderecoCep() && (
-                        <p className="text-xs font-medium text-text-muted mt-1">
-                          CEP: {getEnderecoCep()}
+
+                    <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 bg-bg-elevated p-4 rounded-xl border border-border/50">
+                      <address className="not-italic space-y-1 flex-1">
+                        <p className="font-semibold text-text">
+                          {endereco.rua}
+                          {endereco.numero ? `, ${endereco.numero}` : ""}
                         </p>
-                      )}
-                    </address>
-                  </Card>
-                  <Card className="p-5">
-                    <div className="flex items-center gap-3 mb-4">
-                      <div className="p-2 bg-emerald-50 dark:bg-emerald-950/30 text-emerald-600 dark:text-emerald-400 rounded-lg">
-                        <Calendar className="w-4 h-4" />
+                        <p className="text-sm text-text-muted">
+                          {endereco.bairro}
+                          {endereco.bairro && endereco.cidade ? " - " : ""}
+                          {endereco.cidade}
+                          {endereco.estado
+                            ? `/${endereco.estado.toUpperCase()}`
+                            : ""}
+                        </p>
+                        {endereco.cep && (
+                          <p className="text-xs font-medium text-text-muted pt-1">
+                            CEP:{" "}
+                            {endereco.cep.replace(/^(\d{5})(\d{3})$/, "$1-$2")}
+                          </p>
+                        )}
+                      </address>
+
+                      <div className="flex gap-2 shrink-0">
+                        <Link
+                          href={googleMapsUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center justify-center w-10 h-10 rounded-xl bg-bg-muted border border-border/50 transition-all hover:bg-primary/10 hover:border-primary/30 hover:text-primary group"
+                          title="Abrir no Google Maps"
+                        >
+                          <Map
+                            size={18}
+                            className="text-text-muted group-hover:text-primary transition-colors"
+                          />
+                        </Link>
                       </div>
-                      <h2 className="text-base font-bold text-text">Agenda</h2>
                     </div>
-                    <div className="space-y-2.5 text-sm">
-                      <div className="flex justify-between border-b border-border pb-2">
-                        <span className="font-medium text-text-muted">
-                          Data
-                        </span>
-                        <span className="font-semibold text-text">
-                          {getData()}
-                          {getDiaSemana() ? ` • ${getDiaSemana()}` : ""}
-                        </span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="font-medium text-text-muted">
-                          Horário
-                        </span>
-                        <span className="font-semibold text-text">
-                          {getHorario()}
-                        </span>
-                      </div>
-                    </div>
-                  </Card>
-                  <Card className="p-5">
-                    <div className="flex items-center gap-3 mb-4">
-                      <div className="p-2 bg-orange-50 dark:bg-orange-950/30 text-orange-600 dark:text-orange-400 rounded-lg">
+                  </div>
+
+                  {/* Card: Detalhes Operacionais */}
+                  <div className="md:col-span-2 bg-bg-muted/40 rounded-2xl border border-border/50 p-5">
+                    <div className="flex items-center gap-2.5 mb-4">
+                      <div className="p-2 bg-orange-500/10 text-orange-500 rounded-lg">
                         <Wrench className="w-4 h-4" />
                       </div>
-                      <h2 className="text-base font-bold text-text">Técnico</h2>
+                      <h3 className="text-sm font-bold uppercase tracking-wider text-text-muted">
+                        Detalhes Operacionais
+                      </h3>
                     </div>
-                    <div className="flex items-center gap-3 text-text bg-bg-muted p-3 rounded-xl border border-border">
-                      <User className="w-4 h-4 text-text-muted" />
-                      <span className="font-semibold">{getTecnico()}</span>
-                    </div>
-                  </Card>
-                  <Card className="p-5 md:col-span-2">
-                    <div className="flex items-center gap-3 mb-4">
-                      <div className="p-2 bg-orange-50 dark:bg-orange-950/30 text-orange-600 dark:text-orange-400 rounded-lg">
-                        <NotepadText className="w-4 h-4" />
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div className="bg-bg-elevated p-3 rounded-xl border border-border/50">
+                        <span className="text-xs text-text-muted block mb-1">
+                          Técnico Responsável
+                        </span>
+                        <div className="flex items-center gap-2 text-text font-semibold">
+                          <User size={14} className="text-text-muted" />
+                          {servico.tecnico || "Não atribuído"}
+                        </div>
                       </div>
-                      <h2 className="text-base font-bold text-text">
-                        Observações
-                      </h2>
+                      <div className="bg-bg-elevated p-3 rounded-xl border border-border/50">
+                        <span className="text-xs text-text-muted block mb-1">
+                          Tipo de Serviço
+                        </span>
+                        <div className="flex items-center gap-2 text-text font-semibold">
+                          <Wrench size={14} className="text-text-muted" />
+                          {servico.tipoServico || "Não especificado"}
+                        </div>
+                      </div>
                     </div>
-                    <p className="text-text-muted">{getObservacao()}</p>
-                  </Card>
+                  </div>
+
+                  {/* Card: Observações (Condicional) */}
+                  {servico.observacao && (
+                    <div className="md:col-span-2 bg-amber-500/5 rounded-2xl border border-amber-500/20 p-5">
+                      <div className="flex items-center gap-2.5 mb-3">
+                        <div className="p-2 bg-amber-500/10 text-amber-600 dark:text-amber-400 rounded-lg">
+                          <NotepadText className="w-4 h-4" />
+                        </div>
+                        <h3 className="text-sm font-bold uppercase tracking-wider text-amber-700 dark:text-amber-400">
+                          Observações
+                        </h3>
+                      </div>
+                      <p className="text-sm text-text/90 leading-relaxed whitespace-pre-wrap">
+                        {servico.observacao}
+                      </p>
+                    </div>
+                  )}
                 </div>
               </motion.div>
             )}
           </div>
+
+          {/* --- RODAPÉ COM AÇÕES --- */}
           {hasActions && servico && (
-            <div className="px-5 sm:px-6 py-4 border-t border-border bg-bg-muted shrink-0 flex flex-col-reverse sm:flex-row justify-end gap-3 rounded-b-2xl">
+            <div className="px-6 py-4 border-t border-border/50 bg-bg-muted/30 shrink-0 flex flex-col-reverse sm:flex-row justify-end gap-3 rounded-b-3xl">
               <Button
                 variant="outline"
                 onClick={onClose}
@@ -313,7 +368,7 @@ export default function ServicoDetalhesModal({
                   }}
                   className="w-full sm:w-auto"
                 >
-                  <Trash2 className="w-4 h-4" /> Excluir
+                  <Trash2 className="w-4 h-4 mr-2" /> Excluir
                 </Button>
               )}
               {onEdit && (
@@ -324,7 +379,7 @@ export default function ServicoDetalhesModal({
                   }}
                   className="w-full sm:w-auto"
                 >
-                  <Pencil className="w-4 h-4" /> Editar
+                  <Pencil className="w-4 h-4 mr-2" /> Editar
                 </Button>
               )}
             </div>
