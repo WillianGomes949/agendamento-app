@@ -1,7 +1,12 @@
 // src/hooks/useServicos.ts
 "use client";
 
-import { useState, useEffect, useCallback, useMemo } from "react";
+import {
+  useQuery,
+  useMutation,
+  useQueryClient,
+  keepPreviousData,
+} from "@tanstack/react-query";
 import {
   getServicos,
   createServico,
@@ -10,32 +15,58 @@ import {
 } from "@/lib/api-agendamento";
 import { sanitizarDadosAPI } from "@/lib/utils-format";
 import type { Servico, FormularioServico, FiltrosServicos } from "@/lib/types";
-import { CACHE_TTL_SERVICOS, DEFAULT_PAGE_SIZE } from "@/lib/constants";
+import { DEFAULT_PAGE_SIZE } from "@/lib/constants";
+import { useMemo, useState } from "react";
 
-const CACHE_KEY = "@TrackApp:servicos";
-const CACHE_TTL = CACHE_TTL_SERVICOS;
+const QUERY_KEY = "servicos";
 
-// Variável global para impedir requisições simultâneas aos serviços
-let globalServicosPromise: Promise<any> | null = null;
-let activeFiltersKey = "";
+function sanitizarServico(raw: any): Servico {
+  const limpo = sanitizarDadosAPI(raw);
+  const cliente = (limpo.cliente ?? {}) as Record<string, unknown>;
+  const veiculo = (limpo.veiculo ?? {}) as Record<string, unknown>;
+  const endereco = (limpo.endereco ?? {}) as Record<string, unknown>;
 
-/**
- * Converte data BR (DD/MM/YYYY) para timestamp UTC (timezone-safe)
- */
+  return {
+    id: String(limpo.id ?? ""),
+    tecnico: String(limpo.tecnico ?? ""),
+    data: String(limpo.data ?? ""),
+    diaSemana: String(limpo.diaSemana ?? ""),
+    horario: String(limpo.horario ?? ""),
+    tipoServico: String(limpo.tipoServico ?? ""),
+    ordemServico: limpo.ordemServico ?? null,
+    observacao: limpo.observacao ?? null,
+    cliente: {
+      nome: String(cliente.nome ?? ""),
+      contato: String(cliente.contato ?? ""),
+    },
+    veiculo: {
+      placa: String(veiculo.placa ?? ""),
+      marcaModelo: String(veiculo.marcaModelo ?? ""),
+    },
+    endereco: {
+      rua: String(endereco.rua ?? ""),
+      numero: String(endereco.numero ?? ""),
+      bairro: String(endereco.bairro ?? ""),
+      cidade: String(endereco.cidade ?? ""),
+      estado: String(endereco.estado ?? ""),
+      cep: String(endereco.cep ?? ""),
+    },
+    status: String(limpo.status ?? "PENDENTE") as Servico["status"],
+    criadoEm: String(limpo.criadoEm ?? ""),
+    atualizadoEm: String(limpo.atualizadoEm ?? ""),
+  };
+}
+
 const parseBrDate = (br: string): number => {
   if (!br || !/^\d{2}\/\d{2}\/\d{4}$/.test(br)) return NaN;
   const [d, m, y] = br.split("/").map(Number);
   return Date.UTC(y, m - 1, d, 12, 0, 0);
 };
 
-/**
- * Verifica se uma data BR é válida
- */
 const isValidBrDate = (date: string): boolean => {
   if (!date) return false;
   const regex = /^(0[1-9]|[12][0-9]|3[01])\/(0[1-9]|1[0-2])\/\d{4}$/;
   if (!regex.test(date)) return false;
-
   const [day, month, year] = date.split("/").map(Number);
   const jsDate = new Date(year, month - 1, day);
   return (
@@ -45,268 +76,109 @@ const isValidBrDate = (date: string): boolean => {
   );
 };
 
-export function useServicos(initialFilters?: FiltrosServicos) {
-  const [servicosRaw, setServicosRaw] = useState<Servico[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [isCreating, setIsCreating] = useState(false);
-  const [isUpdating, setIsUpdating] = useState(false);
-  const [isDeleting, setIsDeleting] = useState(false);
-  const [meta, setMeta] = useState({
-    total: 0,
-    page: 1,
-    pageSize: DEFAULT_PAGE_SIZE,
-    totalPages: 1,
+export function useServicos(initialFilters: FiltrosServicos = {}) {
+  const queryClient = useQueryClient();
+  const [filters, setFilters] = useState<FiltrosServicos>(initialFilters);
+  const [page, setPage] = useState(1);
+
+  const apiFilters = useMemo<FiltrosServicos>(
+    () => ({
+      page,
+      pageSize: DEFAULT_PAGE_SIZE,
+      ...(filters.status && { status: filters.status }),
+      ...(filters.tecnico && { tecnico: filters.tecnico }),
+      ...(filters.data && { data: filters.data }),
+    }),
+    [page, filters.status, filters.tecnico, filters.data],
+  );
+
+  const {
+    data: rawData,
+    isLoading,
+    error,
+    isPlaceholderData,
+  } = useQuery({
+    queryKey: [QUERY_KEY, apiFilters],
+    queryFn: () => getServicos(apiFilters),
+    placeholderData: keepPreviousData,
+    select: (res) => ({
+      ...res,
+      data: (res.data ?? []).map(sanitizarServico),
+    }),
   });
-  const [filters, setFilters] = useState<FiltrosServicos>(initialFilters || {});
 
-  const load = useCallback(
-    async (page = 1, forceRefresh = false) => {
-      setLoading(true);
-      setError(null);
+  const servicosRaw = (rawData?.data ?? []) as Servico[];
 
-      const currentFiltersStr = JSON.stringify({ ...filters, page });
-      const cacheStorageKey = `${CACHE_KEY}_${currentFiltersStr}`;
-
-      try {
-        if (!forceRefresh) {
-          const cached = sessionStorage.getItem(cacheStorageKey);
-          if (cached) {
-            const { data, meta: cachedMeta, timestamp } = JSON.parse(cached);
-            if (Date.now() - timestamp < CACHE_TTL) {
-              setServicosRaw(data);
-              if (cachedMeta) setMeta(cachedMeta);
-              setLoading(false);
-              return;
-            }
-          }
-        }
-
-        if (
-          !globalServicosPromise ||
-          forceRefresh ||
-          activeFiltersKey !== currentFiltersStr
-        ) {
-          activeFiltersKey = currentFiltersStr;
-          // API recebe apenas filtros que suporta
-          const apiFilters = {
-            page,
-            pageSize: DEFAULT_PAGE_SIZE,
-            ...(filters.status && { status: filters.status }),
-            ...(filters.tecnico && { tecnico: filters.tecnico }),
-            ...(filters.data && { data: filters.data }),
-          };
-          globalServicosPromise = getServicos(apiFilters);
-        }
-
-        const result = await globalServicosPromise;
-
-        if (result.meta) {
-          setMeta(result.meta);
-        }
-
-        const sanitizedData = (result.data || []).map((servico: any) => {
-          const limpo = sanitizarDadosAPI(servico as Record<string, unknown>);
-
-          const cliente = limpo.cliente as Record<string, unknown> | undefined;
-          const veiculo = limpo.veiculo as Record<string, unknown> | undefined;
-          const endereco = limpo.endereco as
-            | Record<string, unknown>
-            | undefined;
-
-          return {
-            id: String(limpo.id ?? ""),
-            tecnico: String(limpo.tecnico ?? ""),
-            data: String(limpo.data ?? ""),
-            diaSemana: String(limpo.diaSemana ?? ""),
-            horario: String(limpo.horario ?? ""),
-            tipoServico: String(limpo.tipoServico ?? ""),
-            ordemServico: limpo.ordemServico || null,
-            observacao: limpo.observacao || null,
-            cliente: {
-              nome: String(cliente?.nome ?? ""),
-              contato: String(cliente?.contato ?? ""),
-            },
-            veiculo: {
-              placa: String(veiculo?.placa ?? ""),
-              marcaModelo: String(veiculo?.marcaModelo ?? ""),
-            },
-            endereco: {
-              rua: String(endereco?.rua ?? ""),
-              numero: String(endereco?.numero ?? ""),
-              bairro: String(endereco?.bairro ?? ""),
-              cidade: String(endereco?.cidade ?? ""),
-              estado: String(endereco?.estado ?? ""),
-              cep: String(endereco?.cep ?? ""),
-            },
-            status: String(limpo.status || "PENDENTE"),
-            criadoEm: String(limpo.criadoEm ?? ""),
-            atualizadoEm: String(limpo.atualizadoEm ?? ""),
-          };
-        });
-        setServicosRaw(sanitizedData);
-
-        sessionStorage.setItem(
-          cacheStorageKey,
-          JSON.stringify({
-            data: sanitizedData,
-            meta: result.meta,
-            timestamp: Date.now(),
-          }),
-        );
-      } catch (err) {
-        console.error("[useServicos] Erro ao carregar:", err);
-        setError(
-          err instanceof Error ? err.message : "Falha ao carregar dados",
-        );
-      } finally {
-        globalServicosPromise = null;
-        setLoading(false);
-      }
-    },
-    [filters],
-  );
-
-  useEffect(() => {
-    load(1, false);
-  }, [load]);
-
-  const clearCacheAndReload = async () => {
-    Object.keys(sessionStorage).forEach((key) => {
-      if (key.startsWith(CACHE_KEY)) sessionStorage.removeItem(key);
-    });
-    await load(1, true);
-  };
-
-  const create = useCallback(
-    async (data: FormularioServico) => {
-      setError(null);
-      setIsCreating(true);
-      try {
-        await createServico(data);
-        await clearCacheAndReload();
-        return { success: true as const };
-      } catch (err) {
-        const msg =
-          err instanceof Error ? err.message : "Falha ao criar serviço";
-        setError(msg);
-        console.error(err);
-        // Retorna a mensagem bruta para o modal parsear
-        return { success: false as const, error: msg };
-      } finally {
-        setIsCreating(false);
-      }
-    },
-    [load],
-  );
-
-  const update = useCallback(
-    async (id: string, data: Partial<Servico>) => {
-      setError(null);
-      setIsUpdating(true);
-      try {
-        await updateServico(id, data);
-        await clearCacheAndReload();
-        return { success: true as const };
-      } catch (err) {
-        const msg =
-          err instanceof Error ? err.message : "Falha ao atualizar serviço";
-        setError(msg);
-        console.error(err);
-        return { success: false as const, error: msg };
-      } finally {
-        setIsUpdating(false);
-      }
-    },
-    [load],
-  );
-
-  const remove = useCallback(
-    async (id: string) => {
-      setError(null);
-      setIsDeleting(true);
-      try {
-        await deleteServico(id);
-        await clearCacheAndReload();
-        return { success: true as const };
-      } catch (err) {
-        const msg =
-          err instanceof Error ? err.message : "Falha ao remover serviço";
-        setError(msg);
-        console.error(err);
-        return { success: false as const, error: msg };
-      } finally {
-        setIsDeleting(false);
-      }
-    },
-    [load],
-  );
-
-  const setPage = useCallback(
-    (page: number) => {
-      load(page, false);
-    },
-    [load],
-  );
-
-  // FILTROS CLIENT-SIDE (aplicados sobre os dados da API)
+  // Filtros client-side (busca textual, intervalo de datas)
   const servicos = useMemo(() => {
-    if (!filters || Object.keys(filters).length === 0) return servicosRaw;
+    let result = servicosRaw;
 
-    return servicosRaw.filter((s) => {
-      // Busca textual
-      if (filters.busca) {
-        const busca = filters.busca.toLowerCase().trim();
-        if (!busca) return true;
-        const match =
-          s.cliente.nome.toLowerCase().includes(busca) ||
-          s.veiculo.placa.toLowerCase().includes(busca) ||
-          s.endereco.cidade.toLowerCase().includes(busca) ||
-          (s.ordemServico || "").toLowerCase().includes(busca);
+    if (filters.busca) {
+      const termo = filters.busca.toLowerCase().trim();
+      result = result.filter((s) => {
+        const alvo = [
+          s.cliente?.nome,
+          s.veiculo?.placa,
+          s.endereco?.cidade,
+          s.ordemServico ?? "",
+          s.tecnico,
+        ]
+          .join(" ")
+          .toLowerCase();
+        return alvo.includes(termo);
+      });
+    }
 
-        if (!match) return false;
-      }
-
-      // Data única
-      if (filters.data && s.data !== filters.data) return false;
-
-      // Intervalo de datas — CORRIGIDO: comparação UTC segura
-      if (filters.dataInicio || filters.dataFim) {
-        if (!s.data || !isValidBrDate(s.data)) return false;
-
+    if (filters.dataInicio || filters.dataFim) {
+      result = result.filter((s) => {
+        if (!s.data) return false;
         const dataServico = parseBrDate(s.data);
         if (isNaN(dataServico)) return false;
-
         if (filters.dataInicio && isValidBrDate(filters.dataInicio)) {
           const dataInicio = parseBrDate(filters.dataInicio);
           if (!isNaN(dataInicio) && dataServico < dataInicio) return false;
         }
-
         if (filters.dataFim && isValidBrDate(filters.dataFim)) {
           const dataFim = parseBrDate(filters.dataFim);
           if (!isNaN(dataFim) && dataServico > dataFim) return false;
         }
-      }
+        return true;
+      });
+    }
 
-      // Status
-      if (filters.status && s.status !== filters.status) return false;
+    return result;
+  }, [servicosRaw, filters.busca, filters.dataInicio, filters.dataFim]);
 
-      // Técnico
-      if (filters.tecnico && s.tecnico !== filters.tecnico) return false;
+  // MUTATIONS
+  const createMutation = useMutation({
+    mutationFn: (payload: FormularioServico) => createServico(payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [QUERY_KEY] });
+    },
+  });
 
-      return true;
-    });
-  }, [servicosRaw, filters]);
+  const updateMutation = useMutation({
+    mutationFn: ({ id, ...patch }: { id: string } & Partial<Servico>) =>
+      updateServico(id, patch),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [QUERY_KEY] });
+    },
+  });
 
-  // Extrair datas disponíveis dos serviços FILTRADOS
+  const deleteMutation = useMutation({
+    mutationFn: (id: string) => deleteServico(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [QUERY_KEY] });
+    },
+  });
+
+  // Helpers derivados
   const datasDisponiveis = useMemo(() => {
-    return [
-      ...new Set(
-        servicos
-          .filter((s) => s.data && /^\d{2}\/\d{2}\/\d{4}$/.test(s.data))
-          .map((s) => s.data),
-      ),
-    ].sort((a, b) => {
+    const set = new Set<string>();
+    servicos.forEach((s) => {
+      if (s.data && /^\d{2}\/\d{2}\/\d{4}$/.test(s.data)) set.add(s.data);
+    });
+    return Array.from(set).sort((a, b) => {
       const [d1, m1, y1] = a.split("/").map(Number);
       const [d2, m2, y2] = b.split("/").map(Number);
       return (
@@ -315,25 +187,21 @@ export function useServicos(initialFilters?: FiltrosServicos) {
     });
   }, [servicos]);
 
-  const tecnicos = useMemo(() => {
-    return [...new Set(servicos.map((s) => s.tecnico).filter(Boolean))];
-  }, [servicos]);
+  const tecnicos = useMemo(
+    () => [...new Set(servicos.map((s) => s.tecnico).filter(Boolean))],
+    [servicos],
+  );
 
-  // META baseada nos serviços filtrados (para contagem de cards na tela)
-  const metaFiltrada = useMemo(() => {
-    const total = servicos.length;
-    return {
-      total,
-      page: 1,
-      pageSize: DEFAULT_PAGE_SIZE,
-      totalPages: Math.ceil(total / DEFAULT_PAGE_SIZE) || 1,
-    };
-  }, [servicos]);
+  const metaFiltrada = {
+    total: servicos.length,
+    page: 1,
+    pageSize: DEFAULT_PAGE_SIZE,
+    totalPages: Math.ceil(servicos.length / DEFAULT_PAGE_SIZE) || 1,
+  };
 
-  // Contagem de agendamentos pendentes (não concluídos)
   const agendamentosPendentes = useMemo(() => {
     return servicos.filter((s) => {
-      const status = s.status?.toUpperCase() || "";
+      const status = s.status?.toUpperCase() ?? "";
       return !["CONCLUIDO", "FINALIZADO", "CANCELADO", "DELETADO"].includes(
         status,
       );
@@ -341,22 +209,56 @@ export function useServicos(initialFilters?: FiltrosServicos) {
   }, [servicos]);
 
   return {
-    servicos, // ← já filtrados
-    error,
-    meta: metaFiltrada, // ← total reflete servicos.length
-    filters, // ← exposto para a página usar
-    setFilters, // ← exposto para a página usar
-    loading,
+    servicos,
+    error: error ? (error as Error).message : null,
+    meta: metaFiltrada,
+    filters,
+    setFilters,
+    loading: isLoading,
     setPage,
-    create,
-    update,
-    remove,
-    refresh: clearCacheAndReload,
+    isPlaceholderData,
+
+    create: async (data: FormularioServico) => {
+      try {
+        await createMutation.mutateAsync(data);
+        return { success: true as const };
+      } catch (err) {
+        return {
+          success: false as const,
+          error: err instanceof Error ? err.message : "Falha ao criar",
+        };
+      }
+    },
+    update: async (id: string, data: Partial<Servico>) => {
+      try {
+        await updateMutation.mutateAsync({ id, ...data });
+        return { success: true as const };
+      } catch (err) {
+        return {
+          success: false as const,
+          error: err instanceof Error ? err.message : "Falha ao atualizar",
+        };
+      }
+    },
+    remove: async (id: string) => {
+      try {
+        await deleteMutation.mutateAsync(id);
+        return { success: true as const };
+      } catch (err) {
+        return {
+          success: false as const,
+          error: err instanceof Error ? err.message : "Falha ao remover",
+        };
+      }
+    },
+
+    isCreating: createMutation.isPending,
+    isUpdating: updateMutation.isPending,
+    isDeleting: deleteMutation.isPending,
+
+    refresh: () => queryClient.invalidateQueries({ queryKey: [QUERY_KEY] }),
     datasDisponiveis,
     tecnicos,
-    isCreating,
-    isUpdating,
-    isDeleting,
     agendamentosPendentes,
   };
 }

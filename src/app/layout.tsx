@@ -4,6 +4,7 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import AppLayout from "@/components/layout/AppLayout";
 import { ThemeInitScript } from "./theme-init";
+import { Providers } from "./providers";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -23,7 +24,9 @@ export default function RootLayout({
         <ThemeInitScript />
       </head>
       <body className={inter.className}>
-        <AppLayout>{children}</AppLayout>
+        <Providers>
+          <AppLayout>{children}</AppLayout>
+        </Providers>
       </body>
     </html>
   );

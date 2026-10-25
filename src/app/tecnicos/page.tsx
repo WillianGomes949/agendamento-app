@@ -1,6 +1,7 @@
 // src/app/tecnicos/page.tsx
 "use client";
-import { useState, useEffect, useCallback, useRef } from "react";
+
+import { useState, useCallback, useMemo } from "react";
 import { motion, AnimatePresence, Variants } from "framer-motion";
 import {
   Users,
@@ -23,7 +24,8 @@ import { Modal } from "@/components/modals/Modal";
 import { DeleteConfirmModal } from "@/components/modals/DeleteConfirmModal";
 import { Toaster, toast } from "react-hot-toast";
 import type { TecnicoStats } from "@/lib/api/tecnicos.types";
-import { invalidateConfigCache } from "@/lib/config-cache";
+import { useTecnicos } from "@/hooks/useTecnicos";
+import { useQueryClient } from "@tanstack/react-query";
 
 type FormState = {
   nome: string;
@@ -32,6 +34,7 @@ type FormState = {
   whatsapp: string;
   vinculo: string;
 };
+
 const FORM_VAZIO: FormState = {
   nome: "",
   cpf: "",
@@ -40,72 +43,11 @@ const FORM_VAZIO: FormState = {
   vinculo: "",
 };
 
-async function apiFetch<T>(input: string, init?: RequestInit): Promise<T> {
-  const res = await fetch(input, {
-    ...init,
-    headers: { "Content-Type": "application/json", ...(init?.headers ?? {}) },
-    cache: "no-store",
-  });
-  let json: unknown = null;
-  try {
-    json = await res.json();
-  } catch {}
-  const body = json as {
-    success?: boolean;
-    data?: T;
-    error?: string;
-    details?: string;
-  } | null;
-  if (!res.ok || (body && body.success === false)) {
-    const msg = body?.error ?? `HTTP ${res.status}`;
-    const details = body?.details ? `(${body.details})` : "";
-    throw new Error(`${msg}${details}`);
-  }
-  return (body?.data ?? (body as unknown)) as T;
-}
-
-async function getTecnicosComStats(): Promise<TecnicoStats[]> {
-  return apiFetch<TecnicoStats[]>("/api/tecnicos?stats=1");
-}
-async function createTecnico(input: {
-  nome: string;
-  cpf?: string;
-  cnpj?: string;
-  whatsapp?: string;
-  vinculo?: string;
-}): Promise<TecnicoStats> {
-  return apiFetch<TecnicoStats>("/api/tecnicos", {
-    method: "POST",
-    body: JSON.stringify(input),
-  });
-}
-async function updateTecnico(
-  nomeAntigo: string,
-  updates: {
-    nome?: string;
-    ativo?: boolean;
-    cpf?: string;
-    cnpj?: string;
-    whatsapp?: string;
-    vinculo?: string;
-  },
-): Promise<void> {
-  await apiFetch<TecnicoStats>("/api/tecnicos", {
-    method: "PATCH",
-    body: JSON.stringify({ nomeAntigo, ...updates }),
-  });
-}
-async function deleteTecnico(nome: string): Promise<void> {
-  await apiFetch("/api/tecnicos", {
-    method: "DELETE",
-    body: JSON.stringify({ nome }),
-  });
-}
-
 const containerVariants: Variants = {
   hidden: { opacity: 0 },
   show: { opacity: 1, transition: { staggerChildren: 0.05 } },
 };
+
 const itemVariants: Variants = {
   hidden: { opacity: 0, y: 16 },
   show: {
@@ -116,9 +58,21 @@ const itemVariants: Variants = {
 };
 
 export default function TecnicosPage() {
-  const [tecnicos, setTecnicos] = useState<TecnicoStats[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const queryClient = useQueryClient();
+
+  // ✅ Dados vindos do TanStack Query (substitui useState + fetch manual)
+  const {
+    tecnicos,
+    loading,
+    error,
+    create,
+    update,
+    remove,
+    isCreating,
+    isUpdating,
+    isDeleting,
+  } = useTecnicos();
+
   const [busca, setBusca] = useState("");
   const [filtroStatus, setFiltroStatus] = useState<
     "todos" | "ativos" | "inativos"
@@ -132,75 +86,44 @@ export default function TecnicosPage() {
   );
   const [formData, setFormData] = useState<FormState>(FORM_VAZIO);
   const [formError, setFormError] = useState("");
-  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // ✅ Evita race condition: respostas antigas não sobrescrevem dados novos
-  const fetchSeq = useRef(0);
+  // ✅ isSubmitting agora vem diretamente do hook (otimistic + mutation state)
+  const isSubmitting = isCreating || isUpdating;
 
-  const carregarTecnicos = useCallback(async () => {
-    const seq = ++fetchSeq.current;
-    setLoading(true);
-    setError(null);
-    try {
-      const dados = await getTecnicosComStats();
-      if (seq !== fetchSeq.current) return;
-      setTecnicos(Array.isArray(dados) ? dados : []);
-    } catch (err) {
-      if (seq !== fetchSeq.current) return;
-      const msg =
-        err instanceof Error ? err.message : "Falha ao carregar técnicos";
-      setError(msg);
-    } finally {
-      if (seq === fetchSeq.current) setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    carregarTecnicos();
-  }, [carregarTecnicos]);
-
-  const tecnicosFiltrados = tecnicos.filter((t) => {
-    const matchBusca = (t.nome ?? "")
-      .toLowerCase()
-      .includes(busca.toLowerCase());
-    const matchStatus =
-      filtroStatus === "todos" ||
-      (filtroStatus === "ativos" && t.ativo) ||
-      (filtroStatus === "inativos" && !t.ativo);
-    return matchBusca && matchStatus;
-  });
+  // Filtros client-side
+  const tecnicosFiltrados = useMemo(() => {
+    return tecnicos.filter((t) => {
+      const matchBusca = (t.nome ?? "")
+        .toLowerCase()
+        .includes(busca.toLowerCase());
+      const matchStatus =
+        filtroStatus === "todos" ||
+        (filtroStatus === "ativos" && t.ativo) ||
+        (filtroStatus === "inativos" && !t.ativo);
+      return matchBusca && matchStatus;
+    });
+  }, [tecnicos, busca, filtroStatus]);
 
   const totalAtivos = tecnicos.filter((t) => t.ativo).length;
   const totalInativos = tecnicos.filter((t) => !t.ativo).length;
-  // ✅ Evita NaN se a API não retornar os campos de stats
   const totalServicos = tecnicos.reduce(
     (acc, t) => acc + (t.totalServicos ?? 0),
     0,
   );
 
+  // ✅ DELETE — com rollback automático via Query Client
   const handleDelete = useCallback(async () => {
     if (!deletingTecnico) return;
-    const alvo = deletingTecnico;
-
-    // Remove do state NA HORA (otimista)
-    setTecnicos((prev) => prev.filter((t) => t.nome !== alvo.nome));
-    setDeletingTecnico(null);
-
     try {
-      await deleteTecnico(alvo.nome);
-      invalidateConfigCache();
+      await remove(deletingTecnico.nome);
+      // Invalida também o cache de configurações (lista de técnicos em selects)
+      queryClient.invalidateQueries({ queryKey: ["config", "tecnicos"] });
       toast.success("Técnico removido!");
+      setDeletingTecnico(null);
     } catch (err) {
-      // Rollback se falhar
-      setTecnicos((prev) => {
-        if (prev.some((t) => t.nome === alvo.nome)) return prev;
-        return [...prev, alvo];
-      });
-
       const errorMsg =
         err instanceof Error ? err.message : "Erro ao remover técnico";
 
-      // Detecta erro específico de técnico com serviços
       if (errorMsg.includes("possui") && errorMsg.includes("serviço")) {
         toast.error(
           <div className="flex flex-col gap-1">
@@ -209,48 +132,33 @@ export default function TecnicosPage() {
               Este técnico possui serviços vinculados. Desative-o primeiro.
             </span>
           </div>,
-          {
-            icon: "⚠️",
-            duration: 5000,
-          },
+          { icon: "⚠", duration: 5000 },
         );
       } else {
         toast.error(errorMsg);
       }
     }
-  }, [deletingTecnico]);
+  }, [deletingTecnico, remove, queryClient]);
 
+  // ✅ CREATE
   const handleCreate = useCallback(async () => {
     if (!formData.nome.trim()) {
       setFormError("Nome é obrigatório");
       return;
     }
-    setIsSubmitting(true);
     setFormError("");
 
     const payload = {
       nome: formData.nome.trim(),
-      cpf: formData.cpf.trim() || undefined,
-      cnpj: formData.cnpj.trim() || undefined,
-      whatsapp: formData.whatsapp.trim() || undefined,
-      vinculo: formData.vinculo.trim() || undefined,
+      ...(formData.cpf.trim() && { cpf: formData.cpf.trim() }),
+      ...(formData.cnpj.trim() && { cnpj: formData.cnpj.trim() }),
+      ...(formData.whatsapp.trim() && { whatsapp: formData.whatsapp.trim() }),
+      ...(formData.vinculo.trim() && { vinculo: formData.vinculo.trim() }),
     };
 
     try {
-      const criado = await createTecnico(payload);
-      // ✅ Garante defaults de stats para não renderizar undefined/NaN
-      const novo: TecnicoStats = {
-        ...criado,
-        ativo: criado.ativo ?? true,
-        totalServicos: criado.totalServicos ?? 0,
-        servicosConcluidos: criado.servicosConcluidos ?? 0,
-        servicosPendentes: criado.servicosPendentes ?? 0,
-      };
-      setTecnicos((prev) => {
-        if (prev.some((t) => t.nome === novo.nome)) return prev;
-        return [...prev, novo];
-      });
-      invalidateConfigCache();
+      await create(payload);
+      queryClient.invalidateQueries({ queryKey: ["config", "tecnicos"] });
       toast.success("Técnico criado com sucesso!");
       setIsFormOpen(false);
       setFormData(FORM_VAZIO);
@@ -260,55 +168,34 @@ export default function TecnicosPage() {
 
       if (errorMsg.includes("já existe")) {
         setFormError("Já existe um técnico com este nome");
-        toast.error("Técnico já cadastrado", {
-          icon: "⚠️",
-        });
+        toast.error("Técnico já cadastrado", { icon: "⚠" });
       } else {
         setFormError(errorMsg);
         toast.error(errorMsg);
       }
-    } finally {
-      setIsSubmitting(false);
     }
-  }, [formData]);
+  }, [formData, create, queryClient]);
 
+  // ✅ UPDATE (inclui renomeação com propagação)
   const handleUpdate = useCallback(async () => {
     if (!editingTecnico || !formData.nome.trim()) {
       setFormError("Nome é obrigatório");
       return;
     }
-    setIsSubmitting(true);
     setFormError("");
 
-    const nomeAntigo = editingTecnico.nome;
-    // ✅ Campos vazios viram undefined (não sobrescrevem com "" no banco)
-    const updates = {
+    const updates: Record<string, unknown> = {
+      nomeAntigo: editingTecnico.nome,
       nome: formData.nome.trim(),
-      cpf: formData.cpf.trim() || undefined,
-      cnpj: formData.cnpj.trim() || undefined,
-      whatsapp: formData.whatsapp.trim() || undefined,
-      vinculo: formData.vinculo.trim() || undefined,
+      ...(formData.cpf.trim() && { cpf: formData.cpf.trim() }),
+      ...(formData.cnpj.trim() && { cnpj: formData.cnpj.trim() }),
+      ...(formData.whatsapp.trim() && { whatsapp: formData.whatsapp.trim() }),
+      ...(formData.vinculo.trim() && { vinculo: formData.vinculo.trim() }),
     };
 
     try {
-      await updateTecnico(nomeAntigo, updates);
-
-      setTecnicos((prev) =>
-        prev.map((t) =>
-          t.nome === nomeAntigo
-            ? {
-                ...t,
-                nome: updates.nome ?? t.nome,
-                cpf: updates.cpf,
-                cnpj: updates.cnpj,
-                whatsapp: updates.whatsapp,
-                vinculo: updates.vinculo,
-              }
-            : t,
-        ),
-      );
-
-      invalidateConfigCache();
+      await update(updates as { nomeAntigo: string } & Record<string, unknown>);
+      queryClient.invalidateQueries({ queryKey: ["config", "tecnicos"] });
       toast.success("Técnico atualizado!");
       setIsFormOpen(false);
       setEditingTecnico(null);
@@ -318,35 +205,28 @@ export default function TecnicosPage() {
         err instanceof Error ? err.message : "Erro ao atualizar técnico";
       setFormError(msg);
       toast.error(msg);
-    } finally {
-      setIsSubmitting(false);
     }
-  }, [editingTecnico, formData]);
+  }, [editingTecnico, formData, update, queryClient]);
 
-  const handleToggleAtivo = useCallback(async (tecnico: TecnicoStats) => {
-    const novoAtivo = !tecnico.ativo;
-    setTecnicos((prev) =>
-      prev.map((t) =>
-        t.nome === tecnico.nome ? { ...t, ativo: novoAtivo } : t,
-      ),
-    );
-
-    try {
-      await updateTecnico(tecnico.nome, { ativo: novoAtivo });
-      invalidateConfigCache();
-      toast.success(novoAtivo ? "Técnico ativado" : "Técnico desativado");
-    } catch (err) {
-      setTecnicos((prev) =>
-        prev.map((t) =>
-          t.nome === tecnico.nome ? { ...t, ativo: tecnico.ativo } : t,
-        ),
-      );
-
-      const errorMsg =
-        err instanceof Error ? err.message : "Erro ao atualizar status";
-      toast.error(errorMsg);
-    }
-  }, []);
+  // ✅ TOGGLE ATIVO (com optimistic update via hook)
+  const handleToggleAtivo = useCallback(
+    async (tecnico: TecnicoStats) => {
+      const novoAtivo = !tecnico.ativo;
+      try {
+        await update({
+          nomeAntigo: tecnico.nome,
+          ativo: novoAtivo,
+        });
+        queryClient.invalidateQueries({ queryKey: ["config", "tecnicos"] });
+        toast.success(novoAtivo ? "Técnico ativado" : "Técnico desativado");
+      } catch (err) {
+        const errorMsg =
+          err instanceof Error ? err.message : "Erro ao atualizar status";
+        toast.error(errorMsg);
+      }
+    },
+    [update, queryClient],
+  );
 
   const openEditForm = useCallback((tecnico: TecnicoStats) => {
     setEditingTecnico(tecnico);
@@ -367,6 +247,7 @@ export default function TecnicosPage() {
     setIsFormOpen(true);
     setFormError("");
   }, []);
+
   const closeForm = useCallback(() => {
     setIsFormOpen(false);
     setEditingTecnico(null);
@@ -374,6 +255,7 @@ export default function TecnicosPage() {
     setFormError("");
   }, []);
 
+  // ============================ LOADING ============================
   if (loading) {
     return (
       <div className="min-h-[80vh] flex flex-col items-center justify-center">
@@ -388,6 +270,7 @@ export default function TecnicosPage() {
     );
   }
 
+  // ============================ ERRO ============================
   if (error) {
     return (
       <div className="min-h-[80vh] flex flex-col items-center justify-center p-6 text-center">
@@ -403,7 +286,7 @@ export default function TecnicosPage() {
         <Button
           variant="outline"
           className="mt-8 px-8 py-6 text-base"
-          onClick={carregarTecnicos}
+          onClick={() => window.location.reload()}
         >
           Tentar Novamente
         </Button>
@@ -411,6 +294,7 @@ export default function TecnicosPage() {
     );
   }
 
+  // ============================ UI ============================
   return (
     <motion.div
       variants={containerVariants}
@@ -427,6 +311,7 @@ export default function TecnicosPage() {
         }}
       />
 
+      {/* Header */}
       <motion.div
         variants={itemVariants}
         className="flex flex-col md:flex-row md:items-end justify-between gap-6"
@@ -449,6 +334,7 @@ export default function TecnicosPage() {
         </Button>
       </motion.div>
 
+      {/* KPIs */}
       <motion.div
         variants={itemVariants}
         className="grid grid-cols-2 lg:grid-cols-4 gap-4"
@@ -466,6 +352,7 @@ export default function TecnicosPage() {
             </p>
           </div>
         </Card>
+
         <Card className="p-5 flex items-center gap-4 hoverable group">
           <div className="p-3.5 bg-emerald-50 dark:bg-emerald-950/30 text-emerald-600 dark:text-emerald-400 rounded-2xl group-hover:scale-110 transition-transform duration-300">
             <CheckCircle className="w-6 h-6" />
@@ -477,6 +364,7 @@ export default function TecnicosPage() {
             <p className="text-2xl font-extrabold text-text">{totalAtivos}</p>
           </div>
         </Card>
+
         <Card className="p-5 flex items-center gap-4 hoverable group">
           <div className="p-3.5 bg-bg-muted text-text-muted rounded-2xl group-hover:scale-110 transition-transform duration-300">
             <ToggleLeft className="w-6 h-6" />
@@ -488,6 +376,7 @@ export default function TecnicosPage() {
             <p className="text-2xl font-extrabold text-text">{totalInativos}</p>
           </div>
         </Card>
+
         <Card className="p-5 flex items-center gap-4 hoverable group">
           <div className="p-3.5 bg-amber-50 dark:bg-amber-950/30 text-amber-600 dark:text-amber-400 rounded-2xl group-hover:scale-110 transition-transform duration-300">
             <Briefcase className="w-6 h-6" />
@@ -501,6 +390,7 @@ export default function TecnicosPage() {
         </Card>
       </motion.div>
 
+      {/* Filtros */}
       <motion.div
         variants={itemVariants}
         className="bg-bg-elevated rounded-2xl border border-border shadow-sm p-5 space-y-5"
@@ -524,6 +414,7 @@ export default function TecnicosPage() {
               </button>
             )}
           </div>
+
           <div className="flex flex-wrap lg:flex-nowrap gap-3">
             <div className="flex bg-bg-muted p-1 rounded-xl border border-border">
               {(["todos", "ativos", "inativos"] as const).map((status) => (
@@ -546,6 +437,7 @@ export default function TecnicosPage() {
             </div>
           </div>
         </div>
+
         <div className="flex items-center justify-between pt-4 border-t border-border">
           <div className="flex items-center gap-3">
             <span className="text-sm text-text bg-bg-muted px-3 py-1 rounded-full border border-border">
@@ -558,6 +450,7 @@ export default function TecnicosPage() {
         </div>
       </motion.div>
 
+      {/* Lista de Técnicos */}
       <AnimatePresence mode="wait">
         {tecnicosFiltrados.length === 0 ? (
           <motion.div
@@ -611,7 +504,11 @@ export default function TecnicosPage() {
               <motion.div key={tecnico.nome} variants={itemVariants} layout>
                 <Card className="flex flex-col justify-between p-6 bg-bg-elevated shadow-sm hover:shadow-md border border-border rounded-2xl transition-all duration-300 relative overflow-hidden h-full">
                   <div
-                    className={`absolute top-0 left-0 w-full h-1 ${tecnico.ativo ? "bg-emerald-500 dark:bg-emerald-400" : "bg-border-strong"}`}
+                    className={`absolute top-0 left-0 w-full h-1 ${
+                      tecnico.ativo
+                        ? "bg-emerald-500 dark:bg-emerald-400"
+                        : "bg-border-strong"
+                    }`}
                   />
 
                   <div>
@@ -654,6 +551,8 @@ export default function TecnicosPage() {
                         </div>
                       </div>
                     </div>
+
+                    {/* Stats */}
                     <div className="bg-bg-muted border border-border rounded-xl p-4 mb-4">
                       <div className="grid grid-cols-3 gap-3 text-center">
                         <div>
@@ -682,6 +581,8 @@ export default function TecnicosPage() {
                         </div>
                       </div>
                     </div>
+
+                    {/* Dados extras */}
                     {(tecnico.whatsapp || tecnico.cpf || tecnico.cnpj) && (
                       <div className="space-y-1.5 mb-4 text-sm text-text">
                         {tecnico.whatsapp && (
@@ -711,6 +612,8 @@ export default function TecnicosPage() {
                       </div>
                     )}
                   </div>
+
+                  {/* Ações */}
                   <div className="flex items-center justify-between pt-4 border-t border-border">
                     <button
                       onClick={() => handleToggleAtivo(tecnico)}
@@ -730,6 +633,7 @@ export default function TecnicosPage() {
                       )}
                       {tecnico.ativo ? "Desativar" : "Ativar"}
                     </button>
+
                     <div className="flex items-center gap-2">
                       <button
                         onClick={() => openEditForm(tecnico)}
@@ -754,6 +658,7 @@ export default function TecnicosPage() {
         )}
       </AnimatePresence>
 
+      {/* Modal de Formulário */}
       <Modal
         isOpen={isFormOpen}
         onClose={closeForm}
@@ -801,6 +706,7 @@ export default function TecnicosPage() {
               required
               autoFocus
             />
+
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <Input
                 label="CPF"
@@ -819,6 +725,7 @@ export default function TecnicosPage() {
                 }
               />
             </div>
+
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <Input
                 label="WhatsApp"
@@ -839,7 +746,7 @@ export default function TecnicosPage() {
                   }
                   className="w-full px-3 py-2.5 bg-bg-muted border border-border rounded-xl text-sm text-text focus:outline-none focus:ring-2 focus:ring-accent/50 focus:border-accent transition-all"
                 >
-                  <option value="">Selecione…</option>
+                  <option value="">Selecione...</option>
                   <option value="clt">CLT</option>
                   <option value="pj">PJ</option>
                   <option value="terceirizado">Terceirizado</option>
@@ -849,7 +756,7 @@ export default function TecnicosPage() {
               </div>
             </div>
           </div>
-          {/* ✅ Erro removido daqui: o formError já é exibido inline no campo Nome via prop `error` do Input */}
+
           <div className="flex flex-col-reverse sm:flex-row justify-end gap-3 pt-6 border-t border-border">
             <Button
               type="button"
@@ -876,6 +783,7 @@ export default function TecnicosPage() {
         </form>
       </Modal>
 
+      {/* Modal de Confirmação de Exclusão */}
       <DeleteConfirmModal
         isOpen={!!deletingTecnico}
         onClose={() => setDeletingTecnico(null)}
@@ -883,7 +791,7 @@ export default function TecnicosPage() {
         title="Excluir técnico"
         message="Tem certeza que deseja excluir este técnico? Esta ação não pode ser desfeita."
         itemName={deletingTecnico?.nome || "este técnico"}
-        isLoading={false}
+        isLoading={isDeleting}
       />
     </motion.div>
   );
