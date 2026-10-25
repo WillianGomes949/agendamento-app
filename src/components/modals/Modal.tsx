@@ -31,7 +31,7 @@ export function Modal({
   children,
   size = "md",
   className,
-  closeOnOverlayClick = true,
+  closeOnOverlayClick = false,
 }: ModalProps) {
   useEffect(() => {
     const handleEsc = (e: KeyboardEvent) => {

@@ -431,7 +431,7 @@ export default function ServicoForm({
         </div>
       }
       size="lg"
-      closeOnOverlayClick={!isLoading}
+      closeOnOverlayClick={false}
     >
       {configLoading && (
         <div className="flex items-center justify-center p-4 bg-bg-muted rounded-xl border border-border mb-6 animate-pulse">
