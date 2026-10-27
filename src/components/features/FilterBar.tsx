@@ -1,5 +1,6 @@
 // src/components/features/FilterBar.tsx
 "use client";
+
 import {
   Search,
   Filter,
@@ -8,6 +9,9 @@ import {
   Clock,
   RefreshCw,
   SlidersHorizontal,
+  ArrowUpDown,
+  LayoutGrid,
+  List,
 } from "lucide-react";
 import { Input } from "@/components/ui/Input";
 import type { FiltrosServicos } from "@/lib/types";
@@ -16,7 +20,7 @@ import { useConfig } from "@/hooks/useConfig";
 import { useState, useCallback, useEffect, useRef, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
-interface FilterBarProps {
+export interface FilterBarProps {
   filters: FiltrosServicos;
   onChange: (filters: Partial<FiltrosServicos>) => void;
   datas: string[];
@@ -25,16 +29,22 @@ interface FilterBarProps {
   totalResults?: number;
   onClear?: () => void;
   isLoading?: boolean;
+  // Controles opcionais de ordenação e layout
+  ordenarPor?: string;
+  direcao?: "asc" | "desc";
+  onSortChange?: (ordenarPor: string, direcao: "asc" | "desc") => void;
+  visualizacao?: "cards" | "lista";
+  onVisualizacaoChange?: (v: "cards" | "lista") => void;
 }
 
 interface ActiveFilter {
   label: string;
   value: string;
-  type: keyof FiltrosServicos;
+  type: keyof FiltrosServicos | "ordenacao";
   onRemove: () => void;
 }
 
-// === FUNÇÕES AUXILIARES DE DATA REFATORADAS ===
+// === UTILITÁRIOS DE DATA ===
 const isoToBrDate = (isoDate: string): string => {
   if (!isoDate) return "";
   const [year, month, day] = isoDate.split("-");
@@ -102,16 +112,21 @@ export function FilterBar({
   totalResults = 0,
   onClear,
   isLoading = false,
+  ordenarPor,
+  direcao = "desc",
+  onSortChange,
+  visualizacao,
+  onVisualizacaoChange,
 }: FilterBarProps) {
   const [isAdvancedOpen, setIsAdvancedOpen] = useState(false);
   const searchInputRef = useRef<HTMLInputElement>(null);
   const { options: configOptions, loading: configLoading } = useConfig();
 
   const [localDataInicio, setLocalDataInicio] = useState<string>(
-    brToIsoDate(filters.dataInicio),
+    brToIsoDate(filters.dataInicio)
   );
   const [localDataFim, setLocalDataFim] = useState<string>(
-    brToIsoDate(filters.dataFim),
+    brToIsoDate(filters.dataFim)
   );
 
   useEffect(() => {
@@ -122,8 +137,10 @@ export function FilterBar({
     setLocalDataFim(brToIsoDate(filters.dataFim));
   }, [filters.dataFim]);
 
+  // Contagem de filtros ativos
   const activeFiltersCount = useMemo(() => {
     return [
+      filters.busca,
       filters.data,
       filters.status,
       filters.tecnico,
@@ -132,6 +149,7 @@ export function FilterBar({
       filters.dataFim,
     ].filter(Boolean).length;
   }, [
+    filters.busca,
     filters.data,
     filters.status,
     filters.tecnico,
@@ -185,7 +203,7 @@ export function FilterBar({
       }
       onChange(newFilters);
     },
-    [onChange],
+    [onChange]
   );
 
   const handleDataInicioChange = useCallback(
@@ -198,7 +216,7 @@ export function FilterBar({
         data: undefined,
       });
     },
-    [onChange],
+    [onChange]
   );
 
   const handleDataFimChange = useCallback(
@@ -211,7 +229,7 @@ export function FilterBar({
         data: undefined,
       });
     },
-    [onChange],
+    [onChange]
   );
 
   const quickActions = useMemo(
@@ -279,7 +297,7 @@ export function FilterBar({
         },
       },
     ],
-    [onChange],
+    [onChange]
   );
 
   const statusOptions = configLoading
@@ -299,6 +317,13 @@ export function FilterBar({
   const cidadeOptions = [
     { value: "", label: "Todas as cidades" },
     ...cidades.map((c) => ({ value: c, label: c })),
+  ];
+
+  const sortSelectOptions = [
+    { value: "data", label: "Ordenar por: Data" },
+    { value: "status", label: "Ordenar por: Status" },
+    { value: "tecnico", label: "Ordenar por: Técnico" },
+    { value: "cliente", label: "Ordenar por: Cliente" },
   ];
 
   const activeFiltersList: ActiveFilter[] = useMemo(() => {
@@ -365,6 +390,7 @@ export function FilterBar({
     return list;
   }, [filters, configOptions.status, removeFilter]);
 
+  // Atalho de Teclado (Ctrl + K)
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if ((e.ctrlKey || e.metaKey) && e.key === "k") {
@@ -380,12 +406,12 @@ export function FilterBar({
     <div className="space-y-4">
       <div className="bg-bg-elevated rounded-2xl border border-border shadow-sm transition-shadow duration-200">
         <div className="p-4 sm:p-5">
-          <div className="grid grid-cols-2 lg:grid-cols-12 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-3.5">
             {/* Campo de Busca */}
             <div className="lg:col-span-3">
               <Input
                 ref={searchInputRef}
-                placeholder="Buscar por nome, placa, cidade ou OS..."
+                placeholder="Buscar cliente, placa, OS..."
                 value={filters.busca || ""}
                 onChange={(e) =>
                   onChange({ busca: e.target.value || undefined })
@@ -395,9 +421,8 @@ export function FilterBar({
                 disabled={isLoading}
               />
             </div>
-
-            {/* Selects Rápidos */}
-            {/*CIDADE*/}
+<div className="grid grid-cols-2 gap-3.5 lg:grid-cols-8 lg:col-span-8 sm:w-full">
+ {/* Select: Cidade */}
             <div className="lg:col-span-2">
               <Select
                 value={filters.cidade || ""}
@@ -408,7 +433,8 @@ export function FilterBar({
                 disabled={isLoading}
               />
             </div>
-             {/*TECNICO*/}
+
+            {/* Select: Técnico */}
             <div className="lg:col-span-2">
               <Select
                 value={filters.tecnico || ""}
@@ -418,8 +444,9 @@ export function FilterBar({
                 options={tecnicoOptions}
                 disabled={isLoading}
               />
-            </div>     
-            {/*STATUS*/}
+            </div>
+
+            {/* Select: Status */}
             <div className="lg:col-span-2">
               <Select
                 value={filters.status || ""}
@@ -430,7 +457,8 @@ export function FilterBar({
                 disabled={isLoading || configLoading}
               />
             </div>
-             {/*DATA*/}
+
+            {/* Select: Data */}
             <div className="lg:col-span-2">
               <Select
                 value={filters.data || ""}
@@ -441,26 +469,29 @@ export function FilterBar({
                 disabled={isLoading || configLoading}
               />
             </div>
-           
 
-            {/* Botão Filtros Avançados */}
-            <div className="lg:col-span-1 flex items-end">
+</div>
+           
+            {/* Botão de Filtros Avançados */}
+            <div className="relative lg:col-span-1 flex items-end">
               <button
+                type="button"
                 onClick={() => setIsAdvancedOpen(!isAdvancedOpen)}
-                className={`w-full h-10 flex items-center justify-center gap-1 px-3 rounded-xl text-sm font-semibold transition-all ${
+                className={`w-full h-10 flex items-center justify-center gap-1.5 px-3 rounded-xl text-xs font-semibold transition-all ${
                   isAdvancedOpen || activeFiltersCount > 0
                     ? "bg-accent text-accent-foreground shadow-sm"
                     : "bg-bg-muted text-text hover:bg-bg border border-border"
                 }`}
+                title="Abrir Filtros Avançados"
               >
-                <SlidersHorizontal size={16} />
-                <span className="hidden lg:hidden xl:inline">Filtros</span>
+                <SlidersHorizontal size={15} />
+                <span className="hidden xl:inline">Filtros</span>
                 {activeFiltersCount > 0 && (
                   <span
-                    className={`text-xs rounded-full w-5 h-5 flex items-center justify-center px-2 ${
+                    className={`absolute right-0 top-0 text-[11px] rounded-full w-4 h-4 flex items-center justify-center font-bold ${
                       isAdvancedOpen
                         ? "bg-accent-foreground/20 text-accent-foreground"
-                        : "bg-border-strong text-text"
+                        : "bg-primary text-primary-foreground"
                     }`}
                   >
                     {activeFiltersCount}
@@ -474,13 +505,13 @@ export function FilterBar({
           <AnimatePresence>
             {activeFiltersList.length > 0 && (
               <motion.div
-                initial={{ opacity: 0, y: -10 }}
+                initial={{ opacity: 0, y: -6 }}
                 animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                className="mt-4 pt-4 border-t border-border"
+                exit={{ opacity: 0, y: -6 }}
+                className="mt-4 pt-3.5 border-t border-border/70"
               >
                 <div className="flex flex-wrap items-center gap-2">
-                  <span className="text-xs text-text-muted font-bold uppercase tracking-wider mr-1">
+                  <span className="text-[11px] text-text-muted font-bold uppercase tracking-wider mr-1">
                     Ativos:
                   </span>
                   {activeFiltersList.map((filter) => (
@@ -489,25 +520,27 @@ export function FilterBar({
                       initial={{ scale: 0.9, opacity: 0 }}
                       animate={{ scale: 1, opacity: 1 }}
                       exit={{ scale: 0.9, opacity: 0 }}
-                      className="inline-flex items-center gap-2 px-3 py-1.5 bg-bg-muted text-text rounded-lg text-xs font-medium group hover:bg-bg transition-colors border border-border"
+                      className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-bg-muted text-text rounded-lg text-xs font-medium border border-border"
                     >
                       <span className="text-text-muted font-bold uppercase tracking-wide text-[10px]">
                         {filter.label}:
                       </span>
-                      <span className="max-w-37 truncate">{filter.value}</span>
+                      <span className="max-w-[130px] truncate">{filter.value}</span>
                       <button
+                        type="button"
                         onClick={filter.onRemove}
                         className="p-0.5 hover:bg-border-strong rounded-md transition-colors text-text-muted hover:text-text"
                         aria-label={`Remover filtro ${filter.label}`}
                       >
-                        <X size={14} />
+                        <X size={13} />
                       </button>
                     </motion.span>
                   ))}
                   {activeFiltersList.length > 1 && (
                     <button
+                      type="button"
                       onClick={handleClearAll}
-                      className="ml-2 px-3 py-1.5 text-xs font-semibold text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/20 rounded-lg transition-colors flex items-center gap-1.5"
+                      className="ml-2 px-2.5 py-1 text-xs font-semibold text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/20 rounded-lg transition-colors flex items-center gap-1"
                     >
                       <RefreshCw size={12} />
                       Limpar todos
@@ -519,7 +552,7 @@ export function FilterBar({
           </AnimatePresence>
         </div>
 
-        {/* Painel Avançado */}
+        {/* Painel Avançado de Filtros e Ordenação */}
         <AnimatePresence>
           {isAdvancedOpen && (
             <motion.div
@@ -527,35 +560,35 @@ export function FilterBar({
               animate={{ height: "auto", opacity: 1 }}
               exit={{ height: 0, opacity: 0 }}
               transition={{ duration: 0.2 }}
-              className="overflow-hidden border-t border-border bg-bg-muted/50 rounded-b-2xl"
+              className="overflow-hidden border-t border-border bg-bg-muted/40 rounded-b-2xl"
             >
               <div className="p-4 sm:p-5 space-y-5">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
                   {/* Intervalo de Datas */}
-                  <div className="space-y-3">
-                    <label className="text-xs font-bold text-text-muted uppercase tracking-wider flex items-center gap-2">
-                      <Calendar size={14} /> Intervalo Personalizado
+                  <div className="space-y-2.5">
+                    <label className="text-xs font-bold text-text-muted uppercase tracking-wider flex items-center gap-1.5">
+                      <Calendar size={14} /> Intervalo de Datas
                     </label>
-                    <div className="grid grid-cols-2 gap-3">
-                      <div className="space-y-1">
-                        <label className="text-xs text-text-muted font-medium">
+                    <div className="grid grid-cols-2 gap-2.5">
+                      <div>
+                        <label className="text-[11px] text-text-muted font-medium mb-1 block">
                           Data Inicial
                         </label>
                         <input
                           type="date"
-                          className="w-full px-3 py-2 text-sm border border-border rounded-xl focus:outline-none focus:ring-2 focus:ring-accent/50 focus:border-accent transition-all bg-bg-elevated text-text"
+                          className="w-full px-2.5 py-1.5 text-xs border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all bg-bg-elevated text-text"
                           value={localDataInicio}
                           onChange={handleDataInicioChange}
                           disabled={isLoading}
                         />
                       </div>
-                      <div className="space-y-1">
-                        <label className="text-xs text-text-muted font-medium">
+                      <div>
+                        <label className="text-[11px] text-text-muted font-medium mb-1 block">
                           Data Final
                         </label>
                         <input
                           type="date"
-                          className="w-full px-3 py-2 text-sm border border-border rounded-xl focus:outline-none focus:ring-2 focus:ring-accent/50 focus:border-accent transition-all bg-bg-elevated text-text"
+                          className="w-full px-2.5 py-1.5 text-xs border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all bg-bg-elevated text-text"
                           value={localDataFim}
                           onChange={handleDataFimChange}
                           disabled={isLoading}
@@ -563,32 +596,64 @@ export function FilterBar({
                         />
                       </div>
                     </div>
-                    {(filters.dataInicio || filters.dataFim) && (
-                      <div className="text-xs text-text-muted bg-bg-elevated rounded-lg px-2 py-1 inline-block border border-border">
-                        {filters.dataInicio && `De ${filters.dataInicio}`}
-                        {filters.dataInicio && filters.dataFim && " até "}
-                        {filters.dataFim && filters.dataFim}
-                      </div>
-                    )}
                   </div>
 
                   {/* Períodos Rápidos */}
-                  <div className="space-y-3">
-                    <label className="text-xs font-bold text-text-muted uppercase tracking-wider flex items-center gap-2">
-                      <Clock size={14} /> Períodos Rápidos
+                  <div className="space-y-2.5">
+                    <label className="text-xs font-bold text-text-muted uppercase tracking-wider flex items-center gap-1.5">
+                      <Clock size={14} /> Atantes Rápidos
                     </label>
                     <div className="flex flex-wrap gap-2">
                       {quickActions.map((quick) => (
                         <button
                           key={quick.label}
+                          type="button"
                           onClick={quick.action}
-                          className="px-4 py-2 text-sm font-medium bg-bg-elevated border border-border rounded-xl hover:border-accent hover:bg-bg-muted transition-colors shadow-sm text-text"
+                          className="px-3 py-1.5 text-xs font-medium bg-bg-elevated border border-border rounded-lg hover:border-primary/50 hover:bg-bg transition-colors shadow-xs text-text"
                         >
                           {quick.label}
                         </button>
                       ))}
                     </div>
                   </div>
+
+                  {/* Opções de Ordenação (quando disponibilizadas) */}
+                  {onSortChange && ordenarPor && (
+                    <div className="space-y-2.5 md:col-span-2 lg:col-span-1">
+                      <label className="text-xs font-bold text-text-muted uppercase tracking-wider flex items-center gap-1.5">
+                        <ArrowUpDown size={14} /> Configuração de Ordem
+                      </label>
+                      <div className="flex items-center gap-2">
+                        <div className="flex-1">
+                          <Select
+                            value={ordenarPor}
+                            onChange={(e) =>
+                              onSortChange(e.target.value, direcao)
+                            }
+                            options={sortSelectOptions}
+                          />
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() =>
+                            onSortChange(
+                              ordenarPor,
+                              direcao === "asc" ? "desc" : "asc"
+                            )
+                          }
+                          className="h-9 px-3 bg-bg-elevated border border-border rounded-xl text-xs font-semibold text-text hover:bg-bg transition-colors flex items-center gap-1.5"
+                          title={
+                            direcao === "asc"
+                              ? "Ordem Crescente"
+                              : "Ordem Decrescente"
+                          }
+                        >
+                          <ArrowUpDown className="w-3.5 h-3.5" />
+                          <span>{direcao === "asc" ? "ASC" : "DESC"}</span>
+                        </button>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
             </motion.div>
@@ -596,23 +661,53 @@ export function FilterBar({
         </AnimatePresence>
       </div>
 
-      {/* Info Bar */}
-      <div className="flex items-center justify-between px-1">
-        <div className="flex items-center gap-3 text-sm">
-          <div className="flex items-center gap-2 px-3 py-1.5 bg-bg-muted rounded-lg border border-border">
-            <Filter size={14} className="text-text-muted" />
+      {/* Info Bar de Resultados e Alternância de Layout */}
+      <div className="flex items-center justify-between px-1 text-xs">
+        <div className="flex items-center gap-2.5">
+          <div className="flex items-center gap-1.5 px-3 py-1.5 bg-bg-muted rounded-lg border border-border">
+            <Filter size={13} className="text-text-muted" />
             <span className="font-bold text-text">{totalResults}</span>
             <span className="text-text-muted font-medium">
               {totalResults === 1 ? "resultado" : "resultados"}
             </span>
           </div>
           {isLoading && (
-            <div className="flex items-center gap-2 text-text-muted">
-              <RefreshCw size={14} className="animate-spin" />
-              <span className="text-xs font-medium">Atualizando...</span>
+            <div className="flex items-center gap-1.5 text-text-muted">
+              <RefreshCw size={13} className="animate-spin" />
+              <span className="font-medium">Atualizando...</span>
             </div>
           )}
         </div>
+
+        {/* Toggle de Layout (Cards / Lista) caso ativado */}
+        {onVisualizacaoChange && visualizacao && (
+          <div className="flex items-center p-0.5 bg-bg-muted rounded-lg border border-border">
+            <button
+              type="button"
+              onClick={() => onVisualizacaoChange("cards")}
+              className={`flex items-center gap-1 px-2.5 py-1 rounded-md font-semibold transition-all ${
+                visualizacao === "cards"
+                  ? "bg-bg-elevated text-primary shadow-xs"
+                  : "text-text-muted hover:text-text"
+              }`}
+            >
+              <LayoutGrid size={13} />
+              <span className="hidden sm:inline">Cards</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => onVisualizacaoChange("lista")}
+              className={`flex items-center gap-1 px-2.5 py-1 rounded-md font-semibold transition-all ${
+                visualizacao === "lista"
+                  ? "bg-bg-elevated text-primary shadow-xs"
+                  : "text-text-muted hover:text-text"
+              }`}
+            >
+              <List size={13} />
+              <span className="hidden sm:inline">Lista</span>
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );

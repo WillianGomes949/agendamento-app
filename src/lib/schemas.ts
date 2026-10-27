@@ -1,59 +1,52 @@
-// src/lib/schemas.ts
 import { z } from "zod";
 
-export const statusServicoEnum = z.enum([
-  "pendente",
-  "em andamento",
-  "concluido",
-  "cancelado",
-  "deletado",
-  "PENDENTE",
-  "EM ANDAMENTO",
-  "CONCLUIDO",
-  "CANCELADO",
-  "DELETADO",
-]);
-
 export const clienteSchema = z.object({
-  nome: z.string().min(1, "Nome do cliente é obrigatório"),
+  nome: z.string().min(3, "Nome deve ter pelo menos 3 caracteres"),
   contato: z
     .string()
-    .min(10, "Contato deve ter pelo menos 10 dígitos")
-    .max(11, "Contato deve ter no máximo 11 dígitos"),
+    .min(10, "Informe um telefone válido com DDD (mínimo 10 dígitos)"),
 });
 
 export const veiculoSchema = z.object({
-  placa: z.string().min(6, "Placa inválida").max(7, "Placa inválida"),
-  marcaModelo: z.string().min(1, "Marca/modelo é obrigatório"),
+  placa: z
+    .string()
+    .min(7, "Placa inválida (7 caracteres)")
+    .max(7, "Placa inválida"),
+  marcaModelo: z.string().min(2, "Informe a marca e modelo do veículo"),
 });
 
 export const enderecoSchema = z.object({
-  rua: z.string().min(1, "Rua é obrigatória"),
+  cep: z.string().min(8, "CEP inválido (8 dígitos)"),
+  rua: z.string().min(3, "Logradouro é obrigatório"),
   numero: z.string().min(1, "Número é obrigatório"),
-  bairro: z.string().min(1, "Bairro é obrigatório"),
-  cidade: z.string().min(1, "Cidade é obrigatória"),
-  estado: z.string().length(2, "Estado deve ter 2 caracteres"),
-  cep: z.string().length(8, "CEP deve ter 8 dígitos"),
+  bairro: z.string().min(2, "Bairro é obrigatório"),
+  cidade: z.string().min(2, "Cidade é obrigatória"),
+  estado: z.string().length(2, "UF deve ter 2 letras"),
 });
 
-export const formularioServicoSchema = z.object({
-  tecnico: z.string().min(1, "Técnico é obrigatório"),
-  data: z
-    .string()
-    .regex(/^\d{2}\/\d{2}\/\d{4}$/, "Data deve estar no formato DD/MM/YYYY"),
-  horario: z
-    .string()
-    .regex(
-      /^([01]\d|2[0-3]):([0-5]\d)$/,
-      "Horário deve estar no formato HH:MM",
-    ),
-  tipoServico: z.string().min(1, "Tipo de serviço é obrigatório"),
-  status: statusServicoEnum.optional(),
+export const servicoDadosSchema = z.object({
+  tecnico: z.string().min(1, "Selecione o técnico responsável"),
+  data: z.string().min(10, "Informe uma data válida"),
+  horario: z.string().min(1, "Selecione um horário"),
+  tipoServico: z.string().min(1, "Selecione o tipo de serviço"),
+  status: z.string().default("PENDENTE"),
   ordemServico: z.string().nullable().optional(),
-  observacao: z.string().optional(),
+});
+
+// Schema completo do formulário
+export const formularioServicoSchema = servicoDadosSchema.extend({
   cliente: clienteSchema,
   veiculo: veiculoSchema,
   endereco: enderecoSchema,
+  observacao: z.string().optional().nullable(),
 });
+
+// Schemas específicos para validação por etapa (Wizard)
+export const STEP_SCHEMAS = [
+  servicoDadosSchema,
+  z.object({ cliente: clienteSchema, veiculo: veiculoSchema }),
+  z.object({ endereco: enderecoSchema }),
+  formularioServicoSchema,
+];
 
 export type FormularioSchema = z.infer<typeof formularioServicoSchema>;
