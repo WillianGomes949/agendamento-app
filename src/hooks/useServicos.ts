@@ -33,8 +33,9 @@ function sanitizarServico(raw: any): Servico {
     diaSemana: String(limpo.diaSemana ?? ""),
     horario: String(limpo.horario ?? ""),
     tipoServico: String(limpo.tipoServico ?? ""),
-    ordemServico: limpo.ordemServico ?? null,
-    observacao: limpo.observacao ?? null,
+    ordemServico:
+      limpo.ordemServico != null ? String(limpo.ordemServico) : null,
+    observacao: limpo.observacao != null ? String(limpo.observacao) : null,
     cliente: {
       nome: String(cliente.nome ?? ""),
       contato: String(cliente.contato ?? ""),

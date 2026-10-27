@@ -15,7 +15,7 @@ export interface Servico {
   horario: string;
   tipoServico: string;
   ordemServico?: string | null;
-  observacao?: string;
+  observacao?: string | null;
   cliente: { nome: string; contato: string };
   veiculo: { placa: string; marcaModelo: string };
   endereco: {
