@@ -26,7 +26,7 @@ import ServicoForm from "@/components/modals/ServicoForm";
 import { DeleteConfirmModal } from "@/components/modals/DeleteConfirmModal";
 import { FloatingActionButton } from "@/components/features/FloatingActionButton";
 import { Toaster, toast } from "react-hot-toast";
-import type { Servico, FormularioServico } from "@/lib/types";
+import type { Servico, FormularioServico, FiltrosServicos } from "@/lib/types";
 import { Calendar, dateFnsLocalizer } from "react-big-calendar";
 import { format } from "date-fns/format";
 import { parse } from "date-fns/parse";
@@ -36,6 +36,7 @@ import { ptBR } from "date-fns/locale/pt-BR";
 import "react-big-calendar/lib/css/react-big-calendar.css";
 import { useErrorModal } from "@/hooks/useErrorModal";
 import { ErrorModal } from "@/components/modals/ErrorModal";
+import { FilterBar } from "@/components/features/FilterBar";
 
 const locales = { "pt-BR": ptBR };
 const localizer = dateFnsLocalizer({
@@ -108,6 +109,113 @@ export default function AgendamentosPage() {
   const [selectedEvent, setSelectedEvent] = useState<Servico | null>(null);
   const { errorModal, showError, closeModal } = useErrorModal();
 
+  // === ESTADO DOS FILTROS ===
+  const [filters, setFilters] = useState<FiltrosServicos>({});
+
+  const handleFilterChange = useCallback(
+    (newFilters: Partial<FiltrosServicos>) => {
+      setFilters((prev) => ({ ...prev, ...newFilters }));
+    },
+    [],
+  );
+
+  const handleClearFilters = useCallback(() => {
+    setFilters({});
+  }, []);
+
+  // === LISTAS PARA OS SELECTS ===
+  const datasUnicas = useMemo(() => {
+    const set = new Set<string>();
+    servicos.forEach((s) => {
+      if (s.data && s.status?.toLowerCase() !== "deletado") set.add(s.data);
+    });
+    return Array.from(set).sort((a, b) => {
+      const [da, ma, ya] = a.split("/").map(Number);
+      const [db, mb, yb] = b.split("/").map(Number);
+      return (
+        new Date(ya, ma - 1, da).getTime() -
+        new Date(yb, mb - 1, db).getTime()
+      );
+    });
+  }, [servicos]);
+
+  const tecnicosUnicos = useMemo(() => {
+    const set = new Set<string>();
+    servicos.forEach((s) => {
+      if (s.tecnico && s.status?.toLowerCase() !== "deletado")
+        set.add(s.tecnico);
+    });
+    return Array.from(set).sort();
+  }, [servicos]);
+
+  const cidadesUnicas = useMemo(() => {
+    const set = new Set<string>();
+    servicos.forEach((s) => {
+      const cidade = s.endereco?.cidade?.trim();
+      if (cidade && s.status?.toLowerCase() !== "deletado") set.add(cidade);
+    });
+    return Array.from(set).sort();
+  }, [servicos]);
+
+  // === SERVIÇOS FILTRADOS ===
+  const servicosFiltrados = useMemo(() => {
+    return servicos.filter((s) => {
+      if (s.status?.toLowerCase() === "deletado") return false;
+
+      // Busca textual
+      if (filters.busca) {
+        const q = filters.busca.toLowerCase();
+        const match =
+          s.cliente?.nome?.toLowerCase().includes(q) ||
+          s.veiculo?.placa?.toLowerCase().includes(q) ||
+          s.endereco?.cidade?.toLowerCase().includes(q) ||
+          s.id?.toLowerCase().includes(q) ||
+          s.tecnico?.toLowerCase().includes(q);
+        if (!match) return false;
+      }
+
+      // Data específica
+      if (filters.data && s.data !== filters.data) return false;
+
+      // Status
+      if (
+        filters.status &&
+        normalizeStatus(s.status) !== normalizeStatus(filters.status)
+      )
+        return false;
+
+      // Técnico
+      if (filters.tecnico && s.tecnico !== filters.tecnico) return false;
+
+      // Cidade
+      if (
+        filters.cidade &&
+        s.endereco?.cidade?.trim() !== filters.cidade.trim()
+      )
+        return false;
+
+      // Intervalo de datas
+      if (filters.dataInicio || filters.dataFim) {
+        if (!s.data) return false;
+        const [d, m, y] = s.data.split("/").map(Number);
+        const servicoTime = new Date(y, m - 1, d).getTime();
+
+        if (filters.dataInicio) {
+          const [di, mi, yi] = filters.dataInicio.split("/").map(Number);
+          const inicio = new Date(yi, mi - 1, di).getTime();
+          if (servicoTime < inicio) return false;
+        }
+        if (filters.dataFim) {
+          const [df, mf, yf] = filters.dataFim.split("/").map(Number);
+          const fim = new Date(yf, mf - 1, df).getTime();
+          if (servicoTime > fim) return false;
+        }
+      }
+
+      return true;
+    });
+  }, [servicos, filters]);
+
   const eventStyleGetter = useCallback(
     (event: any) => ({
       className:
@@ -118,14 +226,11 @@ export default function AgendamentosPage() {
 
   useEffect(() => {
     if (!selectedEvent) return;
-
     const handleEsc = (e: KeyboardEvent) => {
       if (e.key === "Escape") setSelectedEvent(null);
     };
-
     window.addEventListener("keydown", handleEsc);
     document.body.style.overflow = "hidden";
-
     return () => {
       window.removeEventListener("keydown", handleEsc);
       document.body.style.overflow = "";
@@ -133,8 +238,7 @@ export default function AgendamentosPage() {
   }, [selectedEvent]);
 
   const events = useMemo(() => {
-    return servicos
-      .filter((s) => s.status?.toLowerCase() !== "deletado")
+    return servicosFiltrados
       .map((servico) => {
         const dateObj = parseBrDate(servico.data);
         if (!dateObj) return null;
@@ -158,12 +262,10 @@ export default function AgendamentosPage() {
       end: Date;
       resource: Servico;
     }>;
-  }, [servicos]);
+  }, [servicosFiltrados]);
 
   const metricas = useMemo(() => {
-    const ativos = servicos.filter(
-      (s) => s.status?.toLowerCase() !== "deletado",
-    );
+    const ativos = servicosFiltrados;
     const hoje = new Date();
     return {
       total: ativos.length,
@@ -175,8 +277,9 @@ export default function AgendamentosPage() {
           y === hoje.getFullYear()
         );
       }).length,
-      pendentes: ativos.filter((s) => s.status?.toLowerCase() === "pendente")
-        .length,
+      pendentes: ativos.filter(
+        (s) => s.status?.toLowerCase() === "pendente",
+      ).length,
       concluidos: ativos.filter(
         (s) =>
           s.status
@@ -185,13 +288,11 @@ export default function AgendamentosPage() {
             .replace(/[\u0300-\u036f]/g, "") === "concluido",
       ).length,
     };
-  }, [servicos]);
+  }, [servicosFiltrados]);
 
-  const EventComponent = useCallback(
-  ({ event }: { event: any }) => {
+  const EventComponent = useCallback(({ event }: { event: any }) => {
     const tecnico: string = event.resource?.tecnico || "";
     const inicial = tecnico.trim().charAt(0).toUpperCase() || "?";
-
     return (
       <div className="flex items-center gap-1.5 overflow-hidden">
         <span
@@ -206,9 +307,7 @@ export default function AgendamentosPage() {
         </span>
       </div>
     );
-  },
-  [],
-);
+  }, []);
 
   const handleSelectEvent = useCallback(
     (event: any) => setSelectedEvent(event.resource as Servico),
@@ -237,7 +336,6 @@ export default function AgendamentosPage() {
         toast.success("Serviço criado com sucesso!");
         setIsFormOpen(false);
       } else {
-        // Mostra o modal estilizado em vez do toast
         showError(result.error || "Erro ao criar serviço");
       }
     },
@@ -268,6 +366,7 @@ export default function AgendamentosPage() {
       showError(result.error || "Erro ao remover");
     }
   }, [remove, deletingServico, showError]);
+
   const openEditForm = useCallback((servico: Servico) => {
     setEditingServico(servico);
     setIsFormOpen(true);
@@ -300,7 +399,6 @@ export default function AgendamentosPage() {
 
   const views = ["month", "week", "day", "agenda"] as const;
   type ViewType = (typeof views)[number];
-
   const viewLabels: Record<ViewType, string> = {
     month: "Mês",
     week: "Semana",
@@ -409,6 +507,21 @@ export default function AgendamentosPage() {
         ))}
       </motion.div>
 
+      {/* 🔽 FILTERBAR 🔽 */}
+      <motion.div variants={itemVariants} className="px-4 sm:px-0">
+        <FilterBar
+          filters={filters}
+          onChange={handleFilterChange}
+          datas={datasUnicas}
+          tecnicos={tecnicosUnicos}
+          cidades={cidadesUnicas}
+          totalResults={servicosFiltrados.length}
+          onClear={handleClearFilters}
+          isLoading={loading}
+        />
+      </motion.div>
+      {/* 🔼 FIM DO FILTERBAR 🔼 */}
+
       {/* Calendário Area */}
       <motion.div variants={itemVariants} className="px-4 sm:px-0">
         <Card className="p-0 overflow-hidden shadow-sm border border-border bg-bg-elevated">
@@ -442,7 +555,6 @@ export default function AgendamentosPage() {
                 <ChevronRight className="w-5 h-5 text-text-muted" />
               </Button>
             </div>
-
             {/* Ações e Seletor de View */}
             <div className="flex flex-col md:flex-row items-end gap-2 w-full lg:w-auto overflow-x-auto no-scrollbar pb-1 lg:pb-0">
               <Button
@@ -469,7 +581,6 @@ export default function AgendamentosPage() {
               </div>
             </div>
           </div>
-
           {/* Container do RBC */}
           <div className="rbc-custom h-[60vh] sm:h-[70vh]">
             <Calendar
@@ -563,13 +674,11 @@ export default function AgendamentosPage() {
                   <X className="w-5 h-5" />
                 </button>
               </div>
-
               {/* Body */}
               <div className="p-5 sm:p-6 overflow-y-auto flex-1 custom-scrollbar space-y-5">
                 <div className="flex justify-end">
                   <StatusBadge status={selectedEvent.status || "pendente"} />
                 </div>
-
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 bg-bg-muted p-4 rounded-2xl border border-border">
                   <div className="flex items-center gap-3 text-text">
                     <CalendarIcon className="w-5 h-5 text-blue-500 dark:text-blue-400 shrink-0" />
@@ -616,7 +725,6 @@ export default function AgendamentosPage() {
                     </div>
                   </div>
                 </div>
-
                 {selectedEvent.observacao && (
                   <div className="p-4 bg-amber-50/50 dark:bg-amber-950/20 border border-amber-200/60 dark:border-amber-800/60 rounded-2xl text-sm text-amber-900 dark:text-amber-200">
                     <span className="font-bold text-amber-800 dark:text-amber-300 block mb-1">
@@ -626,7 +734,6 @@ export default function AgendamentosPage() {
                   </div>
                 )}
               </div>
-
               {/* Footer */}
               <div className="px-5 sm:px-6 py-4 border-t border-border bg-bg-muted shrink-0 flex flex-col-reverse sm:flex-row justify-end gap-3">
                 <Button
@@ -675,7 +782,6 @@ export default function AgendamentosPage() {
         initialData={editingServico}
         isLoading={isCreating || isUpdating}
       />
-
       <DeleteConfirmModal
         isOpen={!!deletingServico}
         onClose={() => setDeletingServico(null)}

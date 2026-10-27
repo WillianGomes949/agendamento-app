@@ -21,6 +21,7 @@ interface FilterBarProps {
   onChange: (filters: Partial<FiltrosServicos>) => void;
   datas: string[];
   tecnicos: string[];
+  cidades: string[];
   totalResults?: number;
   onClear?: () => void;
   isLoading?: boolean;
@@ -97,6 +98,7 @@ export function FilterBar({
   onChange,
   datas,
   tecnicos,
+  cidades,
   totalResults = 0,
   onClear,
   isLoading = false,
@@ -125,6 +127,7 @@ export function FilterBar({
       filters.data,
       filters.status,
       filters.tecnico,
+      filters.cidade,
       filters.dataInicio,
       filters.dataFim,
     ].filter(Boolean).length;
@@ -132,6 +135,7 @@ export function FilterBar({
     filters.data,
     filters.status,
     filters.tecnico,
+    filters.cidade,
     filters.dataInicio,
     filters.dataFim,
   ]);
@@ -142,6 +146,7 @@ export function FilterBar({
       data: undefined,
       status: undefined,
       tecnico: undefined,
+      cidade: undefined,
       dataInicio: undefined,
       dataFim: undefined,
     });
@@ -165,6 +170,9 @@ export function FilterBar({
           break;
         case "tecnico":
           newFilters.tecnico = undefined;
+          break;
+        case "cidade":
+          newFilters.cidade = undefined;
           break;
         case "dataInicio":
           newFilters.dataInicio = undefined;
@@ -288,6 +296,11 @@ export function FilterBar({
     ...tecnicos.map((t) => ({ value: t, label: t })),
   ];
 
+  const cidadeOptions = [
+    { value: "", label: "Todas as cidades" },
+    ...cidades.map((c) => ({ value: c, label: c })),
+  ];
+
   const activeFiltersList: ActiveFilter[] = useMemo(() => {
     const list: ActiveFilter[] = [];
     if (filters.busca) {
@@ -298,12 +311,20 @@ export function FilterBar({
         onRemove: () => removeFilter("busca"),
       });
     }
-    if (filters.data && isValidBrDate(filters.data)) {
+    if (filters.cidade) {
       list.push({
-        label: "Data",
-        value: filters.data,
-        type: "data",
-        onRemove: () => removeFilter("data"),
+        label: "Cidade",
+        value: filters.cidade,
+        type: "cidade",
+        onRemove: () => removeFilter("cidade"),
+      });
+    }
+    if (filters.tecnico) {
+      list.push({
+        label: "Técnico",
+        value: filters.tecnico,
+        type: "tecnico",
+        onRemove: () => removeFilter("tecnico"),
       });
     }
     if (filters.status) {
@@ -317,12 +338,12 @@ export function FilterBar({
         onRemove: () => removeFilter("status"),
       });
     }
-    if (filters.tecnico) {
+    if (filters.data && isValidBrDate(filters.data)) {
       list.push({
-        label: "Técnico",
-        value: filters.tecnico,
-        type: "tecnico",
-        onRemove: () => removeFilter("tecnico"),
+        label: "Data",
+        value: filters.data,
+        type: "data",
+        onRemove: () => removeFilter("data"),
       });
     }
     if (filters.dataInicio && isValidBrDate(filters.dataInicio)) {
@@ -361,7 +382,7 @@ export function FilterBar({
         <div className="p-4 sm:p-5">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
             {/* Campo de Busca */}
-            <div className="lg:col-span-5">
+            <div className="lg:col-span-3">
               <Input
                 ref={searchInputRef}
                 placeholder="Buscar por nome, placa, cidade ou OS..."
@@ -376,16 +397,29 @@ export function FilterBar({
             </div>
 
             {/* Selects Rápidos */}
+            {/*CIDADE*/}
             <div className="lg:col-span-2">
               <Select
-                value={filters.data || ""}
+                value={filters.cidade || ""}
                 onChange={(e) =>
-                  onChange({ data: e.target.value || undefined })
+                  onChange({ cidade: e.target.value || undefined })
                 }
-                options={dataOptions}
-                disabled={isLoading || configLoading}
+                options={cidadeOptions}
+                disabled={isLoading}
               />
             </div>
+             {/*TECNICO*/}
+            <div className="lg:col-span-2">
+              <Select
+                value={filters.tecnico || ""}
+                onChange={(e) =>
+                  onChange({ tecnico: e.target.value || undefined })
+                }
+                options={tecnicoOptions}
+                disabled={isLoading}
+              />
+            </div>     
+            {/*STATUS*/}
             <div className="lg:col-span-2">
               <Select
                 value={filters.status || ""}
@@ -396,16 +430,18 @@ export function FilterBar({
                 disabled={isLoading || configLoading}
               />
             </div>
+             {/*DATA*/}
             <div className="lg:col-span-2">
               <Select
-                value={filters.tecnico || ""}
+                value={filters.data || ""}
                 onChange={(e) =>
-                  onChange({ tecnico: e.target.value || undefined })
+                  onChange({ data: e.target.value || undefined })
                 }
-                options={tecnicoOptions}
-                disabled={isLoading}
+                options={dataOptions}
+                disabled={isLoading || configLoading}
               />
             </div>
+           
 
             {/* Botão Filtros Avançados */}
             <div className="lg:col-span-1 flex items-end">

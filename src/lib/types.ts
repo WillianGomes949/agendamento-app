@@ -56,6 +56,7 @@ export interface FiltrosServicos {
   status?: StatusServico;
   tecnico?: string;
   clienteNome?: string;
+  cidade?: string;
   veiculoPlaca?: string;
   dataInicio?: string;
   dataFim?: string;
