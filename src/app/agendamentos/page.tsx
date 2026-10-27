@@ -32,6 +32,10 @@ import { format } from "date-fns/format";
 import { parse } from "date-fns/parse";
 import { startOfWeek } from "date-fns/startOfWeek";
 import { getDay } from "date-fns/getDay";
+import { addDays } from "date-fns/addDays";
+import { addWeeks } from "date-fns/addWeeks";
+import { addMonths } from "date-fns/addMonths";
+import { endOfWeek } from "date-fns/endOfWeek";
 import { ptBR } from "date-fns/locale/pt-BR";
 import "react-big-calendar/lib/css/react-big-calendar.css";
 import { useErrorModal } from "@/hooks/useErrorModal";
@@ -46,6 +50,15 @@ const localizer = dateFnsLocalizer({
   getDay,
   locales,
 });
+
+const views = ["month", "week", "day", "agenda"] as const;
+type ViewType = (typeof views)[number];
+const viewLabels: Record<ViewType, string> = {
+  month: "Mês",
+  week: "Semana",
+  day: "Dia",
+  agenda: "Lista",
+};
 
 const containerVariants: Variants = {
   hidden: { opacity: 0 },
@@ -290,24 +303,63 @@ export default function AgendamentosPage() {
     };
   }, [servicosFiltrados]);
 
-  const EventComponent = useCallback(({ event }: { event: any }) => {
-    const tecnico: string = event.resource?.tecnico || "";
-    const inicial = tecnico.trim().charAt(0).toUpperCase() || "?";
-    return (
-      <div className="flex items-center gap-1.5 overflow-hidden">
-        <span
-          title={tecnico || "Sem técnico"}
-          className="shrink-0 w-4 h-4 rounded-full bg-black/15 dark:bg-white/15 text-[9px] font-bold flex items-center justify-center"
+  const EventComponent = useCallback(
+    ({ event }: { event: any }) => {
+      const tecnico: string = event.resource?.tecnico || "";
+      const inicial = tecnico.trim().charAt(0).toUpperCase() || "?";
+      const horario: string = event.resource?.horario || "S/H";
+
+      // Semana/Dia: card empilhado (cabe mais informação)
+      if (view === "week" || view === "day") {
+        return (
+          <div className="flex flex-col gap-0.5 min-w-0 h-full">
+            <span className="text-[11px] font-mono opacity-80 leading-none">
+              {horario}
+            </span>
+            <span className="ev-title font-semibold truncate leading-tight">
+              {event.title}
+            </span>
+            {tecnico && (
+              <span className="text-[11px] opacity-75 truncate leading-tight">
+                {tecnico}
+              </span>
+            )}
+          </div>
+        );
+      }
+
+      // Lista
+      if (view === "agenda") {
+        return (
+          <span className="ev-agenda">
+            <span className="ev-title">{event.title}</span>
+            {tecnico && (
+              <span className="text-xs opacity-75 font-medium">
+                · {tecnico}
+              </span>
+            )}
+          </span>
+        );
+      }
+
+      // Mês: linha compacta
+      return (
+        <div
+          className="flex items-center gap-1.5 overflow-hidden"
+          title={`${horario} · ${event.title}${tecnico ? ` · ${tecnico}` : ""}`}
         >
-          {inicial}
-        </span>
-        <span className="truncate flex-1">{event.title}</span>
-        <span className="text-[10px] opacity-80 font-mono bg-black/10 dark:bg-white/10 px-1 rounded">
-          {event.resource?.horario || "S/H"}
-        </span>
-      </div>
-    );
-  }, []);
+          <span className="hidden sm:flex shrink-0 w-4 h-4 rounded-full bg-black/10 dark:bg-white/15 text-[9px] font-bold items-center justify-center">
+            {inicial}
+          </span>
+          <span className="text-[10px] font-mono opacity-80 shrink-0">
+            {horario}
+          </span>
+          <span className="ev-title truncate flex-1">{event.title}</span>
+        </div>
+      );
+    },
+    [view],
+  );
 
   const handleSelectEvent = useCallback(
     (event: any) => setSelectedEvent(event.resource as Servico),
@@ -324,9 +376,28 @@ export default function AgendamentosPage() {
 
   const handleNavigate = useCallback((newDate: Date) => setDate(newDate), []);
 
-  const calendarTitle = useMemo(
-    () => format(date, "MMMM yyyy", { locale: ptBR }),
-    [date],
+  const calendarTitle = useMemo(() => {
+    if (view === "day")
+      return format(date, "EEEE, dd 'de' MMMM", { locale: ptBR });
+    if (view === "week") {
+      const ini = startOfWeek(date, { locale: ptBR });
+      const fim = endOfWeek(date, { locale: ptBR });
+      return ini.getMonth() === fim.getMonth()
+        ? `${format(ini, "dd", { locale: ptBR })} – ${format(fim, "dd 'de' MMMM", { locale: ptBR })}`
+        : `${format(ini, "dd MMM", { locale: ptBR })} – ${format(fim, "dd MMM", { locale: ptBR })}`;
+    }
+    return format(date, "MMMM yyyy", { locale: ptBR });
+  }, [date, view]);
+
+  const handleStep = useCallback(
+    (dir: 1 | -1) => {
+      setDate((d) => {
+        if (view === "day") return addDays(d, dir);
+        if (view === "week") return addWeeks(d, dir);
+        return addMonths(d, dir);
+      });
+    },
+    [view],
   );
 
   const handleCreate = useCallback(
@@ -396,15 +467,6 @@ export default function AgendamentosPage() {
       </div>
     );
   }
-
-  const views = ["month", "week", "day", "agenda"] as const;
-  type ViewType = (typeof views)[number];
-  const viewLabels: Record<ViewType, string> = {
-    month: "Mês",
-    week: "Semana",
-    day: "Dia",
-    agenda: "Lista",
-  };
 
   return (
     <motion.div
@@ -532,47 +594,47 @@ export default function AgendamentosPage() {
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() =>
-                  setDate(new Date(date.getFullYear(), date.getMonth() - 1, 1))
-                }
+                onClick={() => handleStep(-1)}
+                aria-label="Período anterior"
                 className="min-h-11 min-w-11 rounded-xl bg-bg-elevated"
               >
                 <ChevronLeft className="w-5 h-5 text-text-muted" />
               </Button>
-              <div className="flex flex-col items-center min-w-35">
-                <h2 className="text-lg font-bold text-text capitalize leading-tight">
+              <div className="flex flex-col items-center min-w-40 sm:min-w-52">
+                <h2 className="text-base sm:text-lg font-bold text-text capitalize leading-tight text-center">
                   {calendarTitle}
                 </h2>
               </div>
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() =>
-                  setDate(new Date(date.getFullYear(), date.getMonth() + 1, 1))
-                }
+                onClick={() => handleStep(1)}
+                aria-label="Próximo período"
                 className="min-h-11 min-w-11 rounded-xl bg-bg-elevated"
               >
                 <ChevronRight className="w-5 h-5 text-text-muted" />
               </Button>
             </div>
             {/* Ações e Seletor de View */}
-            <div className="flex flex-col md:flex-row items-end gap-2 w-full lg:w-auto overflow-x-auto no-scrollbar pb-1 lg:pb-0">
+            <div className="flex items-center gap-2 w-full lg:w-auto">
               <Button
                 variant="outline"
                 onClick={() => setDate(new Date())}
-                className="min-h-10 bg-bg-elevated whitespace-nowrap shrink-0"
+                className="min-h-11 rounded-xl bg-bg-elevated whitespace-nowrap shrink-0"
               >
-                Ir para Hoje
+                <span className="sm:hidden">Hoje</span>
+                <span className="hidden sm:inline">Ir para Hoje</span>
               </Button>
-              <div className="flex bg-bg-muted p-1 rounded-xl shrink-0 border border-border">
+              <div className="flex bg-bg-muted p-1 rounded-xl border border-border flex-1 lg:flex-none min-w-0">
                 {views.map((v) => (
                   <button
                     key={v}
                     onClick={() => setView(v)}
-                    className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all whitespace-nowrap ${
+                    aria-pressed={view === v}
+                    className={`flex-1 lg:flex-none px-2 sm:px-4 py-2 rounded-lg text-sm font-semibold transition-all whitespace-nowrap focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-ring ${
                       view === v
-                        ? "bg-bg-elevated text-blue-600 dark:text-blue-400 shadow-sm ring-1 ring-border"
-                        : "text-text-muted hover:text-text"
+                        ? "bg-bg-elevated text-primary shadow-sm ring-1 ring-border"
+                        : "text-text-muted hover:text-text hover:bg-bg-hover"
                     }`}
                   >
                     {viewLabels[v]}
@@ -582,14 +644,21 @@ export default function AgendamentosPage() {
             </div>
           </div>
           {/* Container do RBC */}
-          <div className="rbc-custom h-[60vh] sm:h-[70vh]">
+          <div className="rbc-custom h-[65vh] min-h-130 sm:h-[72vh]">
             <Calendar
               localizer={localizer}
               events={events}
               startAccessor="start"
               endAccessor="end"
+              culture="pt-BR"
               view={view}
               onView={(newView) => setView(newView as ViewType)}
+              min={new Date(1970, 0, 1, 6, 0)}
+              max={new Date(1970, 0, 1, 21, 0)}
+              scrollToTime={new Date(1970, 0, 1, 7, 30)}
+              step={30}
+              timeslots={2}
+              showMultiDayTimes={false}
               date={date}
               onNavigate={handleNavigate}
               eventPropGetter={eventStyleGetter}
@@ -616,7 +685,11 @@ export default function AgendamentosPage() {
                 monthHeaderFormat: (d) =>
                   format(d, "MMMM yyyy", { locale: ptBR }),
                 weekdayFormat: (d) => format(d, "EEE", { locale: ptBR }),
-                dayFormat: (d) => format(d, "dd", { locale: ptBR }),
+                dayFormat: (d) => format(d, "EEE dd", { locale: ptBR }),
+                dateFormat: (d) => format(d, "d", { locale: ptBR }),
+                timeGutterFormat: (d) => format(d, "HH:mm", { locale: ptBR }),
+                eventTimeRangeFormat: ({ start, end }) =>
+                  `${format(start, "HH:mm", { locale: ptBR })} - ${format(end, "HH:mm", { locale: ptBR })}`,
                 dayHeaderFormat: (d) =>
                   format(d, "EEEE, dd 'de' MMMM", { locale: ptBR }),
                 agendaDateFormat: (d) =>

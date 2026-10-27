@@ -380,7 +380,7 @@ export function FilterBar({
     <div className="space-y-4">
       <div className="bg-bg-elevated rounded-2xl border border-border shadow-sm transition-shadow duration-200">
         <div className="p-4 sm:p-5">
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
+          <div className="grid grid-cols-2 lg:grid-cols-12 gap-4">
             {/* Campo de Busca */}
             <div className="lg:col-span-3">
               <Input
