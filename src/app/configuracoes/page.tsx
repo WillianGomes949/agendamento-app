@@ -1,5 +1,7 @@
 
 export default function ConfiguracoesPage() {
-  return null
+  return (
+    <h1>Nada aqui</h1>
+  )
 }
   
