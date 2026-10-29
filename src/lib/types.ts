@@ -2,9 +2,9 @@
 // Tipos centralizados — alinhados com o backend Google Apps Script
 // src/lib/types.ts
 import type { z } from "zod";
-import type { statusServicoEnum, formularioServicoSchema } from "./schemas";
+import type { servicoDadosSchema, formularioServicoSchema } from "./schemas";
 
-export type StatusServico = z.infer<typeof statusServicoEnum>;
+export type StatusServico = z.infer<typeof servicoDadosSchema>;
 export type FormularioServico = z.infer<typeof formularioServicoSchema>;
 
 export interface Servico {
