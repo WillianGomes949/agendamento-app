@@ -139,7 +139,7 @@ export default function ServicosPage() {
 
   // Filtragem e Ordenação
   const servicosFiltrados = useMemo(() => {
-    let resultado = servicos.filter((s) => {
+    const resultado = servicos.filter((s) => {
       if (s.status?.toLowerCase() === "deletado") return false;
 
       // Busca textual
