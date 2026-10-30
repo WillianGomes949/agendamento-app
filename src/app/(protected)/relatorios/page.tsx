@@ -356,7 +356,7 @@ export default function RelatoriosPage() {
             Análise completa dos seus serviços e métricas de desempenho.
           </p>
         </div>
-        <div className="flex flex-wrap items-center gap-3 w-full lg:w-auto">
+        <div className="grid grid-cols-2 lg:flex lg:flex-wrap gap-3 w-full lg:w-auto">
           <div className="relative flex-1 lg:flex-none">
             <select
               value={periodo}

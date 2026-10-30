@@ -56,7 +56,7 @@ export default function Sidebar({
 }: SidebarProps) {
   const pathname = usePathname();
   const [isHovered, setIsHovered] = useState(false);
-  const { servicos, loading } = useServicos();
+  const { servicos } = useServicos();
 
   const handleMouseEnter = () => {
     setIsHovered(true);

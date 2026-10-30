@@ -2,8 +2,6 @@
 "use client";
 import { Menu, Wifi, WifiOff, Loader2, LogOut } from "lucide-react";
 import { useApiHealth, type ApiStatus } from "@/hooks/useApiHealth";
-import Image from "next/image";
-import { ThemeToggle } from "../ui/ThemeToggle";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 

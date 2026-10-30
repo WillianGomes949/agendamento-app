@@ -2,7 +2,14 @@
 "use client";
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Mail, Lock, AlertCircle, Eye, EyeOff, ShieldCheck } from "lucide-react";
+import {
+  Mail,
+  Lock,
+  AlertCircle,
+  Eye,
+  EyeOff,
+  ShieldCheck,
+} from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { toast, Toaster } from "react-hot-toast";
@@ -48,7 +55,7 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-bg-muted px-4 py-12">
       <Toaster position="top-right" />
-      
+
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -77,7 +84,6 @@ export default function LoginPage() {
                 <span>{error}</span>
               </div>
             )}
-
             <Input
               label="Email"
               type="email"
@@ -87,7 +93,7 @@ export default function LoginPage() {
                 setEmail(e.target.value);
                 setError("");
               }}
-              icon={<Mail className="w-5 h-5 text-text-muted" />}
+              leftIcon={Mail}
               required
               autoFocus
             />
@@ -102,7 +108,7 @@ export default function LoginPage() {
                   setSenha(e.target.value);
                   setError("");
                 }}
-                icon={<Lock className="w-5 h-5 text-text-muted" />}
+                leftIcon={Lock}
                 required
               />
               <button
@@ -110,7 +116,11 @@ export default function LoginPage() {
                 onClick={() => setShowSenha(!showSenha)}
                 className="absolute right-3 top-8.5 p-1.5 text-text-muted hover:text-text transition-colors"
               >
-                {showSenha ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                {showSenha ? (
+                  <EyeOff className="w-4 h-4" />
+                ) : (
+                  <Eye className="w-4 h-4" />
+                )}
               </button>
             </div>
 
