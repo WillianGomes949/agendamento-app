@@ -6,10 +6,10 @@ import {
   CalendarDays,
   Wrench,
   Users,
-  Settings,
   BarChart3,
   X,
   HelpCircle,
+  UserCog2,
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -38,9 +38,9 @@ const baseNavItems = [
   { label: "Relatórios", href: "/relatorios", icon: BarChart3 },
   { label: "Técnicos", href: "/tecnicos", icon: Users },
   {
-    label: "Configurações",
-    href: "/configuracoes",
-    icon: Settings,
+    label: "Usuários",
+    href: "/usuarios",
+    icon: UserCog2,
   },
 ];
 
