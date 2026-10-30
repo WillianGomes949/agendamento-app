@@ -17,7 +17,7 @@ export function ThemeToggle() {
     <div
       role="radiogroup"
       aria-label="Tema da interface"
-      className="inline-flex items-center gap-1 p-1 rounded-xl bg-bg-muted border border-border"
+      className="flex items-center gap-1 p-1 rounded-xl bg-bg-muted border border-border"
     >
       {options.map((opt) => {
         const Icon = opt.icon;
@@ -28,7 +28,7 @@ export function ThemeToggle() {
             role="radio"
             aria-checked={isActive}
             onClick={() => setTheme(opt.value)}
-            className={`relative flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+            className={`relative flex items-center gap-1 px-1 py-1 rounded-lg text-sm font-medium transition-colors ${
               isActive ? "text-text" : "text-text-muted hover:text-text"
             }`}
           >

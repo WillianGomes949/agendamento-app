@@ -6,7 +6,16 @@ import Header from "./Header";
 import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts";
 import { useServicos } from "@/hooks/useServicos";
 
-export default function AppLayout({ children }: { children: React.ReactNode }) {
+interface AppLayoutProps {
+  children: any;
+  usuario?: {
+    tecnico_nome: string;
+    email: string;
+    role: string;
+  };
+}
+
+export default function AppLayout({ children, usuario }: AppLayoutProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [mounted, setMounted] = useState(false);
@@ -97,6 +106,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           onToggleMobile={toggleMobileMenu}
           isSidebarCollapsed={sidebarCollapsed}
           isMobile={isMobile}
+          usuario={usuario}
         />
         <main className="flex-1 p-4 sm:p-6 lg:p-8 overflow-y-auto">
           <div className="max-w-7xl mx-auto pb-20 lg:pb-0">{children}</div>

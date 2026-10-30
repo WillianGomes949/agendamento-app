@@ -51,6 +51,9 @@ export const API_ACTIONS = {
   GET_USUARIOS: "GET_USUARIOS",
   UPDATE_USUARIO: "UPDATE_USUARIO",
   DELETE_USUARIO: "DELETE_USUARIO",
+  // Autenticação
+  LOGIN: "LOGIN",
+  LOGOUT: "LOGOUT",
 } as const;
 
 export type APIAction = (typeof API_ACTIONS)[keyof typeof API_ACTIONS];

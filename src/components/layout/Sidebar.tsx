@@ -15,6 +15,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
 import { useServicos } from "@/hooks/useServicos";
+import { ThemeSwitch, ThemeToggle } from "../ui/ThemeToggle";
 
 interface SidebarProps {
   isOpen: boolean;
@@ -115,18 +116,18 @@ export default function Sidebar({
             >
               <div className="md:hidden w-8 h-8 bg-accent rounded-xl flex items-center justify-center">
                 <span className="text-accent-foreground font-bold text-sm">
-                  TA
+                  Aa
                 </span>
               </div>
               <span className="md:hidden font-extrabold text-lg tracking-tight text-text">
-                TrackApp
+                AgendaApp
               </span>
             </motion.div>
           )}
           {isCollapsed && !isHovered && (
             <div className="md:hidden w-8 h-8 bg-accent rounded-xl flex items-center justify-center mx-auto">
               <span className="text-accent-foreground font-bold text-sm">
-                TA
+                Aa
               </span>
             </div>
           )}
@@ -199,14 +200,15 @@ export default function Sidebar({
         {/* Footer Sidebar */}
         <div className="p-4 border-t border-border">
           {!isCollapsed || isHovered ? (
-            <Link
-              href="/ajuda"
-              onClick={() => onCloseMobile()}
-              className="flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 text-text-muted hover:bg-bg-muted hover:text-text"
-            >
-              <HelpCircle size={18} />
-              <span className="text-sm font-semibold">Suporte</span>
-            </Link>
+            <>
+              <div className="hidden sm:block">
+                <ThemeToggle />
+              </div>
+              <div className="sm:hidden justify-center items-center gap-4 flex p-1 rounded-xl bg-bg-muted border border-border mx-auto">
+                <p className="text-text-muted">Mudar Tema</p>
+                <ThemeSwitch />{" "}
+              </div>
+            </>
           ) : (
             <div className="flex justify-center">
               <HelpCircle size={18} className="text-text-muted" />

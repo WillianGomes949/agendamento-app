@@ -2,15 +2,13 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
-import AppLayout from "@/components/layout/AppLayout";
-import { ThemeInitScript } from "./theme-init";
 import { Providers } from "./providers";
 
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "AgendaApp | Gestão",
-  description: "Sistema de agendamento e rastreamento técnico",
+  title: "Sistema de Agendamento",
+  description: "Gestão de serviços técnicos",
 };
 
 export default function RootLayout({
@@ -19,14 +17,9 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="pt-BR" suppressHydrationWarning>
-      <head>
-        <ThemeInitScript />
-      </head>
+    <html lang="pt-BR">
       <body className={inter.className}>
-        <Providers>
-          <AppLayout>{children}</AppLayout>
-        </Providers>
+        <Providers>{children}</Providers>
       </body>
     </html>
   );
