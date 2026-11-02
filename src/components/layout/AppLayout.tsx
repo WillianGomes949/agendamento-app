@@ -83,7 +83,7 @@ export default function AppLayout({ children, usuario }: AppLayoutProps) {
     ? "0px"
     : sidebarCollapsed
       ? "5rem"
-      : "16rem";
+      : "18rem";
 
   return (
     <div className="flex min-h-screen bg-bg font-sans">

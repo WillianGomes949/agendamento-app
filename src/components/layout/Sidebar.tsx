@@ -38,11 +38,7 @@ const baseNavItems = [
   { label: "Serviços", href: "/servicos", icon: Wrench },
   { label: "Relatórios", href: "/relatorios", icon: BarChart3 },
   { label: "Técnicos", href: "/tecnicos", icon: Users },
-  {
-    label: "Usuários",
-    href: "/usuarios",
-    icon: UserCog2,
-  },
+  { label: "Usuários", href: "/usuarios", icon: UserCog2},
 ];
 
 export default function Sidebar({
@@ -68,7 +64,7 @@ export default function Sidebar({
     onHoverEnd?.();
   };
 
-  const sidebarWidth = isCollapsed && !isHovered ? "5rem" : "16rem";
+  const sidebarWidth = isCollapsed && !isHovered ? "5rem" : "18rem";
   const isExpanded = !isCollapsed || isHovered;
 
   const navItems = baseNavItems.map((item) => ({

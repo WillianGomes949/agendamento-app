@@ -88,12 +88,6 @@ export default function Header({
         >
           <Menu size={20} />
         </button>
-
-        <div className="flex items-center gap-2.5">
-          <h1 className="hidden text-base font-semibold tracking-tight text-text sm:block">
-            AgendaApp
-          </h1>
-        </div>
       </div>
 
       {/* Direita: Ações & Perfil */}
