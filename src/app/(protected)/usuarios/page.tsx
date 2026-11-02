@@ -24,13 +24,13 @@ import {
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
+import { Select } from "@/components/ui/Select";
 import { Modal } from "@/components/modals/Modal";
 import { DeleteConfirmModal } from "@/components/modals/DeleteConfirmModal";
 import { Toaster, toast } from "react-hot-toast";
 import type { UsuarioStats } from "@/lib/api/usuarios.types";
 import { formatarData } from "@/lib/api/usuarios.types";
 import { useUsuarios } from "@/hooks/useUsuarios";
-import { useQueryClient } from "@tanstack/react-query";
 
 type FormState = {
   tecnico_nome: string;
@@ -54,7 +54,7 @@ const containerVariants: Variants = {
 };
 
 const itemVariants: Variants = {
-  hidden: { opacity: 0, y: 16 },
+  hidden: { opacity: 0, y: 12 },
   show: {
     opacity: 1,
     y: 0,
@@ -63,7 +63,6 @@ const itemVariants: Variants = {
 };
 
 export default function UsuariosPage() {
-  const queryClient = useQueryClient();
   const {
     usuarios,
     loading,
@@ -106,8 +105,7 @@ export default function UsuariosPage() {
         filtroStatus === "todos" ||
         (filtroStatus === "ativos" && u.ativo) ||
         (filtroStatus === "inativos" && !u.ativo);
-      const matchRole =
-        filtroRole === "todas" || u.role === filtroRole;
+      const matchRole = filtroRole === "todas" || u.role === filtroRole;
       return matchBusca && matchStatus && matchRole;
     });
   }, [usuarios, busca, filtroStatus, filtroRole]);
@@ -264,34 +262,35 @@ export default function UsuariosPage() {
   // LOADING
   if (loading) {
     return (
-      <div className="min-h-[80vh] flex flex-col items-center justify-center">
-        <div className="relative">
-          <div className="absolute inset-0 rounded-full blur-2xl bg-blue-500/20 dark:bg-blue-400/20 animate-pulse" />
-          <Loader2 className="animate-spin text-blue-600 dark:text-blue-400 w-12 h-12 relative z-10 mb-4" />
-        </div>
-        <p className="text-text-muted font-medium animate-pulse text-lg">
+      <div className="flex min-h-[80vh] flex-col items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" aria-hidden />
+        <p className="mt-3 text-sm font-medium text-text-muted">
           Carregando usuários...
         </p>
       </div>
     );
   }
 
+
   // ERRO
   if (error) {
     return (
-      <div className="min-h-[80vh] flex flex-col items-center justify-center p-6 text-center">
-        <div className="w-24 h-24 bg-rose-50 dark:bg-rose-950/30 rounded-4xl flex items-center justify-center border border-rose-200 dark:border-rose-800 mb-6 shadow-sm">
-          <AlertCircle className="w-12 h-12 text-rose-500 dark:text-rose-400" />
+      <div className="flex min-h-[80vh] flex-col items-center justify-center p-6 text-center">
+        <div className="mb-5 flex h-12 w-12 items-center justify-center rounded-xl border border-rose-500/20 bg-rose-500/10">
+          <AlertCircle
+            className="h-6 w-6 text-rose-600 dark:text-rose-400"
+            aria-hidden
+          />
         </div>
-        <h2 className="text-2xl md:text-3xl font-extrabold text-text tracking-tight">
+        <h2 className="text-lg font-semibold tracking-tight text-text">
           Ops! Algo deu errado.
         </h2>
-        <p className="text-text-muted mt-3 max-w-md leading-relaxed text-lg">
+        <p className="mt-2 max-w-md text-sm leading-relaxed text-text-muted">
           {error}
         </p>
         <Button
           variant="outline"
-          className="mt-8 px-8 py-6 text-base"
+          className="mt-6"
           onClick={() => window.location.reload()}
         >
           Tentar Novamente
@@ -306,88 +305,110 @@ export default function UsuariosPage() {
       variants={containerVariants}
       initial="hidden"
       animate="show"
-      className="space-y-8 max-w-7xl mx-auto pb-12"
+      className="mx-auto max-w-7xl space-y-6 pb-12"
     >
       <Toaster
         position="top-right"
         toastOptions={{
           className:
-            "shadow-xl rounded-2xl font-medium text-sm border border-border",
+            "!rounded-lg !bg-bg-elevated !text-text !border !border-border !shadow-lg backdrop-blur-md",
           duration: 4000,
+          success: { iconTheme: { primary: "#10b981", secondary: "#fff" } },
+          error: { iconTheme: { primary: "#e11d48", secondary: "#fff" } },
         }}
       />
 
       {/* Header */}
       <motion.div
         variants={itemVariants}
-        className="flex flex-col sm:flex-row items-center justify-between gap-4 bg-bg-elevated p-6 rounded-2xl shadow-sm border border-border"
+        className="flex flex-col items-center justify-between gap-4 rounded-2xl border border-border bg-bg-elevated p-5 shadow-sm sm:flex-row sm:p-6"
       >
         <div>
-          <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight text-text mb-2">
+          <h1 className="mb-2 text-2xl font-semibold tracking-tight text-text md:text-3xl">
             Usuários & Acessos
           </h1>
-          <p className="text-text-muted text-sm md:text-base max-w-xl">
-            Gerencie os usuários do sistema, seus papéis e credenciais de acesso.
+          <p className="max-w-xl text-sm text-text-muted md:text-[15px]">
+            Gerencie os usuários do sistema, seus papéis e credenciais de
+            acesso.
           </p>
         </div>
         <Button
           variant="primary"
+          icon={Plus}
           onClick={openCreateForm}
-          className="flex items-center gap-2 w-full md:w-auto justify-center py-2.5 shadow-md hover:shadow-lg transition-all"
+          className="w-full sm:w-auto"
         >
-          <Plus className="w-5 h-5" /> Novo Usuário
+          Novo Usuário
         </Button>
       </motion.div>
 
       {/* KPIs */}
       <motion.div
         variants={itemVariants}
-        className="grid grid-cols-2 lg:grid-cols-4 gap-4"
+        className="grid grid-cols-2 gap-3 lg:grid-cols-4 sm:gap-4"
       >
-        <Card className="p-5 flex items-center gap-4 hoverable group">
-          <div className="p-3.5 bg-blue-50 dark:bg-blue-950/30 text-blue-600 dark:text-blue-400 rounded-2xl group-hover:scale-110 transition-transform duration-300">
-            <Shield className="w-6 h-6" />
+        <Card
+          padding="none"
+          className="flex items-center gap-4 p-4 hover:shadow-md"
+        >
+          <div className="flex items-center justify-center rounded-lg bg-blue-500/10 p-2.5 text-blue-600 dark:text-blue-400">
+            <Shield className="h-5 w-5" />
           </div>
           <div>
-            <p className="text-xs font-bold text-text-muted uppercase tracking-wider">
+            <p className="text-[11px] font-semibold uppercase tracking-wider text-text-muted">
               Total
             </p>
-            <p className="text-2xl font-extrabold text-text">
+            <p className="mt-0.5 text-2xl font-semibold leading-none tracking-tight text-text">
               {usuarios.length}
             </p>
           </div>
         </Card>
-        <Card className="p-5 flex items-center gap-4 hoverable group">
-          <div className="p-3.5 bg-emerald-50 dark:bg-emerald-950/30 text-emerald-600 dark:text-emerald-400 rounded-2xl group-hover:scale-110 transition-transform duration-300">
-            <CheckCircle className="w-6 h-6" />
+        <Card
+          padding="none"
+          className="flex items-center gap-4 p-4 hover:shadow-md"
+        >
+          <div className="flex items-center justify-center rounded-lg bg-emerald-500/10 p-2.5 text-emerald-600 dark:text-emerald-400">
+            <CheckCircle className="h-5 w-5" />
           </div>
           <div>
-            <p className="text-xs font-bold text-text-muted uppercase tracking-wider">
+            <p className="text-[11px] font-semibold uppercase tracking-wider text-text-muted">
               Ativos
             </p>
-            <p className="text-2xl font-extrabold text-text">{totalAtivos}</p>
+            <p className="mt-0.5 text-2xl font-semibold leading-none tracking-tight text-text">
+              {totalAtivos}
+            </p>
           </div>
         </Card>
-        <Card className="p-5 flex items-center gap-4 hoverable group">
-          <div className="p-3.5 bg-amber-50 dark:bg-amber-950/30 text-amber-600 dark:text-amber-400 rounded-2xl group-hover:scale-110 transition-transform duration-300">
-            <Crown className="w-6 h-6" />
+        <Card
+          padding="none"
+          className="flex items-center gap-4 p-4 hover:shadow-md"
+        >
+          <div className="flex items-center justify-center rounded-lg bg-amber-500/10 p-2.5 text-amber-600 dark:text-amber-400">
+            <Crown className="h-5 w-5" />
           </div>
           <div>
-            <p className="text-xs font-bold text-text-muted uppercase tracking-wider">
+            <p className="text-[11px] font-semibold uppercase tracking-wider text-text-muted">
               Masters
             </p>
-            <p className="text-2xl font-extrabold text-text">{totalMasters}</p>
+            <p className="mt-0.5 text-2xl font-semibold leading-none tracking-tight text-text">
+              {totalMasters}
+            </p>
           </div>
         </Card>
-        <Card className="p-5 flex items-center gap-4 hoverable group">
-          <div className="p-3.5 bg-purple-50 dark:bg-purple-950/30 text-purple-600 dark:text-purple-400 rounded-2xl group-hover:scale-110 transition-transform duration-300">
-            <User className="w-6 h-6" />
+        <Card
+          padding="none"
+          className="flex items-center gap-4 p-4 hover:shadow-md"
+        >
+          <div className="flex items-center justify-center rounded-lg bg-purple-500/10 p-2.5 text-purple-600 dark:text-purple-400">
+            <User className="h-5 w-5" />
           </div>
           <div>
-            <p className="text-xs font-bold text-text-muted uppercase tracking-wider">
+            <p className="text-[11px] font-semibold uppercase tracking-wider text-text-muted">
               Técnicos
             </p>
-            <p className="text-2xl font-extrabold text-text">{totalTecnicos}</p>
+            <p className="mt-0.5 text-2xl font-semibold leading-none tracking-tight text-text">
+              {totalTecnicos}
+            </p>
           </div>
         </Card>
       </motion.div>
@@ -395,37 +416,42 @@ export default function UsuariosPage() {
       {/* Filtros */}
       <motion.div
         variants={itemVariants}
-        className="bg-bg-elevated rounded-2xl border border-border shadow-sm p-5 space-y-5"
+        className="space-y-4 rounded-2xl border border-border bg-bg-elevated p-4 shadow-sm"
       >
-        <div className="flex flex-col lg:flex-row gap-4">
-          <div className="flex-1 relative group">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-text-muted group-focus-within:text-blue-500 dark:group-focus-within:text-blue-400 transition-colors" />
+        <div className="flex flex-col gap-3 lg:flex-row">
+          <div className="group relative flex-1">
+            <Search
+              className="pointer-events-none absolute left-3 top-1/2 z-10 h-4 w-4 -translate-y-1/2 text-text-muted transition-colors group-focus-within:text-text"
+              aria-hidden
+            />
             <input
               type="text"
               placeholder="Pesquisar por nome ou email..."
               value={busca}
               onChange={(e) => setBusca(e.target.value)}
-              className="w-full pl-12 pr-10 py-3 bg-bg-muted border border-border rounded-xl text-sm font-medium text-text placeholder:text-text-muted/60 focus:outline-none focus:ring-2 focus:ring-accent/50 focus:border-accent focus:bg-bg-elevated transition-all shadow-sm"
+              aria-label="Pesquisar usuários"
+              className="h-10 w-full rounded-lg border border-border bg-bg-muted/30 pl-9 pr-9 text-sm font-medium text-text transition-colors placeholder:text-text-muted/50 focus:border-text focus:bg-bg-elevated focus:outline-none focus:ring-2 focus:ring-text/30"
             />
             {busca && (
               <button
                 onClick={() => setBusca("")}
-                className="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 text-text-muted hover:text-text hover:bg-bg-muted rounded-lg transition-colors"
+                className="absolute right-1.5 top-1/2 inline-flex h-6 w-6 -translate-y-1/2 items-center justify-center rounded-md text-text-muted transition-colors hover:bg-bg-hover hover:text-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-text/50"
+                aria-label="Limpar pesquisa"
               >
-                <X className="w-4 h-4" />
+                <X className="h-3.5 w-3.5" />
               </button>
             )}
           </div>
-          <div className="flex flex-wrap lg:flex-nowrap gap-3">
-            <div className="flex bg-bg-muted p-1 rounded-xl border border-border">
+          <div className="flex flex-wrap gap-2 lg:flex-nowrap">
+            <div className="inline-flex gap-0.5 rounded-lg border border-border bg-bg-muted/40 p-0.5">
               {(["todos", "ativos", "inativos"] as const).map((status) => (
                 <button
                   key={status}
                   onClick={() => setFiltroStatus(status)}
-                  className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all whitespace-nowrap ${
+                  className={`whitespace-nowrap rounded-md px-3 py-1.5 text-[13px] font-medium tracking-tight transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-text/50 ${
                     filtroStatus === status
-                      ? "bg-bg-elevated text-text shadow-sm ring-1 ring-border"
-                      : "text-text-muted hover:text-text"
+                      ? "bg-bg text-text shadow-sm ring-1 ring-border/60"
+                      : "text-text-muted hover:bg-bg-elevated/60 hover:text-text"
                   }`}
                 >
                   {status === "todos"
@@ -436,15 +462,15 @@ export default function UsuariosPage() {
                 </button>
               ))}
             </div>
-            <div className="flex bg-bg-muted p-1 rounded-xl border border-border">
+            <div className="inline-flex gap-0.5 rounded-lg border border-border bg-bg-muted/40 p-0.5">
               {(["todas", "master", "tecnico"] as const).map((role) => (
                 <button
                   key={role}
                   onClick={() => setFiltroRole(role)}
-                  className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all whitespace-nowrap ${
+                  className={`whitespace-nowrap rounded-md px-3 py-1.5 text-[13px] font-medium tracking-tight transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-text/50 ${
                     filtroRole === role
-                      ? "bg-bg-elevated text-text shadow-sm ring-1 ring-border"
-                      : "text-text-muted hover:text-text"
+                      ? "bg-bg text-text shadow-sm ring-1 ring-border/60"
+                      : "text-text-muted hover:bg-bg-elevated/60 hover:text-text"
                   }`}
                 >
                   {role === "todas"
@@ -457,15 +483,14 @@ export default function UsuariosPage() {
             </div>
           </div>
         </div>
-        <div className="flex items-center justify-between pt-4 border-t border-border">
-          <div className="flex items-center gap-3">
-            <span className="text-sm text-text bg-bg-muted px-3 py-1 rounded-full border border-border">
-              <span className="font-bold text-text">
-                {usuariosFiltrados.length}
-              </span>{" "}
-              {usuariosFiltrados.length === 1 ? "resultado" : "resultados"}
+        <div className="flex items-center justify-between border-t border-border pt-3">
+          <span className="inline-flex items-center rounded-md border border-border bg-bg-muted/40 px-3 py-1.5 text-xs font-medium text-text-muted">
+            <span className="font-semibold text-text">
+              {usuariosFiltrados.length}
             </span>
-          </div>
+            <span className="mx-1">·</span>
+            {usuariosFiltrados.length === 1 ? "resultado" : "resultados"}
+          </span>
         </div>
       </motion.div>
 
@@ -474,18 +499,18 @@ export default function UsuariosPage() {
         {usuariosFiltrados.length === 0 ? (
           <motion.div
             key="empty"
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            className="flex flex-col items-center justify-center py-20 px-4 bg-bg-elevated rounded-3xl border-2 border-dashed border-border text-center shadow-sm"
+            exit={{ opacity: 0, y: -12 }}
+            className="flex flex-col items-center justify-center rounded-xl border-2 border-dashed border-border bg-bg-elevated px-4 py-16 text-center"
           >
-            <div className="w-20 h-20 bg-bg-muted rounded-full flex items-center justify-center mb-5 border border-border shadow-inner">
-              <Shield className="w-10 h-10 text-text-muted" />
+            <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-xl border border-border bg-bg-muted/50">
+              <Shield className="h-7 w-7 text-text-muted/60" aria-hidden />
             </div>
-            <h3 className="text-xl font-bold text-text mb-2">
+            <h3 className="mb-2 text-base font-semibold tracking-tight text-text">
               Nenhum usuário encontrado
             </h3>
-            <p className="text-text-muted max-w-md mb-8 text-base">
+            <p className="mb-6 max-w-md text-sm text-text-muted">
               {busca || filtroStatus !== "todos" || filtroRole !== "todas"
                 ? "Não encontramos resultados para a sua pesquisa. Tente ajustar os filtros."
                 : "Você ainda não possui usuários cadastrados. Comece adicionando um novo usuário."}
@@ -498,17 +523,18 @@ export default function UsuariosPage() {
                   setFiltroRole("todas");
                 }}
                 variant="outline"
-                className="px-6 py-2.5"
+                size="sm"
               >
                 Limpar Filtros
               </Button>
             ) : (
               <Button
                 variant="primary"
+                icon={Plus}
                 onClick={openCreateForm}
-                className="px-6 py-2.5 shadow-md"
+                size="sm"
               >
-                <Plus className="w-5 h-5 mr-2" /> Criar Primeiro Usuário
+                Criar Primeiro Usuário
               </Button>
             )}
           </motion.div>
@@ -518,66 +544,74 @@ export default function UsuariosPage() {
             variants={containerVariants}
             initial="hidden"
             animate="show"
-            className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5"
+            className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3 sm:gap-5"
           >
             {usuariosFiltrados.map((usuario) => (
               <motion.div key={usuario.email} variants={itemVariants} layout>
-                <Card className="flex flex-col justify-between p-6 bg-bg-elevated shadow-sm hover:shadow-md border border-border rounded-2xl transition-all duration-300 relative overflow-hidden h-full">
+                <Card
+                  padding="none"
+                  className="relative flex h-full flex-col justify-between overflow-hidden p-5 hover:shadow-md"
+                >
+                  {/* Barra de Status */}
                   <div
-                    className={`absolute top-0 left-0 w-full h-1 ${
+                    className={`absolute left-0 top-0 h-1 w-full ${
                       usuario.ativo
                         ? "bg-emerald-500 dark:bg-emerald-400"
                         : "bg-border-strong"
                     }`}
                   />
-                  <div>
-                    <div className="flex items-start justify-between mb-4 gap-2">
+
+                  <div className="mt-1">
+                    {/* Header do Card */}
+                    <div className="mb-4 flex items-start justify-between gap-2">
                       <div className="flex items-center gap-3">
                         <div
-                          className={`w-12 h-12 rounded-2xl flex items-center justify-center font-bold text-lg ${
+                          className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-lg text-base font-semibold ring-1 ring-inset ring-white/15 ${
                             usuario.role === "master"
-                              ? "bg-linear-to-br from-amber-500 to-orange-600 dark:from-amber-400 dark:to-orange-500 text-white"
+                              ? "bg-linear-to-br from-amber-500 to-orange-600 text-white"
                               : usuario.ativo
-                                ? "bg-linear-to-br from-blue-500 to-indigo-600 dark:from-blue-400 dark:to-indigo-500 text-white"
-                                : "bg-bg-muted text-text-muted"
+                                ? "bg-linear-to-br from-blue-600 to-indigo-700 text-white"
+                                : "bg-bg-muted text-text-muted ring-border"
                           }`}
                         >
                           {usuario.role === "master" ? (
-                            <Crown className="w-6 h-6" />
+                            <Crown className="h-5 w-5" />
                           ) : (
-                            (usuario.tecnico_nome ?? "?").charAt(0).toUpperCase()
+                            (usuario.tecnico_nome ?? "?")
+                              .charAt(0)
+                              .toUpperCase()
                           )}
                         </div>
                         <div>
-                          <h3 className="font-extrabold text-lg text-text uppercase tracking-tight leading-tight">
+                          <h3 className="text-base font-semibold tracking-tight text-text">
                             {usuario.tecnico_nome}
                           </h3>
-                          <div className="flex items-center gap-2 mt-1">
+                          <div className="mt-1 flex items-center gap-2">
                             <span
-                              className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-xs font-bold uppercase tracking-wider ring-1 ring-inset ${
+                              className={`inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider ring-1 ring-inset ${
                                 usuario.ativo
-                                  ? "bg-emerald-50 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-400 ring-emerald-600/20 dark:ring-emerald-800/30"
-                                  : "bg-bg-muted text-text-muted ring-border"
+                                  ? "bg-emerald-500/10 text-emerald-600 ring-emerald-500/20 dark:text-emerald-400"
+                                  : "bg-bg-muted/50 text-text-muted ring-border"
                               }`}
                             >
                               {usuario.ativo ? (
-                                <CheckCircle className="w-3 h-3" />
+                                <CheckCircle className="h-3 w-3" />
                               ) : (
-                                <ToggleLeft className="w-3 h-3" />
+                                <ToggleLeft className="h-3 w-3" />
                               )}
                               {usuario.ativo ? "Ativo" : "Inativo"}
                             </span>
                             <span
-                              className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-xs font-bold uppercase tracking-wider ring-1 ring-inset ${
+                              className={`inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider ring-1 ring-inset ${
                                 usuario.role === "master"
-                                  ? "bg-amber-50 dark:bg-amber-950/30 text-amber-700 dark:text-amber-400 ring-amber-600/20 dark:ring-amber-800/30"
-                                  : "bg-blue-50 dark:bg-blue-950/30 text-blue-700 dark:text-blue-400 ring-blue-600/20 dark:ring-blue-800/30"
+                                  ? "bg-amber-500/10 text-amber-600 ring-amber-500/20 dark:text-amber-400"
+                                  : "bg-blue-500/10 text-blue-600 ring-blue-500/20 dark:text-blue-400"
                               }`}
                             >
                               {usuario.role === "master" ? (
-                                <Crown className="w-3 h-3" />
+                                <Crown className="h-3 w-3" />
                               ) : (
-                                <User className="w-3 h-3" />
+                                <User className="h-3 w-3" />
                               )}
                               {usuario.role}
                             </span>
@@ -587,18 +621,18 @@ export default function UsuariosPage() {
                     </div>
 
                     {/* Email */}
-                    <div className="bg-bg-muted border border-border rounded-xl p-4 mb-4">
+                    <div className="mb-4 rounded-lg border border-border bg-bg-muted/40 p-3">
                       <div className="flex items-center gap-2 text-sm">
-                        <Mail className="w-4 h-4 text-text-muted" />
-                        <span className="text-text font-medium break-all">
+                        <Mail className="h-4 w-4 shrink-0 text-text-muted" />
+                        <span className="break-all font-medium text-text">
                           {usuario.email}
                         </span>
                       </div>
                     </div>
 
                     {/* Último Login */}
-                    <div className="flex items-center gap-2 text-sm text-text-muted mb-4">
-                      <Clock className="w-4 h-4" />
+                    <div className="mb-4 flex items-center gap-2 text-sm text-text-muted">
+                      <Clock className="h-4 w-4 shrink-0" />
                       <span>
                         Último login:{" "}
                         <span className="font-medium text-text">
@@ -609,39 +643,41 @@ export default function UsuariosPage() {
                   </div>
 
                   {/* Ações */}
-                  <div className="flex items-center justify-between pt-4 border-t border-border">
+                  <div className="flex items-center justify-between border-t border-border pt-4">
                     <button
                       onClick={() => handleToggleAtivo(usuario)}
-                      className={`flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-semibold transition-colors ${
+                      className={`flex items-center gap-2 rounded-lg px-3 py-1.5 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-text/50 ${
                         usuario.ativo
-                          ? "text-text-muted hover:bg-bg-muted"
-                          : "text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/20"
+                          ? "text-text-muted hover:bg-bg-hover"
+                          : "text-emerald-600 hover:bg-emerald-500/10 dark:text-emerald-400"
                       }`}
                       title={
                         usuario.ativo ? "Desativar usuário" : "Ativar usuário"
                       }
                     >
                       {usuario.ativo ? (
-                        <ToggleRight className="w-5 h-5" />
+                        <ToggleRight className="h-5 w-5" />
                       ) : (
-                        <ToggleLeft className="w-5 h-5" />
+                        <ToggleLeft className="h-5 w-5" />
                       )}
                       {usuario.ativo ? "Desativar" : "Ativar"}
                     </button>
                     <div className="flex items-center gap-2">
                       <button
                         onClick={() => openEditForm(usuario)}
-                        className="w-10 h-10 flex items-center justify-center text-text-muted hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950/30 bg-bg-elevated border border-border rounded-xl transition-colors shadow-sm"
+                        className="flex h-9 w-9 items-center justify-center rounded-lg border border-border bg-bg-elevated text-text-muted transition-colors hover:bg-bg-hover hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-text/50"
                         title="Editar usuário"
+                        aria-label="Editar usuário"
                       >
-                        <Edit3 className="w-4 h-4" strokeWidth={2} />
+                        <Edit3 className="h-4 w-4" strokeWidth={2} />
                       </button>
                       <button
                         onClick={() => setDeletingUsuario(usuario)}
-                        className="w-10 h-10 flex items-center justify-center text-text-muted hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/30 bg-bg-elevated border border-border rounded-xl transition-colors shadow-sm"
+                        className="flex h-9 w-9 items-center justify-center rounded-lg border border-border bg-bg-elevated text-text-muted transition-colors hover:border-rose-500/30 hover:bg-rose-500/10 hover:text-rose-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-500/50 dark:hover:text-rose-400"
                         title="Excluir usuário"
+                        aria-label="Excluir usuário"
                       >
-                        <Trash2 className="w-4 h-4" strokeWidth={2} />
+                        <Trash2 className="h-4 w-4" strokeWidth={2} />
                       </button>
                     </div>
                   </div>
@@ -658,14 +694,14 @@ export default function UsuariosPage() {
         onClose={closeForm}
         title={
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-accent rounded-xl flex items-center justify-center shadow-sm">
-              <Shield className="w-5 h-5 text-accent-foreground" />
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-accent ring-1 ring-inset ring-white/15">
+              <Shield className="h-5 w-5 text-accent-foreground" />
             </div>
             <div>
-              <h2 className="text-xl font-bold text-text tracking-tight">
+              <h2 className="text-base font-semibold tracking-tight text-text">
                 {editingUsuario ? "Editar Usuário" : "Novo Usuário"}
               </h2>
-              <p className="text-xs font-medium text-text-muted mt-0.5">
+              <p className="mt-0.5 text-xs font-medium text-text-muted">
                 {editingUsuario
                   ? "Atualize as informações do usuário"
                   : "Adicione um novo usuário ao sistema"}
@@ -685,105 +721,111 @@ export default function UsuariosPage() {
               handleCreate();
             }
           }}
-          className="space-y-6"
+          className="space-y-5"
         >
-          <div className="space-y-5">
-            <Input
-              label="Nome do Técnico"
-              placeholder="Ex: João Silva"
-              value={formData.tecnico_nome}
-              onChange={(e) => {
-                setFormData((f) => ({ ...f, tecnico_nome: e.target.value }));
-                setFormError("");
-              }}
-              error={formError}
-              required
-              autoFocus
-            />
-            <Input
-              label="Email"
-              type="email"
-              placeholder="joao@empresa.com"
-              value={formData.email}
-              onChange={(e) => {
-                setFormData((f) => ({ ...f, email: e.target.value }));
-                setFormError("");
-              }}
-              required
-            />
-            <div>
-              <label className="block text-sm font-medium text-text mb-1.5">
-                Senha {editingUsuario && "(deixe vazio para manter)"}
-              </label>
-              <div className="relative">
-                <input
-                  type={showSenha ? "text" : "password"}
-                  placeholder={editingUsuario ? "••••••••" : "Mínimo 6 caracteres"}
-                  value={formData.senha}
-                  onChange={(e) => {
-                    setFormData((f) => ({ ...f, senha: e.target.value }));
-                    setFormError("");
-                  }}
-                  className="w-full px-3 py-2.5 bg-bg-muted border border-border rounded-xl text-sm text-text placeholder:text-text-muted/60 focus:outline-none focus:ring-2 focus:ring-accent/50 focus:border-accent transition-all pr-10"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowSenha(!showSenha)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 text-text-muted hover:text-text transition-colors"
-                >
-                  {showSenha ? (
-                    <EyeOff className="w-4 h-4" />
-                  ) : (
-                    <Eye className="w-4 h-4" />
-                  )}
-                </button>
-              </div>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-text mb-1.5">
-                Perfil de Acesso
-              </label>
-              <select
-                value={formData.role}
-                onChange={(e) =>
-                  setFormData((f) => ({
-                    ...f,
-                    role: e.target.value as "tecnico" | "master",
-                  }))
+          <Input
+            label="Nome do Técnico"
+            placeholder="Ex: João Silva"
+            value={formData.tecnico_nome}
+            onChange={(e) => {
+              setFormData((f) => ({ ...f, tecnico_nome: e.target.value }));
+              setFormError("");
+            }}
+            error={formError}
+            required
+            autoFocus
+          />
+          <Input
+            label="Email"
+            type="email"
+            placeholder="joao@empresa.com"
+            value={formData.email}
+            onChange={(e) => {
+              setFormData((f) => ({ ...f, email: e.target.value }));
+              setFormError("");
+            }}
+            required
+          />
+
+          {/* Senha com toggle show/hide */}
+          <div className="w-full">
+            <label
+              htmlFor="senha"
+              className="mb-1.5 block text-[13px] font-medium tracking-tight text-text"
+            >
+              Senha {editingUsuario && "(deixe vazio para manter)"}
+            </label>
+            <div className="relative">
+              <Input
+                id="senha"
+                type={showSenha ? "text" : "password"}
+                placeholder={
+                  editingUsuario ? "••••••••" : "Mínimo 6 caracteres"
                 }
-                className="w-full px-3 py-2.5 bg-bg-muted border border-border rounded-xl text-sm text-text focus:outline-none focus:ring-2 focus:ring-accent/50 focus:border-accent transition-all"
-              >
-                <option value="tecnico">Técnico</option>
-                <option value="master">Master (Administrador)</option>
-              </select>
-            </div>
-            <div className="flex items-center gap-3 p-4 bg-bg-muted rounded-xl border border-border">
+                value={formData.senha}
+                onChange={(e) => {
+                  setFormData((f) => ({ ...f, senha: e.target.value }));
+                  setFormError("");
+                }}
+                className="pr-9"
+              />
               <button
                 type="button"
-                onClick={() =>
-                  setFormData((f) => ({ ...f, ativo: !f.ativo }))
-                }
-                className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-colors ${
-                  formData.ativo
-                    ? "text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/20"
-                    : "text-text-muted bg-bg-elevated"
-                }`}
+                onClick={() => setShowSenha(!showSenha)}
+                className="absolute right-3 top-1/2 inline-flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-md text-text-muted transition-colors hover:bg-bg-hover hover:text-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-text/50"
+                tabIndex={-1}
+                aria-label={showSenha ? "Ocultar senha" : "Mostrar senha"}
               >
-                {formData.ativo ? (
-                  <ToggleRight className="w-5 h-5" />
+                {showSenha ? (
+                  <EyeOff className="h-4 w-4" aria-hidden />
                 ) : (
-                  <ToggleLeft className="w-5 h-5" />
+                  <Eye className="h-4 w-4" aria-hidden />
                 )}
-                {formData.ativo ? "Ativo" : "Inativo"}
               </button>
-              <span className="text-sm text-text-muted">
-                {formData.ativo
-                  ? "Usuário poderá fazer login"
-                  : "Usuário não poderá fazer login"}
-              </span>
             </div>
           </div>
-          <div className="flex flex-col-reverse sm:flex-row justify-end gap-3 pt-6 border-t border-border">
+
+          <Select
+            label="Perfil de Acesso"
+            value={formData.role}
+            onChange={(e) =>
+              setFormData((f) => ({
+                ...f,
+                role: e.target.value as "tecnico" | "master",
+              }))
+            }
+            options={[
+              { value: "tecnico", label: "Técnico" },
+              { value: "master", label: "Master (Administrador)" },
+            ]}
+          />
+
+          {/* Toggle Ativo */}
+          <div className="flex items-center gap-3 rounded-lg border border-border bg-bg-muted/40 p-3">
+            <button
+              type="button"
+              onClick={() => setFormData((f) => ({ ...f, ativo: !f.ativo }))}
+              className={`flex items-center gap-2 rounded-lg px-3 py-1.5 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-text/50 ${
+                formData.ativo
+                  ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
+                  : "bg-bg-elevated text-text-muted"
+              }`}
+            >
+              {formData.ativo ? (
+                <ToggleRight className="h-5 w-5" />
+              ) : (
+                <ToggleLeft className="h-5 w-5" />
+              )}
+              {formData.ativo ? "Ativo" : "Inativo"}
+            </button>
+            <span className="text-sm text-text-muted">
+              {formData.ativo
+                ? "Usuário poderá fazer login"
+                : "Usuário não poderá fazer login"}
+            </span>
+          </div>
+
+          <div className="flex flex-col-reverse justify-end gap-3 border-t border-border pt-5">
             <Button
               type="button"
               variant="outline"

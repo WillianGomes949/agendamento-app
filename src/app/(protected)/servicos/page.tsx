@@ -40,7 +40,7 @@ const containerVariants: Variants = {
 };
 
 const itemVariants: Variants = {
-  hidden: { opacity: 0, y: 16 },
+  hidden: { opacity: 0, y: 12 },
   show: {
     opacity: 1,
     y: 0,
@@ -295,9 +295,9 @@ export default function ServicosPage() {
 
   if (loading && servicos.length === 0) {
     return (
-      <div className="min-h-[80vh] flex flex-col items-center justify-center">
-        <Loader2 className="animate-spin text-primary w-12 h-12 mb-4" />
-        <p className="text-text-muted font-medium text-base">
+      <div className="flex min-h-[80vh] flex-col items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" aria-hidden />
+        <p className="mt-3 text-sm font-medium text-text-muted">
           Carregando serviços...
         </p>
       </div>
@@ -309,133 +309,176 @@ export default function ServicosPage() {
       variants={containerVariants}
       initial="hidden"
       animate="show"
-      className="space-y-6 max-w-7xl mx-auto pb-12"
+      className="mx-auto max-w-7xl space-y-6 pb-12"
     >
       <Toaster
         position="top-right"
         toastOptions={{
           className:
-            "shadow-lg rounded-xl font-medium text-sm border border-border",
+            "!rounded-lg !bg-bg-elevated !text-text !border !border-border !shadow-lg backdrop-blur-md",
           duration: 4000,
+          success: { iconTheme: { primary: "#10b981", secondary: "#fff" } },
+          error: { iconTheme: { primary: "#e11d48", secondary: "#fff" } },
         }}
       />
 
       {/* Header Principal */}
       <motion.div
         variants={itemVariants}
-        className="bg-bg-elevated p-6 rounded-2xl shadow-xs border border-border flex flex-col md:flex-row md:items-center justify-between gap-6"
+        className="flex flex-col justify-between gap-4 rounded-2xl border border-border bg-bg-elevated p-5 shadow-sm md:flex-row md:items-center sm:p-6"
       >
         <div>
-          <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight text-text mb-2">
+          <h1 className="mb-2 text-2xl font-semibold tracking-tight text-text md:text-3xl">
             Gestão de Serviços
           </h1>
-          <p className="text-text-muted text-sm max-w-xl">
+          <p className="max-w-xl text-sm text-text-muted">
             Acompanhe, ordene e gerencie todos os atendimentos cadastrados.
           </p>
         </div>
         <Button
           variant="primary"
+          icon={Plus}
           onClick={() => {
             setEditingServico(null);
             setIsFormOpen(true);
           }}
-          className="flex items-center gap-2 w-full md:w-auto justify-center shadow-xs py-2.5 px-5"
+          className="w-full md:w-auto"
         >
-          <Plus className="w-5 h-5" /> Novo Serviço
+          Novo Serviço
         </Button>
       </motion.div>
 
       {/* KPIs com Filtro Rápido */}
       <motion.div
         variants={itemVariants}
-        className="grid grid-cols-2 lg:grid-cols-4 gap-4"
+        className="grid grid-cols-2 gap-3 lg:grid-cols-4 sm:gap-4"
       >
         <Card
-          className={`p-4 flex items-center gap-4 transition-all cursor-pointer group hover:shadow-md border ${
+          padding="none"
+          role="button"
+          tabIndex={0}
+          aria-pressed={!filters.status}
+          onClick={() => handleFilterChange({ status: undefined })}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" || e.key === " ") {
+              e.preventDefault();
+              handleFilterChange({ status: undefined });
+            }
+          }}
+          className={`flex cursor-pointer items-center gap-4 p-4 transition-all hover:shadow-md ${
             !filters.status
-              ? "ring-2 ring-primary border-transparent"
+              ? "border-transparent ring-2 ring-primary"
               : "border-border"
           }`}
-          onClick={() => handleFilterChange({ status: undefined })}
         >
-          <div className="p-3 bg-blue-500/10 text-blue-600 dark:text-blue-400 rounded-xl group-hover:scale-105 transition-transform">
-            <Wrench className="w-5 h-5" />
+          <div className="flex items-center justify-center rounded-lg bg-blue-500/10 p-2.5 text-blue-600 dark:text-blue-400">
+            <Wrench className="h-5 w-5" />
           </div>
           <div>
-            <p className="text-[11px] font-bold text-text-muted uppercase tracking-wider">
+            <p className="text-[11px] font-semibold uppercase tracking-wider text-text-muted">
               Total
             </p>
-            <p className="text-xl font-black text-text mt-0.5">
+            <p className="mt-0.5 text-xl font-semibold leading-none tracking-tight text-text">
               {metricas.total}
             </p>
           </div>
         </Card>
 
         <Card
-          className={`p-4 flex items-center gap-4 transition-all cursor-pointer group hover:shadow-md border ${
+          padding="none"
+          role="button"
+          tabIndex={0}
+          aria-pressed={filters.status === "PENDENTE"}
+          onClick={() => handleFilterChange({ status: "PENDENTE" })}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" || e.key === " ") {
+              e.preventDefault();
+              handleFilterChange({ status: "PENDENTE" });
+            }
+          }}
+          className={`flex cursor-pointer items-center gap-4 p-4 transition-all hover:shadow-md ${
             filters.status === "PENDENTE"
-              ? "ring-2 ring-amber-500 border-transparent"
+              ? "border-transparent ring-2 ring-amber-500"
               : "border-border"
           }`}
-          onClick={() => handleFilterChange({ status: "PENDENTE" })}
         >
-          <div className="p-3 bg-amber-500/10 text-amber-600 dark:text-amber-400 rounded-xl group-hover:scale-105 transition-transform">
-            <Clock className="w-5 h-5" />
+          <div className="flex items-center justify-center rounded-lg bg-amber-500/10 p-2.5 text-amber-600 dark:text-amber-400">
+            <Clock className="h-5 w-5" />
           </div>
           <div>
-            <p className="text-[11px] font-bold text-text-muted uppercase tracking-wider">
+            <p className="text-[11px] font-semibold uppercase tracking-wider text-text-muted">
               Pendentes
             </p>
-            <p className="text-xl font-black text-text mt-0.5">
+            <p className="mt-0.5 text-xl font-semibold leading-none tracking-tight text-text">
               {metricas.pendentes}
             </p>
           </div>
         </Card>
 
         <Card
-          className={`p-4 flex items-center gap-4 transition-all cursor-pointer group hover:shadow-md border ${
+          padding="none"
+          role="button"
+          tabIndex={0}
+          aria-pressed={filters.status === "EM ANDAMENTO"}
+          onClick={() => handleFilterChange({ status: "EM ANDAMENTO" })}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" || e.key === " ") {
+              e.preventDefault();
+              handleFilterChange({ status: "EM ANDAMENTO" });
+            }
+          }}
+          className={`flex cursor-pointer items-center gap-4 p-4 transition-all hover:shadow-md ${
             filters.status === "EM ANDAMENTO"
-              ? "ring-2 ring-indigo-500 border-transparent"
+              ? "border-transparent ring-2 ring-indigo-500"
               : "border-border"
           }`}
-          onClick={() => handleFilterChange({ status: "EM ANDAMENTO" })}
         >
-          <div className="p-3 bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 rounded-xl group-hover:scale-105 transition-transform">
-            <Wrench className="w-5 h-5" />
+          <div className="flex items-center justify-center rounded-lg bg-indigo-500/10 p-2.5 text-indigo-600 dark:text-indigo-400">
+            <Wrench className="h-5 w-5" />
           </div>
           <div>
-            <p className="text-[11px] font-bold text-text-muted uppercase tracking-wider">
+            <p className="text-[11px] font-semibold uppercase tracking-wider text-text-muted">
               Em Andamento
             </p>
-            <p className="text-xl font-black text-text mt-0.5">
+            <p className="mt-0.5 text-xl font-semibold leading-none tracking-tight text-text">
               {metricas.emAndamento}
             </p>
           </div>
         </Card>
 
         <Card
-          className={`p-4 flex items-center gap-4 transition-all cursor-pointer group hover:shadow-md border ${
+          padding="none"
+          role="button"
+          tabIndex={0}
+          aria-pressed={filters.status === "CONCLUIDO"}
+          onClick={() => handleFilterChange({ status: "CONCLUIDO" })}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" || e.key === " ") {
+              e.preventDefault();
+              handleFilterChange({ status: "CONCLUIDO" });
+            }
+          }}
+          className={`flex cursor-pointer items-center gap-4 p-4 transition-all hover:shadow-md ${
             filters.status === "CONCLUIDO"
-              ? "ring-2 ring-emerald-500 border-transparent"
+              ? "border-transparent ring-2 ring-emerald-500"
               : "border-border"
           }`}
-          onClick={() => handleFilterChange({ status: "CONCLUIDO" })}
         >
-          <div className="p-3 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 rounded-xl group-hover:scale-105 transition-transform">
-            <CheckCircle className="w-5 h-5" />
+          <div className="flex items-center justify-center rounded-lg bg-emerald-500/10 p-2.5 text-emerald-600 dark:text-emerald-400">
+            <CheckCircle className="h-5 w-5" />
           </div>
           <div>
-            <p className="text-[11px] font-bold text-text-muted uppercase tracking-wider">
+            <p className="text-[11px] font-semibold uppercase tracking-wider text-text-muted">
               Concluídos
             </p>
-            <p className="text-xl font-black text-text mt-0.5">
+            <p className="mt-0.5 text-xl font-semibold leading-none tracking-tight text-text">
               {metricas.concluidos}
             </p>
           </div>
         </Card>
       </motion.div>
 
-      {/* COMPONENTE FILTERBAR */}
+      {/* FILTERBAR */}
       <motion.div variants={itemVariants}>
         <FilterBar
           filters={filters}
@@ -459,18 +502,18 @@ export default function ServicosPage() {
         {servicosFiltrados.length === 0 ? (
           <motion.div
             key="empty"
-            initial={{ opacity: 0, y: 15 }}
+            initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -15 }}
-            className="flex flex-col items-center justify-center py-16 px-4 bg-bg-elevated rounded-2xl border border-border text-center shadow-xs"
+            exit={{ opacity: 0, y: -12 }}
+            className="flex flex-col items-center justify-center rounded-xl border border-border bg-bg-elevated px-4 py-16 text-center shadow-sm"
           >
-            <div className="w-16 h-16 bg-bg-muted rounded-full flex items-center justify-center mb-4 border border-border">
-              <Wrench className="w-8 h-8 text-text-muted/60" />
+            <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-xl border border-border bg-bg-muted/50">
+              <Wrench className="h-7 w-7 text-text-muted/60" aria-hidden />
             </div>
-            <h3 className="text-lg font-bold text-text mb-1">
+            <h3 className="mb-1 text-base font-semibold tracking-tight text-text">
               Nenhum serviço encontrado
             </h3>
-            <p className="text-text-muted max-w-md mb-6 text-xs">
+            <p className="mb-6 max-w-md text-xs text-text-muted">
               Não encontramos nenhum atendimento correspondente aos filtros
               aplicados.
             </p>
@@ -485,7 +528,7 @@ export default function ServicosPage() {
             initial="hidden"
             animate="show"
             exit={{ opacity: 0 }}
-            className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5"
+            className="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-3"
           >
             {servicosFiltrados.map((servico) => (
               <ServicoCard
@@ -522,51 +565,53 @@ export default function ServicosPage() {
                   variants={itemVariants}
                   layout
                   onClick={() => setDetalhesServicoId(String(servico.id))}
-                  className={`group bg-bg-elevated rounded-xl p-4 hover:shadow-md transition-all cursor-pointer flex flex-col lg:flex-row lg:items-center gap-4 relative border border-border border-l-4 ${getBorderColor()}`}
+                  className={`group flex cursor-pointer flex-col gap-4 rounded-lg border border-border border-l-4 bg-bg-elevated p-4 transition-all hover:shadow-md lg:flex-row lg:items-center ${getBorderColor()}`}
                 >
-                  <div className="flex items-center gap-3.5 flex-[1.5] min-w-0">
-                    <div className="w-10 h-10 rounded-xl bg-bg-muted border border-border flex items-center justify-center shrink-0 group-hover:bg-primary/10 group-hover:text-primary transition-colors">
-                      <Car className="w-5 h-5 text-text-muted group-hover:text-primary transition-colors" />
+                  {/* Cliente + Veículo */}
+                  <div className="flex min-w-0 flex-[1.5] items-center gap-3.5">
+                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-border bg-bg-muted/40 transition-colors group-hover:bg-primary/10">
+                      <Car className="h-5 w-5 text-text-muted transition-colors group-hover:text-primary" />
                     </div>
                     <div className="min-w-0">
-                      <p className="font-bold text-sm text-text truncate group-hover:text-primary transition-colors">
+                      <p className="truncate text-sm font-semibold tracking-tight text-text transition-colors group-hover:text-primary">
                         {servico.cliente?.nome || "Cliente não informado"}
                       </p>
-                      <div className="flex items-center gap-2 mt-0.5">
-                        <span className="text-[10px] font-mono uppercase bg-bg-muted text-text px-1.5 py-0.5 rounded font-bold border border-border">
+                      <div className="mt-0.5 flex items-center gap-2">
+                        <span className="rounded-md border border-border bg-bg-muted/40 px-1.5 py-0.5 font-mono text-[10px] font-bold uppercase text-text">
                           {servico.veiculo?.placa || "S/ PLACA"}
                         </span>
-                        <span className="text-xs text-text-muted font-medium truncate">
+                        <span className="truncate text-xs font-medium text-text-muted">
                           OS: {servico.ordemServico || "N/A"}
                         </span>
                       </div>
                     </div>
                   </div>
 
-                  <div className="hidden flex-1 md:grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 items-center pl-2 lg:pl-0 border-t border-border/50 lg:border-t-0 pt-2 lg:pt-0">
+                  {/* Detalhes (desktop) */}
+                  <div className="hidden flex-1 gap-3 border-t border-border/50 pt-2 md:grid md:grid-cols-2 lg:grid-cols-4 lg:border-t-0 lg:pl-0 lg:pt-0">
                     <div className="flex flex-col">
-                      <p className="text-xs font-semibold text-text flex items-center gap-1">
-                        <Calendar className="w-3.5 h-3.5 text-text-muted" />
+                      <p className="flex items-center gap-1 text-xs font-semibold text-text">
+                        <Calendar className="h-3.5 w-3.5 text-text-muted" />
                         {formatarDataExibicao(servico.data)}
                       </p>
-                      <p className="text-[11px] text-text-muted flex items-center gap-1 font-medium mt-0.5">
-                        <Clock className="w-3 h-3 text-text-muted" />
+                      <p className="mt-0.5 flex items-center gap-1 text-[11px] font-medium text-text-muted">
+                        <Clock className="h-3 w-3 text-text-muted" />
                         {formatarHorarioExibicao(servico.horario)}
                       </p>
                     </div>
 
                     <div className="flex items-center gap-1.5">
-                      <User className="w-3.5 h-3.5 text-text-muted shrink-0" />
-                      <span className="text-xs font-semibold text-text truncate uppercase">
+                      <User className="h-3.5 w-3.5 shrink-0 text-text-muted" />
+                      <span className="truncate text-xs font-semibold uppercase text-text">
                         {servico.tecnico || "—"}
                       </span>
                     </div>
 
                     <div
-                      className="flex items-center gap-1 text-xs font-medium text-text truncate"
+                      className="flex items-center gap-1 truncate text-xs font-medium text-text"
                       title={servico.endereco?.cidade}
                     >
-                      <MapPin className="w-3.5 h-3.5 text-text-muted shrink-0" />
+                      <MapPin className="h-3.5 w-3.5 shrink-0 text-text-muted" />
                       <span className="truncate">
                         {servico.endereco?.cidade || "Não informado"}
                       </span>
@@ -577,6 +622,7 @@ export default function ServicosPage() {
                     </div>
                   </div>
 
+                  {/* Ações */}
                   <div
                     className="flex items-center justify-end gap-1"
                     onClick={(e) => e.stopPropagation()}
@@ -584,18 +630,20 @@ export default function ServicosPage() {
                     <button
                       type="button"
                       onClick={() => openEditForm(servico)}
-                      className="w-8 h-8 flex items-center justify-center text-text-muted hover:text-primary hover:bg-primary/10 rounded-lg transition-colors"
+                      className="flex h-8 w-8 items-center justify-center rounded-md text-text-muted transition-colors hover:bg-primary/10 hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-text/50"
                       title="Editar"
+                      aria-label="Editar serviço"
                     >
-                      <Edit3 className="w-4 h-4" />
+                      <Edit3 className="h-4 w-4" />
                     </button>
                     <button
                       type="button"
                       onClick={() => openDeleteConfirm(servico)}
-                      className="w-8 h-8 flex items-center justify-center text-text-muted hover:text-rose-500 hover:bg-rose-500/10 rounded-lg transition-colors"
+                      className="flex h-8 w-8 items-center justify-center rounded-md text-text-muted transition-colors hover:bg-rose-500/10 hover:text-rose-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-500/50 dark:hover:text-rose-400"
                       title="Excluir"
+                      aria-label="Excluir serviço"
                     >
-                      <Trash2 className="w-4 h-4" />
+                      <Trash2 className="h-4 w-4" />
                     </button>
                   </div>
                 </motion.div>

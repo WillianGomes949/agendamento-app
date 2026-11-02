@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import { Poppins } from "next/font/google";
 import "./globals.css";
 import { Providers } from "./providers";
+import TopButton from "@/components/ui/TopButton";
 
 const poppins = Poppins({
   variable: "--font-poppins",
@@ -25,7 +26,10 @@ export default function RootLayout({
   return (
     <html lang="pt-BR">
       <body className={poppins.className}>
-        <Providers>{children}</Providers>
+        <Providers>
+          {children} 
+          <TopButton />
+        </Providers>
       </body>
     </html>
   );

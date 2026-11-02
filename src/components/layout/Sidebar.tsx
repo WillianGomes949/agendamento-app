@@ -148,7 +148,9 @@ export default function Sidebar({
                   isActive
                     ? "bg-accent text-accent-foreground shadow-sm"
                     : "text-text-muted hover:bg-bg-hover hover:text-text"
-                }`}
+                  
+                }
+                ${isExpanded ? 'justify-start': 'justify-center'}`}
               >
                 <Icon size={18} className="shrink-0" />
                 {isExpanded && (

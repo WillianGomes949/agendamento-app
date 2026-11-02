@@ -18,6 +18,7 @@ import {
 import { formatarContato } from "@/lib/utils";
 import { StatusBadge } from "@/components/features/StatusBadge";
 import { Card } from "@/components/ui/Card";
+import { Button } from "@/components/ui/Button";
 
 export default function ServicoDetalhesPage() {
   const params = useParams();
@@ -48,12 +49,9 @@ export default function ServicoDetalhesPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-bg flex flex-col items-center justify-center gap-4">
-        <div className="relative">
-          <div className="absolute inset-0 rounded-full blur-xl bg-blue-500/20 dark:bg-blue-400/20 animate-pulse" />
-          <Loader2 className="animate-spin text-blue-600 dark:text-blue-400 w-10 h-10 relative z-10" />
-        </div>
-        <p className="text-text-muted font-medium animate-pulse">
+      <div className="flex min-h-screen flex-col items-center justify-center gap-4 bg-bg">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" aria-hidden />
+        <p className="animate-pulse text-sm font-medium text-text-muted">
           Carregando detalhes do serviço...
         </p>
       </div>
@@ -62,138 +60,146 @@ export default function ServicoDetalhesPage() {
 
   if (error || !servico) {
     return (
-      <div className="min-h-screen bg-bg flex items-center justify-center p-4">
-        <div className="max-w-md w-full bg-bg-elevated p-8 rounded-3xl shadow-sm border border-border text-center">
-          <div className="w-16 h-16 bg-rose-50 dark:bg-rose-950/30 rounded-2xl flex items-center justify-center mx-auto mb-6 border border-rose-200 dark:border-rose-800">
-            <AlertCircle className="w-8 h-8 text-rose-500 dark:text-rose-400" />
+      <div className="flex min-h-screen items-center justify-center bg-bg p-4">
+        <div className="w-full max-w-md rounded-2xl border border-border bg-bg-elevated p-8 text-center shadow-lg">
+          <div className="mx-auto mb-5 flex h-12 w-12 items-center justify-center rounded-xl border border-rose-500/20 bg-rose-500/10">
+            <AlertCircle
+              className="h-6 w-6 text-rose-600 dark:text-rose-400"
+              aria-hidden
+            />
           </div>
-          <h2 className="text-2xl font-bold text-text mb-2">
+          <h2 className="mb-2 text-lg font-semibold tracking-tight text-text">
             {error ? "Erro ao carregar" : "Serviço não encontrado"}
           </h2>
-          <p className="text-text-muted mb-8">
+          <p className="mb-6 text-sm text-text-muted">
             {error ||
               "O agendamento solicitado pode ter sido removido ou o ID está incorreto."}
           </p>
-          <button
+          <Button
             onClick={() => router.push("/agendamentos")}
-            className="w-full py-3 px-4 bg-accent text-accent-foreground font-semibold rounded-xl hover:bg-accent/90 transition-colors focus:ring-2 focus:ring-accent focus:ring-offset-2"
+            variant="primary"
+            size="lg"
+            className="w-full"
           >
             Voltar
-          </button>
+          </Button>
         </div>
       </div>
     );
   }
 
   return (
-    <main className="min-h-screen bg-bg font-sans selection:bg-accent/20 selection:text-text p-4 md:p-8">
+    <main className="min-h-svh bg-bg p-4 selection:bg-primary/20 selection:text-text md:p-8">
       <motion.div
-        initial={{ opacity: 0, y: 20 }}
+        initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4, ease: "easeOut" }}
-        className="max-w-5xl mx-auto"
+        className="mx-auto max-w-5xl"
       >
-        <button
-          onClick={() => router.back()}
-          className="group flex items-center gap-2 text-sm font-semibold text-text-muted hover:text-text transition-colors mb-8 focus:outline-none"
-          aria-label="Voltar"
-        >
-          <ArrowLeft className="w-4 h-4 transition-transform group-hover:-translate-x-1" />
-          Voltar
-        </button>
-
-        <div className="flex flex-col md:flex-row md:items-start justify-between gap-4 mb-8">
+        <div className="mb-8 flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
           <div>
-            <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight text-text mb-2">
+            <h1 className="mb-2 text-2xl font-semibold tracking-tight text-text md:text-3xl">
               {getClienteNome()}
             </h1>
             <div className="flex items-center gap-3">
-              <span className="bg-bg-muted text-text px-2.5 py-1 rounded-md text-xs font-bold uppercase tracking-wider border border-border">
+              <span className="inline-flex items-center rounded-md border border-border bg-bg-muted/40 px-2.5 py-1 text-xs font-bold uppercase tracking-wider text-text">
                 OS: {getOrdemServico()}
               </span>
             </div>
           </div>
-          <div className="mt-2 md:mt-0">
-            <StatusBadge status={getStatus()} className="shadow-sm" />
+          <div className="mt-1 md:mt-0">
+            <StatusBadge status={getStatus()} />
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          <Card className="p-6 rounded-2xl border-border shadow-sm hover:shadow-md transition-shadow">
-            <div className="flex items-center gap-3 mb-5">
-              <div className="p-2.5 bg-blue-50 dark:bg-blue-950/30 text-blue-600 dark:text-blue-400 rounded-xl">
-                <User className="w-5 h-5" />
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+          {/* Card: Cliente */}
+          <Card padding="none" className="p-5">
+            <div className="mb-4 flex items-center gap-3">
+              <div className="flex items-center justify-center rounded-lg bg-blue-500/10 p-2 text-blue-600 dark:text-blue-400">
+                <User className="h-5 w-5" />
               </div>
-              <h2 className="text-lg font-bold text-text">Cliente</h2>
+              <h2 className="text-sm font-semibold tracking-tight text-text">
+                Cliente
+              </h2>
             </div>
             <div className="flex items-center gap-3 text-text">
-              <Phone className="w-4 h-4 text-text-muted" />
-              <span className="font-medium">
+              <Phone className="h-4 w-4 shrink-0 text-text-muted" />
+              <span className="text-sm font-medium">
                 {formatarContato(getClienteContato())}
               </span>
             </div>
           </Card>
 
-          <Card className="p-6 rounded-2xl border-border shadow-sm hover:shadow-md transition-shadow">
-            <div className="flex items-center gap-3 mb-5">
-              <div className="p-2.5 bg-purple-50 dark:bg-purple-950/30 text-purple-600 dark:text-purple-400 rounded-xl">
-                <Car className="w-5 h-5" />
+          {/* Card: Veículo */}
+          <Card padding="none" className="p-5">
+            <div className="mb-4 flex items-center gap-3">
+              <div className="flex items-center justify-center rounded-lg bg-purple-500/10 p-2 text-purple-600 dark:text-purple-400">
+                <Car className="h-5 w-5" />
               </div>
-              <h2 className="text-lg font-bold text-text">Veículo</h2>
+              <h2 className="text-sm font-semibold tracking-tight text-text">
+                Veículo
+              </h2>
             </div>
-            <div className="space-y-3 text-sm">
-              <div className="flex justify-between items-center border-b border-border pb-2">
+            <div className="space-y-2.5 text-sm">
+              <div className="flex items-center justify-between border-b border-border pb-2">
                 <span className="font-medium text-text-muted">Placa</span>
-                <span className="font-mono font-bold bg-bg-muted px-2 py-0.5 rounded text-text uppercase tracking-widest border border-border">
+                <span className="rounded-md border border-border bg-bg px-2 py-0.5 font-mono text-xs font-bold uppercase tracking-widest text-text">
                   {getVeiculoPlaca()}
                 </span>
               </div>
-              <div className="flex justify-between items-center border-b border-border pb-2">
+              <div className="flex items-center justify-between border-b border-border pb-2">
                 <span className="font-medium text-text-muted">Modelo</span>
-                <span className="font-medium text-text text-right">
+                <span className="text-right font-medium text-text">
                   {getVeiculoModelo()}
                 </span>
               </div>
-              <div className="flex justify-between items-center">
+              <div className="flex items-center justify-between">
                 <span className="font-medium text-text-muted">Serviço</span>
-                <span className="font-medium text-text text-right">
+                <span className="text-right font-medium text-text">
                   {getTipoServico()}
                 </span>
               </div>
             </div>
           </Card>
 
-          <Card className="p-6 rounded-2xl border-border shadow-sm hover:shadow-md transition-shadow">
-            <div className="flex items-center gap-3 mb-5">
-              <div className="p-2.5 bg-emerald-50 dark:bg-emerald-950/30 text-emerald-600 dark:text-emerald-400 rounded-xl">
-                <Calendar className="w-5 h-5" />
+          {/* Card: Agenda */}
+          <Card padding="none" className="p-5">
+            <div className="mb-4 flex items-center gap-3">
+              <div className="flex items-center justify-center rounded-lg bg-emerald-500/10 p-2 text-emerald-600 dark:text-emerald-400">
+                <Calendar className="h-5 w-5" />
               </div>
-              <h2 className="text-lg font-bold text-text">Agenda</h2>
+              <h2 className="text-sm font-semibold tracking-tight text-text">
+                Agenda
+              </h2>
             </div>
-            <div className="space-y-3 text-sm">
-              <div className="flex justify-between items-center border-b border-border pb-2">
+            <div className="space-y-2.5 text-sm">
+              <div className="flex items-center justify-between border-b border-border pb-2">
                 <span className="font-medium text-text-muted">Data</span>
                 <span className="font-semibold text-text">
                   {getData()}
                   {getDiaSemana() ? ` • ${getDiaSemana()}` : ""}
                 </span>
               </div>
-              <div className="flex justify-between items-center">
+              <div className="flex items-center justify-between">
                 <span className="font-medium text-text-muted">Horário</span>
                 <span className="font-semibold text-text">{getHorario()}</span>
               </div>
             </div>
           </Card>
 
-          <Card className="p-6 rounded-2xl border-border shadow-sm hover:shadow-md transition-shadow md:col-span-2">
-            <div className="flex items-center gap-3 mb-5">
-              <div className="p-2.5 bg-rose-50 dark:bg-rose-950/30 text-rose-600 dark:text-rose-400 rounded-xl">
-                <MapPin className="w-5 h-5" />
+          {/* Card: Localização */}
+          <Card padding="none" className="p-5 md:col-span-2">
+            <div className="mb-4 flex items-center gap-3">
+              <div className="flex items-center justify-center rounded-lg bg-rose-500/10 p-2 text-rose-600 dark:text-rose-400">
+                <MapPin className="h-5 w-5" />
               </div>
-              <h2 className="text-lg font-bold text-text">Localização</h2>
+              <h2 className="text-sm font-semibold tracking-tight text-text">
+                Localização
+              </h2>
             </div>
-            <address className="not-italic flex flex-col gap-1.5 text-text bg-bg-muted p-4 rounded-xl border border-border">
-              <p className="font-medium text-text text-base">
+            <address className="flex flex-col gap-1.5 rounded-lg border border-border bg-bg-muted/40 p-4 not-italic text-text">
+              <p className="text-base font-medium text-text">
                 {getEnderecoRua()}
                 {getEnderecoNumero() ? `, ${getEnderecoNumero()}` : ""}
               </p>
@@ -206,49 +212,65 @@ export default function ServicoDetalhesPage() {
                   : ""}
               </p>
               {getEnderecoCep() && (
-                <p className="text-sm font-medium text-text-muted mt-1">
+                <p className="mt-1 text-sm font-medium text-text-muted">
                   CEP: {getEnderecoCep()}
                 </p>
               )}
             </address>
           </Card>
 
-          <Card className="p-6 rounded-2xl border-border shadow-sm hover:shadow-md transition-shadow">
-            <div className="flex items-center gap-3 mb-5">
-              <div className="p-2.5 bg-orange-50 dark:bg-orange-950/30 text-orange-600 dark:text-orange-400 rounded-xl">
-                <Wrench className="w-5 h-5" />
+          {/* Card: Responsável */}
+          <Card padding="none" className="p-5">
+            <div className="mb-4 flex items-center gap-3">
+              <div className="flex items-center justify-center rounded-lg bg-orange-500/10 p-2 text-orange-600 dark:text-orange-400">
+                <Wrench className="h-5 w-5" />
               </div>
-              <h2 className="text-lg font-bold text-text">Responsável</h2>
+              <h2 className="text-sm font-semibold tracking-tight text-text">
+                Responsável
+              </h2>
             </div>
-            <div className="flex items-center gap-3 text-text bg-bg-muted p-4 rounded-xl border border-border">
-              <div className="w-8 h-8 rounded-full bg-bg-elevated flex items-center justify-center border border-border">
-                <User className="w-4 h-4 text-text-muted" />
+            <div className="flex items-center gap-3 rounded-lg border border-border bg-bg-muted/40 p-3 text-text">
+              <div className="flex h-8 w-8 items-center justify-center rounded-full border border-border bg-bg-elevated">
+                <User className="h-4 w-4 text-text-muted" />
               </div>
-              <span className="font-semibold">{getTecnico()}</span>
+              <span className="text-sm font-semibold">{getTecnico()}</span>
             </div>
           </Card>
 
-          <Card className="p-6 rounded-2xl border-border shadow-sm md:col-span-2 lg:col-span-3">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="p-2.5 bg-amber-50 dark:bg-amber-950/30 text-amber-600 dark:text-amber-400 rounded-xl">
-                <FileText className="w-5 h-5" />
+          {/* Card: Observações */}
+          <Card padding="none" className="p-5 md:col-span-2 lg:col-span-3">
+            <div className="mb-4 flex items-center gap-3">
+              <div className="flex items-center justify-center rounded-lg bg-amber-500/10 p-2 text-amber-600 dark:text-amber-400">
+                <FileText className="h-5 w-5" />
               </div>
-              <h2 className="text-lg font-bold text-text">Observações</h2>
+              <h2 className="text-sm font-semibold tracking-tight text-text">
+                Observações
+              </h2>
             </div>
             {getObservacao() ? (
-              <div className="bg-amber-50/50 dark:bg-amber-950/20 border border-amber-200/60 dark:border-amber-800/60 rounded-xl p-4 text-amber-900 dark:text-amber-200">
-                <p className="text-sm leading-relaxed whitespace-pre-wrap">
+              <div className="rounded-lg border border-amber-500/20 bg-amber-500/5 p-4 text-amber-900 dark:text-amber-200">
+                <p className="whitespace-pre-wrap text-sm leading-relaxed">
                   {getObservacao()}
                 </p>
               </div>
             ) : (
-              <div className="bg-bg-muted border border-border rounded-xl p-4 flex items-center justify-center">
-                <p className="text-text-muted text-sm font-medium">
+              <div className="flex items-center justify-center rounded-lg border border-border bg-bg-muted/40 p-4">
+                <p className="text-sm font-medium text-text-muted">
                   Nenhuma observação registrada para este agendamento.
                 </p>
               </div>
             )}
           </Card>
+        </div>
+        <div className="flex mt-3  items-end justify-end">
+          <Button
+            onClick={() => router.back()}
+            aria-label="Voltar"
+            className="flex items-center gap-2 min-h-11"
+          >
+            <ArrowLeft className="h-4 w-4 transition-transform group-hover:-translate-x-1" />
+            Voltar
+          </Button>
         </div>
       </motion.div>
     </main>

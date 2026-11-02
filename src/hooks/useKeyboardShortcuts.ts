@@ -13,7 +13,10 @@ export function useKeyboardShortcuts(shortcuts: Shortcut[]) {
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       for (const shortcut of shortcuts) {
-        const keyMatch = event.key.toLowerCase() === shortcut.key.toLowerCase();
+ const eventKey = event.key?.toLowerCase() || '';
+        const shortcutKey = shortcut.key?.toLowerCase() || '';
+
+        const keyMatch = eventKey === shortcutKey;
         const ctrlMatch = shortcut.ctrlKey === undefined || event.ctrlKey === shortcut.ctrlKey;
         const altMatch = shortcut.altKey === undefined || event.altKey === shortcut.altKey;
         const shiftMatch = shortcut.shiftKey === undefined || event.shiftKey === shortcut.shiftKey;

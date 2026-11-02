@@ -67,7 +67,7 @@ const containerVariants: Variants = {
 };
 
 const itemVariants: Variants = {
-  hidden: { opacity: 0, y: 15 },
+  hidden: { opacity: 0, y: 12 },
   show: {
     opacity: 1,
     y: 0,
@@ -130,7 +130,7 @@ export default function AgendamentosPage() {
     (newFilters: Partial<FiltrosServicos>) => {
       setFilters((prev) => ({ ...prev, ...newFilters }));
     },
-    []
+    [],
   );
 
   const handleClearFilters = useCallback(() => {
@@ -147,8 +147,7 @@ export default function AgendamentosPage() {
       const [da, ma, ya] = a.split("/").map(Number);
       const [db, mb, yb] = b.split("/").map(Number);
       return (
-        new Date(ya, ma - 1, da).getTime() -
-        new Date(yb, mb - 1, db).getTime()
+        new Date(ya, ma - 1, da).getTime() - new Date(yb, mb - 1, db).getTime()
       );
     });
   }, [servicos]);
@@ -238,7 +237,7 @@ export default function AgendamentosPage() {
       className:
         STATUS_CLASS[normalizeStatus(event.resource?.status)] ?? "ev-pendente",
     }),
-    []
+    [],
   );
 
   useEffect(() => {
@@ -294,15 +293,14 @@ export default function AgendamentosPage() {
           y === hoje.getFullYear()
         );
       }).length,
-      pendentes: ativos.filter(
-        (s) => s.status?.toLowerCase() === "pendente"
-      ).length,
+      pendentes: ativos.filter((s) => s.status?.toLowerCase() === "pendente")
+        .length,
       concluidos: ativos.filter(
         (s) =>
           s.status
             ?.toLowerCase()
             .normalize("NFD")
-            .replace(/[\u0300-\u036f]/g, "") === "concluido"
+            .replace(/[\u0300-\u036f]/g, "") === "concluido",
       ).length,
     };
   }, [servicosFiltrados]);
@@ -315,15 +313,15 @@ export default function AgendamentosPage() {
 
       if (view === "week" || view === "day") {
         return (
-          <div className="flex flex-col gap-0.5 min-w-0 h-full">
-            <span className="text-[11px] font-mono opacity-80 leading-none">
+          <div className="flex h-full min-w-0 flex-col gap-0.5">
+            <span className="text-[11px] font-mono leading-none opacity-80">
               {horario}
             </span>
-            <span className="ev-title font-semibold truncate leading-tight">
+            <span className="ev-title truncate font-semibold leading-tight">
               {event.title}
             </span>
             {tecnico && (
-              <span className="text-[11px] opacity-75 truncate leading-tight">
+              <span className="truncate text-[11px] leading-tight opacity-75">
                 {tecnico}
               </span>
             )}
@@ -336,7 +334,7 @@ export default function AgendamentosPage() {
           <span className="ev-agenda">
             <span className="ev-title">{event.title}</span>
             {tecnico && (
-              <span className="text-xs opacity-75 font-medium">
+              <span className="text-xs font-medium opacity-75">
                 · {tecnico}
               </span>
             )}
@@ -349,22 +347,22 @@ export default function AgendamentosPage() {
           className="flex items-center gap-1.5 overflow-hidden"
           title={`${horario} · ${event.title}${tecnico ? ` · ${tecnico}` : ""}`}
         >
-          <span className="hidden sm:flex shrink-0 w-4 h-4 rounded-full bg-black/10 dark:bg-white/15 text-[9px] font-bold items-center justify-center">
+          <span className="hidden h-4 w-4 shrink-0 items-center justify-center rounded-full bg-black/10 text-[9px] font-bold dark:bg-white/15 sm:flex">
             {inicial}
           </span>
-          <span className="text-[10px] font-mono opacity-80 shrink-0">
+          <span className="shrink-0 font-mono text-[10px] opacity-80">
             {horario}
           </span>
-          <span className="ev-title truncate flex-1">{event.title}</span>
+          <span className="ev-title flex-1 truncate">{event.title}</span>
         </div>
       );
     },
-    [view]
+    [view],
   );
 
   const handleSelectEvent = useCallback(
     (event: any) => setSelectedEvent(event.resource as Servico),
-    []
+    [],
   );
 
   const handleSelectSlot = useCallback(
@@ -372,7 +370,7 @@ export default function AgendamentosPage() {
       setDate(slotInfo.start);
       if (view === "month") setView("day");
     },
-    [view]
+    [view],
   );
 
   const handleNavigate = useCallback((newDate: Date) => setDate(newDate), []);
@@ -398,7 +396,7 @@ export default function AgendamentosPage() {
         return addMonths(d, dir);
       });
     },
-    [view]
+    [view],
   );
 
   const handleCreate = useCallback(
@@ -411,7 +409,7 @@ export default function AgendamentosPage() {
         showError(result.error || "Erro ao criar serviço");
       }
     },
-    [create, showError]
+    [create, showError],
   );
 
   const handleUpdate = useCallback(
@@ -425,7 +423,7 @@ export default function AgendamentosPage() {
         showError(result.error || "Erro ao atualizar");
       }
     },
-    [update, showError]
+    [update, showError],
   );
 
   const handleDelete = useCallback(async () => {
@@ -447,22 +445,29 @@ export default function AgendamentosPage() {
 
   if (loading && servicos.length === 0) {
     return (
-      <div className="min-h-[80vh] flex flex-col items-center justify-center p-6">
-        <Loader2 className="animate-spin text-primary w-12 h-12 mb-4" />
-        <p className="text-text-muted font-medium">Carregando sua agenda...</p>
+      <div className="flex min-h-[80vh] flex-col items-center justify-center p-6">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" aria-hidden />
+        <p className="mt-3 text-sm font-medium text-text-muted">
+          Carregando sua agenda...
+        </p>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="min-h-[80vh] flex flex-col items-center justify-center p-6 text-center">
-        <div className="w-16 h-16 bg-rose-500/10 rounded-full flex items-center justify-center mb-4 border border-rose-500/20">
-          <AlertCircle className="w-8 h-8 text-rose-500" />
+      <div className="flex min-h-[80vh] flex-col items-center justify-center p-6 text-center">
+        <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl border border-rose-500/20 bg-rose-500/10">
+          <AlertCircle
+            className="h-6 w-6 text-rose-600 dark:text-rose-400"
+            aria-hidden
+          />
         </div>
-        <h2 className="text-xl font-bold text-text">Ops! Algo deu errado</h2>
-        <p className="text-text-muted mt-2 text-sm max-w-xs">{error}</p>
-        <Button variant="outline" className="mt-6 min-h-11" onClick={refresh}>
+        <h2 className="text-lg font-semibold tracking-tight text-text">
+          Ops! Algo deu errado
+        </h2>
+        <p className="mt-2 max-w-xs text-sm text-text-muted">{error}</p>
+        <Button variant="outline" onClick={refresh} className="mt-6">
           Tentar novamente
         </Button>
       </div>
@@ -474,46 +479,49 @@ export default function AgendamentosPage() {
       variants={containerVariants}
       initial="hidden"
       animate="show"
-      className="space-y-6 pb-28 md:pb-8 max-w-7xl mx-auto"
+      className="mx-auto max-w-7xl space-y-6 pb-28 md:pb-8"
     >
       <Toaster
         position="top-right"
         toastOptions={{
           className:
-            "shadow-xl rounded-2xl font-medium text-sm border border-border",
+            "!rounded-lg !bg-bg-elevated !text-text !border !border-border !shadow-lg backdrop-blur-md",
           duration: 3000,
+          success: { iconTheme: { primary: "#10b981", secondary: "#fff" } },
+          error: { iconTheme: { primary: "#e11d48", secondary: "#fff" } },
         }}
       />
 
       {/* Header */}
       <motion.div
         variants={itemVariants}
-        className="flex flex-col sm:flex-row items-center justify-between gap-4 bg-bg-elevated p-6 rounded-2xl shadow-sm border border-border"
+        className="flex flex-col items-center justify-between gap-4 rounded-2xl border border-border bg-bg-elevated p-5 shadow-sm sm:flex-row sm:p-6"
       >
         <div>
-          <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight text-text mb-2">
+          <h1 className="text-2xl font-semibold tracking-tight text-text md:text-3xl">
             Agenda
           </h1>
-          <p className="text-text-muted text-sm mt-1">
+          <p className="mt-1 text-sm text-text-muted">
             Planeje e gerencie seus atendimentos em tempo real.
           </p>
         </div>
         <Button
           variant="primary"
+          icon={Plus}
           onClick={() => {
             setEditingServico(null);
             setIsFormOpen(true);
           }}
-          className="hidden sm:flex items-center gap-2 min-h-11"
+          className="hidden sm:inline-flex"
         >
-          <Plus className="w-5 h-5" /> Novo Serviço
+          Novo Serviço
         </Button>
       </motion.div>
 
       {/* KPIs */}
       <motion.div
         variants={itemVariants}
-        className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 px-4 sm:px-0"
+        className="grid grid-cols-2 gap-3 px-4 sm:gap-4 sm:px-0 lg:grid-cols-4"
       >
         {[
           {
@@ -551,18 +559,19 @@ export default function AgendamentosPage() {
         ].map((kpi, i) => (
           <Card
             key={i}
-            className={`p-4 flex items-center gap-4 hoverable group transition-all border ${kpi.border} shadow-xs hover:shadow-md`}
+            padding="none"
+            className={`flex items-center gap-4 p-4 hover:shadow-md ${kpi.border}`}
           >
             <div
-              className={`p-3 ${kpi.bg} ${kpi.text} rounded-xl group-hover:scale-105 transition-transform duration-200`}
+              className={`flex items-center justify-center rounded-lg p-2.5 ${kpi.bg} ${kpi.text}`}
             >
-              <kpi.icon className="w-5 h-5 sm:w-6 sm:h-6" />
+              <kpi.icon className="h-5 w-5 sm:h-6 sm:w-6" />
             </div>
             <div>
-              <p className="text-xs font-bold text-text-muted uppercase tracking-wider mb-0.5">
+              <p className="mb-0.5 text-[11px] font-semibold uppercase tracking-wider text-text-muted">
                 {kpi.label}
               </p>
-              <p className="text-xl sm:text-2xl font-black text-text leading-none">
+              <p className="text-xl font-semibold leading-none tracking-tight text-text sm:text-2xl">
                 {kpi.value}
               </p>
             </div>
@@ -570,7 +579,7 @@ export default function AgendamentosPage() {
         ))}
       </motion.div>
 
-      {/* FILTERBAR COMPONENTE */}
+      {/* FILTERBAR */}
       <motion.div variants={itemVariants} className="px-4 sm:px-0">
         <FilterBar
           filters={filters}
@@ -584,57 +593,56 @@ export default function AgendamentosPage() {
         />
       </motion.div>
 
-      {/* Calendário Area */}
+      {/* Calendário */}
       <motion.div variants={itemVariants} className="px-4 sm:px-0">
-        <Card className="p-0 overflow-hidden shadow-xs border border-border bg-bg-elevated">
+        <Card padding="none" className="overflow-hidden">
           {/* Toolbar Customizada */}
-          <div className="flex flex-col lg:flex-row items-center justify-between gap-4 p-4 border-b border-border bg-bg-muted/40">
-            {/* Navegação de Meses/Dias */}
-            <div className="flex items-center justify-between w-full lg:w-auto gap-2">
-              <Button
-                variant="outline"
-                size="sm"
+          <div className="flex flex-col items-center justify-between gap-4 border-b border-border bg-bg-muted/40 p-4 lg:flex-row">
+            {/* Navegação */}
+            <div className="flex w-full items-center justify-between gap-2 lg:w-auto">
+              <button
+                type="button"
                 onClick={() => handleStep(-1)}
+                className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-border bg-bg-elevated text-text-muted transition-colors hover:bg-bg-hover hover:text-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-text/50"
                 aria-label="Período anterior"
-                className="min-h-10 min-w-10 rounded-xl bg-bg-elevated"
               >
-                <ChevronLeft className="w-5 h-5 text-text-muted" />
-              </Button>
-              <div className="flex flex-col items-center min-w-40 sm:min-w-52.5">
-                <h2 className="text-base sm:text-lg font-bold text-text capitalize leading-tight text-center">
+                <ChevronLeft className="h-5 w-5" />
+              </button>
+              <div className="flex min-w-40 flex-col items-center sm:min-w-52">
+                <h2 className="text-center text-base font-semibold capitalize leading-tight tracking-tight text-text sm:text-lg">
                   {calendarTitle}
                 </h2>
               </div>
-              <Button
-                variant="outline"
-                size="sm"
+              <button
+                type="button"
                 onClick={() => handleStep(1)}
+                className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-border bg-bg-elevated text-text-muted transition-colors hover:bg-bg-hover hover:text-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-text/50"
                 aria-label="Próximo período"
-                className="min-h-10 min-w-10 rounded-xl bg-bg-elevated"
               >
-                <ChevronRight className="w-5 h-5 text-text-muted" />
-              </Button>
+                <ChevronRight className="h-5 w-5" />
+              </button>
             </div>
 
             {/* Ações e Seletor de Visão */}
-            <div className="flex items-center gap-2 w-full lg:w-auto">
+            <div className="flex w-full items-center gap-2 lg:w-auto">
               <Button
                 variant="outline"
+                size="sm"
                 onClick={() => setDate(new Date())}
-                className="min-h-10 rounded-xl bg-bg-elevated whitespace-nowrap shrink-0 text-xs"
+                className="shrink-0"
               >
                 Ir para Hoje
               </Button>
-              <div className="flex bg-bg-muted p-1 rounded-xl border border-border flex-1 lg:flex-none min-w-0">
+              <div className="inline-flex flex-1 gap-0.5 rounded-lg border border-border bg-bg-muted/40 p-0.5 lg:flex-none">
                 {views.map((v) => (
                   <button
                     key={v}
                     onClick={() => setView(v)}
                     aria-pressed={view === v}
-                    className={`flex-1 lg:flex-none px-2.5 sm:px-4 py-1.5 rounded-lg text-xs font-semibold transition-all whitespace-nowrap ${
+                    className={`flex-1 whitespace-nowrap rounded-md px-2.5 py-1.5 text-xs font-medium tracking-tight transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-text/50 lg:flex-none ${
                       view === v
-                        ? "bg-bg-elevated text-primary shadow-xs border border-border"
-                        : "text-text-muted hover:text-text"
+                        ? "bg-bg text-text shadow-sm ring-1 ring-border/60"
+                        : "text-text-muted hover:bg-bg-elevated/60 hover:text-text"
                     }`}
                   >
                     {viewLabels[v]}
@@ -695,7 +703,7 @@ export default function AgendamentosPage() {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={() => setSelectedEvent(null)}
-            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 dark:bg-black/60 backdrop-blur-xs"
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm"
             role="dialog"
             aria-modal="true"
           >
@@ -704,108 +712,111 @@ export default function AgendamentosPage() {
               animate={{ scale: 1, opacity: 1, y: 0 }}
               exit={{ scale: 0.95, opacity: 0, y: 20 }}
               onClick={(e) => e.stopPropagation()}
-              className="w-full max-w-2xl max-h-[90vh] flex flex-col bg-bg-elevated rounded-2xl border border-border shadow-2xl overflow-hidden"
+              className="flex max-h-[90vh] w-full max-w-2xl flex-col overflow-hidden rounded-2xl border border-border bg-bg-elevated shadow-lg"
             >
               {/* Header */}
-              <div className="flex items-center justify-between px-5 sm:px-6 py-4 border-b border-border bg-bg-elevated/80 shrink-0">
+              <div className="flex shrink-0 items-center justify-between border-b border-border bg-bg-elevated/85 px-5 py-4 backdrop-blur-md sm:px-6">
                 <div className="flex items-center gap-3">
-                  <div className="p-2 bg-primary/10 border border-primary/20 rounded-xl text-primary">
-                    <Car className="w-5 h-5" />
+                  <div className="flex items-center justify-center rounded-lg border border-primary/20 bg-primary/10 p-2 text-primary">
+                    <Car className="h-5 w-5" />
                   </div>
                   <div>
-                    <h3 className="text-base sm:text-lg font-bold text-text leading-tight">
+                    <h3 className="text-base font-semibold leading-tight tracking-tight text-text sm:text-lg">
                       {selectedEvent.cliente?.nome || "Cliente não informado"}
                     </h3>
-                    <p className="text-xs text-text-muted font-mono font-medium">
+                    <p className="font-mono text-xs font-medium text-text-muted">
                       {selectedEvent.veiculo?.placa || "S/ PLACA"}
                     </p>
                   </div>
                 </div>
                 <button
                   onClick={() => setSelectedEvent(null)}
-                  className="p-2 rounded-xl hover:bg-bg-muted transition-colors text-text-muted hover:text-text"
+                  className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-text-muted transition-colors hover:bg-bg-hover hover:text-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-text/50"
                   aria-label="Fechar"
                 >
-                  <X className="w-5 h-5" />
+                  <X className="h-4 w-4" />
                 </button>
               </div>
 
               {/* Body */}
-              <div className="p-5 sm:p-6 overflow-y-auto flex-1 custom-scrollbar space-y-5">
+              <div className="custom-scrollbar flex-1 space-y-5 overflow-y-auto p-5 sm:p-6">
                 <div className="flex justify-end">
                   <StatusBadge status={selectedEvent.status || "pendente"} />
                 </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 bg-bg-muted/50 p-4 rounded-2xl border border-border">
+                <div className="grid grid-cols-1 gap-4 rounded-lg border border-border bg-bg-muted/40 p-4 sm:grid-cols-2">
                   <div className="flex items-center gap-3 text-text">
-                    <CalendarIcon className="w-5 h-5 text-blue-500 shrink-0" />
+                    <CalendarIcon className="h-5 w-5 shrink-0 text-blue-600 dark:text-blue-400" />
                     <div className="flex flex-col">
-                      <span className="text-[11px] font-semibold text-text-muted uppercase">
+                      <span className="text-[11px] font-semibold uppercase text-text-muted">
                         Data & Hora
                       </span>
-                      <span className="font-semibold text-sm">
+                      <span className="text-sm font-semibold">
                         {selectedEvent.data} às {selectedEvent.horario}
                       </span>
                     </div>
                   </div>
                   <div className="flex items-center gap-3 text-text">
-                    <User className="w-5 h-5 text-emerald-500 shrink-0" />
+                    <User className="h-5 w-5 shrink-0 text-emerald-600 dark:text-emerald-400" />
                     <div className="flex flex-col">
-                      <span className="text-[11px] font-semibold text-text-muted uppercase">
+                      <span className="text-[11px] font-semibold uppercase text-text-muted">
                         Técnico
                       </span>
-                      <span className="font-semibold text-sm">
+                      <span className="text-sm font-semibold">
                         {selectedEvent.tecnico || "Não atribuído"}
                       </span>
                     </div>
                   </div>
                   <div className="flex items-center gap-3 text-text">
-                    <MapPin className="w-5 h-5 text-rose-500 shrink-0" />
+                    <MapPin className="h-5 w-5 shrink-0 text-rose-600 dark:text-rose-400" />
                     <div className="flex flex-col">
-                      <span className="text-[11px] font-semibold text-text-muted uppercase">
+                      <span className="text-[11px] font-semibold uppercase text-text-muted">
                         Cidade
                       </span>
-                      <span className="font-semibold text-sm">
+                      <span className="text-sm font-semibold">
                         {selectedEvent.endereco?.cidade || "Não informada"}
                       </span>
                     </div>
                   </div>
                   <div className="flex items-center gap-3 text-text">
-                    <Wrench className="w-5 h-5 text-amber-500 shrink-0" />
+                    <Wrench className="h-5 w-5 shrink-0 text-amber-600 dark:text-amber-400" />
                     <div className="flex flex-col">
-                      <span className="text-[11px] font-semibold text-text-muted uppercase">
+                      <span className="text-[11px] font-semibold uppercase text-text-muted">
                         Tipo de Serviço
                       </span>
-                      <span className="font-semibold text-sm">
+                      <span className="text-sm font-semibold">
                         {selectedEvent.tipoServico || "Não especificado"}
                       </span>
                     </div>
                   </div>
                 </div>
                 {selectedEvent.observacao && (
-                  <div className="p-4 bg-amber-500/10 border border-amber-500/20 rounded-xl text-xs text-text">
-                    <span className="font-bold block mb-1">Observações:</span>
+                  <div className="rounded-lg border border-amber-500/20 bg-amber-500/10 p-4 text-xs text-text">
+                    <span className="mb-1 block font-bold">Observações:</span>
                     {selectedEvent.observacao}
                   </div>
                 )}
               </div>
 
               {/* Footer */}
-              <div className="px-5 sm:px-6 py-4 border-t border-border bg-bg-muted/40 shrink-0 flex flex-col-reverse sm:flex-row justify-end gap-3">
+              <div className="flex shrink-0 flex-col-reverse justify-end gap-3 border-t border-border bg-bg-muted/40 px-5 py-4 sm:flex-row sm:px-6">
                 <Button
                   variant="outline"
+                  icon={Trash2}
                   onClick={() => {
                     setDeletingServico(selectedEvent);
                     setSelectedEvent(null);
                   }}
-                  className="w-full sm:w-auto text-rose-600 dark:text-rose-400 border-rose-500/30 hover:bg-rose-500/10"
+                  className="w-full border-rose-500/30 text-rose-600 hover:bg-rose-500/10 hover:border-rose-500/30 focus-visible:ring-rose-500/50 dark:text-rose-400 sm:w-auto"
                 >
-                  <Trash2 className="w-4 h-4 mr-1.5" /> Excluir
+                  Excluir
                 </Button>
                 <Button
+                  variant="primary"
+                  icon={Wrench}
                   onClick={() => openEditForm(selectedEvent)}
                   className="w-full sm:w-auto"
                 >
-                  <Wrench className="w-4 h-4 mr-1.5" /> Editar Serviço
+                  Editar Serviço
                 </Button>
               </div>
             </motion.div>
@@ -814,7 +825,7 @@ export default function AgendamentosPage() {
       </AnimatePresence>
 
       {/* FAB Mobile */}
-      <div className="sm:hidden fixed bottom-6 right-6 z-30">
+      <div className="fixed bottom-6 right-6 z-30 sm:hidden">
         <FloatingActionButton
           onClick={() => {
             setEditingServico(null);
