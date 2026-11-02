@@ -8,8 +8,8 @@ import {
   Users,
   BarChart3,
   X,
-  HelpCircle,
   UserCog2,
+  SunMoon,
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -211,7 +211,7 @@ export default function Sidebar({
             </>
           ) : (
             <div className="flex justify-center">
-              <HelpCircle size={18} className="text-text-muted" />
+              <SunMoon size={18} className="text-text-muted" />
             </div>
           )}
         </div>
