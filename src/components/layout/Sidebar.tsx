@@ -29,12 +29,7 @@ interface SidebarProps {
 
 const baseNavItems = [
   { label: "Dashboard", href: "/dashboard", icon: Home },
-  {
-    label: "Agendamentos",
-    href: "/agendamentos",
-    icon: CalendarDays,
-    badgeKey: "agendamentos" as const,
-  },
+  { label: "Agendamentos", href: "/agendamentos", icon: CalendarDays, badgeKey: "agendamentos" as const},
   { label: "Serviços", href: "/servicos", icon: Wrench },
   { label: "Relatórios", href: "/relatorios", icon: BarChart3 },
   { label: "Técnicos", href: "/tecnicos", icon: Users },
