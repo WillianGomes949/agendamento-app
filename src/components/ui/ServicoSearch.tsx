@@ -23,7 +23,7 @@ interface Props {
 const MAX_VISIBLE = 8;
 
 const selectClass =
-  "w-full h-10 px-3 rounded-xl text-sm bg-bg-muted text-text border border-border outline-none transition-all focus:ring-2 focus:ring-primary/20 focus:border-primary";
+  "h-10 w-full cursor-pointer appearance-none rounded-lg border border-border bg-bg-muted/30 px-3 text-sm tracking-tight text-text outline-none transition-colors focus:border-text focus:ring-2 focus:ring-text/30";
 
 export function ServicoSearch({ servicos, onSelect, className = "" }: Props) {
   const {
@@ -104,7 +104,10 @@ export function ServicoSearch({ servicos, onSelect, className = "" }: Props) {
       {/* Barra de pesquisa */}
       <div className="flex items-center gap-2">
         <div className="relative flex-1">
-          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted pointer-events-none" />
+          <Search
+            className="pointer-events-none absolute left-3 top-1/2 z-10 h-4 w-4 -translate-y-1/2 text-text-muted"
+            aria-hidden
+          />
           <input
             type="text"
             role="combobox"
@@ -124,10 +127,13 @@ export function ServicoSearch({ servicos, onSelect, className = "" }: Props) {
             onFocus={() => setOpen(true)}
             onKeyDown={handleKeyDown}
             placeholder="Buscar por cliente, placa, OS, telefone, endereço..."
-            className="w-full h-11 pl-10 pr-10 rounded-xl text-sm bg-bg-elevated text-text placeholder:text-text-muted border border-border outline-none transition-all focus:ring-2 focus:ring-primary/20 focus:border-primary"
+            className="h-10 w-full rounded-lg border border-border bg-bg-elevated pl-9 pr-9 text-sm tracking-tight text-text outline-none transition-colors placeholder:text-text-muted/50 focus:border-text focus:ring-2 focus:ring-text/30"
           />
           {isPending ? (
-            <Loader2 className="absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted animate-spin" />
+            <Loader2
+              className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 animate-spin text-text-muted"
+              aria-hidden
+            />
           ) : (
             (query || activeFiltersCount > 0) && (
               <button
@@ -137,9 +143,9 @@ export function ServicoSearch({ servicos, onSelect, className = "" }: Props) {
                   setOpen(false);
                 }}
                 aria-label="Limpar pesquisa"
-                className="absolute right-2.5 top-1/2 -translate-y-1/2 p-1 rounded-lg text-text-muted hover:text-text hover:bg-bg-muted transition-colors"
+                className="absolute right-1.5 top-1/2 inline-flex h-6 w-6 -translate-y-1/2 items-center justify-center rounded-md text-text-muted transition-colors hover:bg-bg-hover hover:text-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-text/50"
               >
-                <X className="w-4 h-4" />
+                <X className="h-3.5 w-3.5" />
               </button>
             )
           )}
@@ -150,15 +156,15 @@ export function ServicoSearch({ servicos, onSelect, className = "" }: Props) {
           onClick={() => setShowFilters((v) => !v)}
           aria-expanded={showFilters}
           aria-label="Filtros"
-          className={`relative h-11 w-11 shrink-0 flex items-center justify-center rounded-xl border transition-colors ${
+          className={`relative flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-text/50 ${
             showFilters || activeFiltersCount > 0
-              ? "bg-primary/10 border-primary/30 text-primary"
-              : "bg-bg-elevated border-border text-text-muted hover:text-text"
+              ? "border-primary/30 bg-primary/10 text-primary"
+              : "border-border bg-bg-elevated text-text-muted hover:text-text"
           }`}
         >
-          <SlidersHorizontal className="w-4 h-4" />
+          <SlidersHorizontal className="h-4 w-4" />
           {activeFiltersCount > 0 && (
-            <span className="absolute -top-1.5 -right-1.5 min-w-5 h-5 px-1 rounded-full bg-primary text-primary-foreground text-[10px] font-bold flex items-center justify-center">
+            <span className="absolute -right-1 -top-1 flex h-4 min-w-4 items-center justify-center rounded-md bg-primary px-1 text-[10px] font-bold text-white">
               {activeFiltersCount}
             </span>
           )}
@@ -167,10 +173,10 @@ export function ServicoSearch({ servicos, onSelect, className = "" }: Props) {
 
       {/* Filtros */}
       {showFilters && (
-        <div className="mt-3 p-4 bg-bg-elevated border border-border rounded-2xl shadow-sm">
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        <div className="mt-3 rounded-lg border border-border bg-bg-elevated p-4 shadow-sm">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
             <label className="flex flex-col gap-1.5">
-              <span className="text-xs font-semibold text-text-muted uppercase tracking-wider">
+              <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-text-muted">
                 Status
               </span>
               <select
@@ -191,7 +197,7 @@ export function ServicoSearch({ servicos, onSelect, className = "" }: Props) {
             </label>
 
             <label className="flex flex-col gap-1.5">
-              <span className="text-xs font-semibold text-text-muted uppercase tracking-wider">
+              <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-text-muted">
                 Técnico
               </span>
               <select
@@ -212,7 +218,7 @@ export function ServicoSearch({ servicos, onSelect, className = "" }: Props) {
             </label>
 
             <label className="flex flex-col gap-1.5">
-              <span className="text-xs font-semibold text-text-muted uppercase tracking-wider">
+              <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-text-muted">
                 Tipo de serviço
               </span>
               <select
@@ -237,7 +243,7 @@ export function ServicoSearch({ servicos, onSelect, className = "" }: Props) {
             <button
               type="button"
               onClick={clearFilters}
-              className="mt-3 text-xs font-semibold text-primary hover:underline"
+              className="mt-3 text-xs font-medium text-rose-600 transition-colors hover:underline dark:text-rose-400"
             >
               Limpar filtros
             </button>
@@ -247,8 +253,8 @@ export function ServicoSearch({ servicos, onSelect, className = "" }: Props) {
 
       {/* Resultados */}
       {panelOpen && (
-        <div className="absolute z-40 left-0 right-0 mt-2 bg-bg-elevated border border-border rounded-2xl shadow-2xl overflow-hidden">
-          <div className="px-4 py-2 text-xs font-semibold text-text-muted border-b border-border bg-bg-muted/50">
+        <div className="absolute left-0 right-0 z-40 mt-2 overflow-hidden rounded-lg border border-border bg-bg-elevated shadow-lg">
+          <div className="border-b border-border bg-bg-muted/40 px-4 py-2 text-xs font-semibold text-text-muted">
             {results.length === 0
               ? "Nenhum resultado"
               : `${results.length} ${results.length === 1 ? "resultado" : "resultados"}`}
@@ -262,7 +268,7 @@ export function ServicoSearch({ servicos, onSelect, className = "" }: Props) {
             <ul
               id={listId}
               role="listbox"
-              className="max-h-80 overflow-y-auto custom-scrollbar divide-y divide-border/50"
+              className="no-scrollbar max-h-80 divide-y divide-border/50 overflow-y-auto"
             >
               {visible.map((s, i) => (
                 <li
@@ -271,18 +277,18 @@ export function ServicoSearch({ servicos, onSelect, className = "" }: Props) {
                   role="option"
                   aria-selected={i === activeIndex}
                   onMouseEnter={() => setActiveIndex(i)}
-                  onMouseDown={(e) => e.preventDefault()} // mantém o foco no input
+                  onMouseDown={(e) => e.preventDefault()}
                   onClick={() => handleSelect(s)}
-                  className={`px-4 py-3 cursor-pointer transition-colors ${
-                    i === activeIndex ? "bg-bg-muted" : ""
+                  className={`cursor-pointer px-4 py-3 transition-colors ${
+                    i === activeIndex ? "bg-bg-hover" : ""
                   }`}
                 >
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0">
-                      <p className="text-sm font-bold text-text truncate">
+                      <p className="truncate text-sm font-semibold text-text">
                         {s.cliente?.nome || "Sem cliente"}
                       </p>
-                      <p className="text-xs text-text-muted truncate">
+                      <p className="truncate text-xs text-text-muted">
                         <span className="font-mono font-semibold uppercase">
                           {s.veiculo?.placa || "S/ PLACA"}
                         </span>
@@ -297,11 +303,11 @@ export function ServicoSearch({ servicos, onSelect, className = "" }: Props) {
 
                   <div className="mt-1.5 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-text-muted">
                     <span className="flex items-center gap-1.5">
-                      <CalendarIcon className="w-3.5 h-3.5" />
+                      <CalendarIcon className="h-3.5 w-3.5" />
                       {s.data} {s.horario ? `às ${s.horario}` : ""}
                     </span>
                     <span className="flex items-center gap-1.5">
-                      <User className="w-3.5 h-3.5" />
+                      <User className="h-3.5 w-3.5" />
                       {s.tecnico || "Não atribuído"}
                     </span>
                   </div>
@@ -311,7 +317,7 @@ export function ServicoSearch({ servicos, onSelect, className = "" }: Props) {
           )}
 
           {extra > 0 && (
-            <div className="px-4 py-2 text-xs text-center text-text-muted border-t border-border bg-bg-muted/50">
+            <div className="border-t border-border bg-bg-muted/40 px-4 py-2 text-center text-xs text-text-muted">
               +{extra} {extra === 1 ? "resultado" : "resultados"} — refine a
               pesquisa para ver mais
             </div>

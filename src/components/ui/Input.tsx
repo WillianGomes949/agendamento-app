@@ -34,25 +34,25 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
         {label && (
           <label
             htmlFor={inputId}
-            className="block text-sm font-semibold text-text mb-1.5"
+            className="mb-1.5 block text-[13px] font-medium tracking-tight text-text"
           >
             {label}
           </label>
         )}
-        <div className="relative group">
+        <div className="group relative">
           {LeftIcon && (
-            <LeftIcon className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted group-focus-within:text-text transition-colors pointer-events-none" />
+            <LeftIcon className="pointer-events-none absolute left-3 top-1/2 z-10 h-4 w-4 -translate-y-1/2 text-text-muted transition-colors group-focus-within:text-text" />
           )}
           <input
             ref={ref}
             id={inputId}
             className={cn(
-              "w-full rounded-xl border bg-bg-muted px-4 py-2.5 text-sm text-text placeholder:text-text-muted/60 focus:bg-bg-elevated focus:outline-none focus:ring-4 focus:ring-accent/10 focus:border-accent transition-all shadow-sm",
-              LeftIcon && "pl-10",
-              RightIcon && "pr-10",
+              "h-10 w-full rounded-lg border bg-bg-muted/30 px-3 text-sm tracking-tight text-text shadow-sm transition-colors placeholder:text-text-muted/50 focus:bg-bg-elevated focus:outline-none focus:ring-2 focus:ring-text/30 disabled:cursor-not-allowed disabled:opacity-60",
+              LeftIcon && "pl-9",
+              RightIcon && "pr-9",
               error
-                ? "border-red-300 dark:border-red-700 bg-red-50/50 dark:bg-red-950/20 focus:border-red-500 focus:ring-red-100 dark:focus:ring-red-900/30 text-red-900 dark:text-red-300"
-                : "border-border",
+                ? "border-rose-500 bg-rose-500/5 focus:border-rose-500 focus:ring-rose-500/20"
+                : "border-border focus:border-text",
               className,
             )}
             aria-invalid={!!error}
@@ -66,15 +66,15 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
             {...props}
           />
           {RightIcon && (
-            <RightIcon className="absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted pointer-events-none" />
+            <RightIcon className="pointer-events-none absolute right-3 top-1/2 z-10 h-4 w-4 -translate-y-1/2 text-text-muted transition-colors group-focus-within:text-text" />
           )}
         </div>
         {error ? (
           <p
             id={`${inputId}-error`}
-            className="mt-1.5 text-xs font-medium text-red-500 dark:text-red-400 flex items-center gap-1.5"
+            className="mt-1.5 flex items-center gap-1.5 text-xs font-medium text-rose-600 dark:text-rose-400"
           >
-            <AlertCircle className="w-3.5 h-3.5" /> {error}
+            <AlertCircle className="h-3.5 w-3.5 shrink-0" /> {error}
           </p>
         ) : helperText ? (
           <p

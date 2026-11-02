@@ -123,10 +123,10 @@ export function FilterBar({
   const { options: configOptions, loading: configLoading } = useConfig();
 
   const [localDataInicio, setLocalDataInicio] = useState<string>(
-    brToIsoDate(filters.dataInicio)
+    brToIsoDate(filters.dataInicio),
   );
   const [localDataFim, setLocalDataFim] = useState<string>(
-    brToIsoDate(filters.dataFim)
+    brToIsoDate(filters.dataFim),
   );
 
   useEffect(() => {
@@ -203,7 +203,7 @@ export function FilterBar({
       }
       onChange(newFilters);
     },
-    [onChange]
+    [onChange],
   );
 
   const handleDataInicioChange = useCallback(
@@ -216,7 +216,7 @@ export function FilterBar({
         data: undefined,
       });
     },
-    [onChange]
+    [onChange],
   );
 
   const handleDataFimChange = useCallback(
@@ -229,7 +229,7 @@ export function FilterBar({
         data: undefined,
       });
     },
-    [onChange]
+    [onChange],
   );
 
   const quickActions = useMemo(
@@ -297,25 +297,25 @@ export function FilterBar({
         },
       },
     ],
-    [onChange]
+    [onChange],
   );
 
   const statusOptions = configLoading
     ? [{ value: "", label: "Carregando..." }]
-    : [{ value: "", label: "Todos os status" }, ...configOptions.status];
+    : [{ value: "", label: "Status" }, ...configOptions.status];
 
   const dataOptions = [
-    { value: "", label: "Todas as datas" },
+    { value: "", label: "Datas" },
     ...datas.filter(isValidBrDate).map((d) => ({ value: d, label: d })),
   ];
 
   const tecnicoOptions = [
-    { value: "", label: "Todos os técnicos" },
+    { value: "", label: "Técnicos" },
     ...tecnicos.map((t) => ({ value: t, label: t })),
   ];
 
   const cidadeOptions = [
-    { value: "", label: "Todas as cidades" },
+    { value: "", label: "Cidades" },
     ...cidades.map((c) => ({ value: c, label: c })),
   ];
 
@@ -404,9 +404,9 @@ export function FilterBar({
 
   return (
     <div className="space-y-4">
-      <div className="bg-bg-elevated rounded-2xl border border-border shadow-sm transition-shadow duration-200">
+      <div className="rounded-2xl border border-border bg-bg-elevated shadow-sm">
         <div className="p-4 sm:p-5">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-3.5">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-12">
             {/* Campo de Busca */}
             <div className="lg:col-span-3">
               <Input
@@ -421,66 +421,66 @@ export function FilterBar({
                 disabled={isLoading}
               />
             </div>
-<div className="grid grid-cols-2 gap-3.5 lg:grid-cols-8 lg:col-span-8 sm:w-full">
- {/* Select: Cidade */}
-            <div className="lg:col-span-2">
-              <Select
-                value={filters.cidade || ""}
-                onChange={(e) =>
-                  onChange({ cidade: e.target.value || undefined })
-                }
-                options={cidadeOptions}
-                disabled={isLoading}
-              />
+
+            <div className="grid grid-cols-2 gap-3 lg:col-span-8 lg:grid-cols-8">
+              {/* Select: Cidade */}
+              <div className="lg:col-span-2">
+                <Select
+                  value={filters.cidade || ""}
+                  onChange={(e) =>
+                    onChange({ cidade: e.target.value || undefined })
+                  }
+                  options={cidadeOptions}
+                  disabled={isLoading}
+                />
+              </div>
+
+              {/* Select: Técnico */}
+              <div className="lg:col-span-2">
+                <Select
+                  value={filters.tecnico || ""}
+                  onChange={(e) =>
+                    onChange({ tecnico: e.target.value || undefined })
+                  }
+                  options={tecnicoOptions}
+                  disabled={isLoading}
+                />
+              </div>
+
+              {/* Select: Status */}
+              <div className="lg:col-span-2">
+                <Select
+                  value={filters.status || ""}
+                  onChange={(e) =>
+                    onChange({ status: (e.target.value as any) || undefined })
+                  }
+                  options={statusOptions}
+                  disabled={isLoading || configLoading}
+                />
+              </div>
+
+              {/* Select: Data */}
+              <div className="lg:col-span-2">
+                <Select
+                  value={filters.data || ""}
+                  onChange={(e) =>
+                    onChange({ data: e.target.value || undefined })
+                  }
+                  options={dataOptions}
+                  disabled={isLoading || configLoading}
+                />
+              </div>
             </div>
 
-            {/* Select: Técnico */}
-            <div className="lg:col-span-2">
-              <Select
-                value={filters.tecnico || ""}
-                onChange={(e) =>
-                  onChange({ tecnico: e.target.value || undefined })
-                }
-                options={tecnicoOptions}
-                disabled={isLoading}
-              />
-            </div>
-
-            {/* Select: Status */}
-            <div className="lg:col-span-2">
-              <Select
-                value={filters.status || ""}
-                onChange={(e) =>
-                  onChange({ status: (e.target.value as any) || undefined })
-                }
-                options={statusOptions}
-                disabled={isLoading || configLoading}
-              />
-            </div>
-
-            {/* Select: Data */}
-            <div className="lg:col-span-2">
-              <Select
-                value={filters.data || ""}
-                onChange={(e) =>
-                  onChange({ data: e.target.value || undefined })
-                }
-                options={dataOptions}
-                disabled={isLoading || configLoading}
-              />
-            </div>
-
-</div>
-           
             {/* Botão de Filtros Avançados */}
-            <div className="relative lg:col-span-1 flex items-end">
+            <div className="flex items-end lg:col-span-1">
               <button
                 type="button"
                 onClick={() => setIsAdvancedOpen(!isAdvancedOpen)}
-                className={`w-full h-10 flex items-center justify-center gap-1.5 px-3 rounded-xl text-xs font-semibold transition-all ${
+                className={`relative flex h-10 w-full items-center justify-center gap-1.5 rounded-lg px-3 text-[13px] font-medium tracking-tight transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-text/50 ${
                   isAdvancedOpen || activeFiltersCount > 0
                     ? "bg-accent text-accent-foreground shadow-sm"
-                    : "bg-bg-muted text-text hover:bg-bg border border-border"
+                    : "border border-border bg-bg-muted/40 text-text-muted hover:bg-bg-hover hover:text-text"
                 }`}
                 title="Abrir Filtros Avançados"
               >
@@ -488,10 +488,10 @@ export function FilterBar({
                 <span className="hidden xl:inline">Filtros</span>
                 {activeFiltersCount > 0 && (
                   <span
-                    className={`absolute right-0 top-0 text-[11px] rounded-full w-4 h-4 flex items-center justify-center font-bold ${
+                    className={`absolute -right-1 -top-1 flex h-4 min-w-4 items-center justify-center rounded-md px-1 text-[10px] font-bold ${
                       isAdvancedOpen
                         ? "bg-accent-foreground/20 text-accent-foreground"
-                        : "bg-primary text-primary-foreground"
+                        : "bg-primary text-white"
                     }`}
                   >
                     {activeFiltersCount}
@@ -508,10 +508,10 @@ export function FilterBar({
                 initial={{ opacity: 0, y: -6 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -6 }}
-                className="mt-4 pt-3.5 border-t border-border/70"
+                className="mt-4 border-t border-border/70 pt-3.5"
               >
                 <div className="flex flex-wrap items-center gap-2">
-                  <span className="text-[11px] text-text-muted font-bold uppercase tracking-wider mr-1">
+                  <span className="mr-1 text-[11px] font-bold uppercase tracking-wider text-text-muted">
                     Ativos:
                   </span>
                   {activeFiltersList.map((filter) => (
@@ -520,16 +520,18 @@ export function FilterBar({
                       initial={{ scale: 0.9, opacity: 0 }}
                       animate={{ scale: 1, opacity: 1 }}
                       exit={{ scale: 0.9, opacity: 0 }}
-                      className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-bg-muted text-text rounded-lg text-xs font-medium border border-border"
+                      className="inline-flex items-center gap-1.5 rounded-md border border-border bg-bg-muted/50 px-2.5 py-1 text-xs font-medium text-text"
                     >
-                      <span className="text-text-muted font-bold uppercase tracking-wide text-[10px]">
+                      <span className="text-[10px] font-bold uppercase tracking-wide text-text-muted">
                         {filter.label}:
                       </span>
-                      <span className="max-w-[130px] truncate">{filter.value}</span>
+                      <span className="max-w-32.5 truncate">
+                        {filter.value}
+                      </span>
                       <button
                         type="button"
                         onClick={filter.onRemove}
-                        className="p-0.5 hover:bg-border-strong rounded-md transition-colors text-text-muted hover:text-text"
+                        className="rounded p-0.5 text-text-muted transition-colors hover:bg-bg-hover hover:text-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-text/50"
                         aria-label={`Remover filtro ${filter.label}`}
                       >
                         <X size={13} />
@@ -540,7 +542,7 @@ export function FilterBar({
                     <button
                       type="button"
                       onClick={handleClearAll}
-                      className="ml-2 px-2.5 py-1 text-xs font-semibold text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/20 rounded-lg transition-colors flex items-center gap-1"
+                      className="ml-1 flex items-center gap-1 rounded-md px-2.5 py-1 text-xs font-medium text-rose-600 transition-colors hover:bg-rose-500/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-500/50 dark:text-rose-400"
                     >
                       <RefreshCw size={12} />
                       Limpar todos
@@ -560,35 +562,35 @@ export function FilterBar({
               animate={{ height: "auto", opacity: 1 }}
               exit={{ height: 0, opacity: 0 }}
               transition={{ duration: 0.2 }}
-              className="overflow-hidden border-t border-border bg-bg-muted/40 rounded-b-2xl"
+              className="overflow-hidden rounded-b-2xl border-t border-border bg-bg-muted/40"
             >
-              <div className="p-4 sm:p-5 space-y-5">
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+              <div className="space-y-5 p-4 sm:p-5">
+                <div className="grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3">
                   {/* Intervalo de Datas */}
                   <div className="space-y-2.5">
-                    <label className="text-xs font-bold text-text-muted uppercase tracking-wider flex items-center gap-1.5">
+                    <label className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-text-muted">
                       <Calendar size={14} /> Intervalo de Datas
                     </label>
                     <div className="grid grid-cols-2 gap-2.5">
                       <div>
-                        <label className="text-[11px] text-text-muted font-medium mb-1 block">
+                        <label className="mb-1 block text-[11px] font-medium text-text-muted">
                           Data Inicial
                         </label>
                         <input
                           type="date"
-                          className="w-full px-2.5 py-1.5 text-xs border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all bg-bg-elevated text-text"
+                          className="h-9 w-full rounded-md border border-border bg-bg-elevated px-2.5 text-xs text-text transition-colors focus:border-text focus:outline-none focus:ring-2 focus:ring-text/30 disabled:cursor-not-allowed disabled:opacity-60"
                           value={localDataInicio}
                           onChange={handleDataInicioChange}
                           disabled={isLoading}
                         />
                       </div>
                       <div>
-                        <label className="text-[11px] text-text-muted font-medium mb-1 block">
+                        <label className="mb-1 block text-[11px] font-medium text-text-muted">
                           Data Final
                         </label>
                         <input
                           type="date"
-                          className="w-full px-2.5 py-1.5 text-xs border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all bg-bg-elevated text-text"
+                          className="h-9 w-full rounded-md border border-border bg-bg-elevated px-2.5 text-xs text-text transition-colors focus:border-text focus:outline-none focus:ring-2 focus:ring-text/30 disabled:cursor-not-allowed disabled:opacity-60"
                           value={localDataFim}
                           onChange={handleDataFimChange}
                           disabled={isLoading}
@@ -598,10 +600,10 @@ export function FilterBar({
                     </div>
                   </div>
 
-                  {/* Períodos Rápidos */}
+                  {/* Atalhos Rápidos */}
                   <div className="space-y-2.5">
-                    <label className="text-xs font-bold text-text-muted uppercase tracking-wider flex items-center gap-1.5">
-                      <Clock size={14} /> Atantes Rápidos
+                    <label className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-text-muted">
+                      <Clock size={14} /> Atalhos Rápidos
                     </label>
                     <div className="flex flex-wrap gap-2">
                       {quickActions.map((quick) => (
@@ -609,7 +611,7 @@ export function FilterBar({
                           key={quick.label}
                           type="button"
                           onClick={quick.action}
-                          className="px-3 py-1.5 text-xs font-medium bg-bg-elevated border border-border rounded-lg hover:border-primary/50 hover:bg-bg transition-colors shadow-xs text-text"
+                          className="inline-flex h-8 items-center rounded-md border border-border bg-bg-elevated px-3 text-xs font-medium text-text transition-colors hover:bg-bg-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-text/50"
                         >
                           {quick.label}
                         </button>
@@ -620,7 +622,7 @@ export function FilterBar({
                   {/* Opções de Ordenação (quando disponibilizadas) */}
                   {onSortChange && ordenarPor && (
                     <div className="space-y-2.5 md:col-span-2 lg:col-span-1">
-                      <label className="text-xs font-bold text-text-muted uppercase tracking-wider flex items-center gap-1.5">
+                      <label className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-text-muted">
                         <ArrowUpDown size={14} /> Configuração de Ordem
                       </label>
                       <div className="flex items-center gap-2">
@@ -638,17 +640,17 @@ export function FilterBar({
                           onClick={() =>
                             onSortChange(
                               ordenarPor,
-                              direcao === "asc" ? "desc" : "asc"
+                              direcao === "asc" ? "desc" : "asc",
                             )
                           }
-                          className="h-9 px-3 bg-bg-elevated border border-border rounded-xl text-xs font-semibold text-text hover:bg-bg transition-colors flex items-center gap-1.5"
+                          className="flex h-9 items-center gap-1.5 rounded-lg border border-border bg-bg-elevated px-3 text-xs font-medium text-text transition-colors hover:bg-bg-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-text/50"
                           title={
                             direcao === "asc"
                               ? "Ordem Crescente"
                               : "Ordem Decrescente"
                           }
                         >
-                          <ArrowUpDown className="w-3.5 h-3.5" />
+                          <ArrowUpDown className="h-3.5 w-3.5" />
                           <span>{direcao === "asc" ? "ASC" : "DESC"}</span>
                         </button>
                       </div>
@@ -664,10 +666,10 @@ export function FilterBar({
       {/* Info Bar de Resultados e Alternância de Layout */}
       <div className="flex items-center justify-between px-1 text-xs">
         <div className="flex items-center gap-2.5">
-          <div className="flex items-center gap-1.5 px-3 py-1.5 bg-bg-muted rounded-lg border border-border">
+          <div className="inline-flex items-center gap-1.5 rounded-md border border-border bg-bg-muted/40 px-3 py-1.5">
             <Filter size={13} className="text-text-muted" />
             <span className="font-bold text-text">{totalResults}</span>
-            <span className="text-text-muted font-medium">
+            <span className="font-medium text-text-muted">
               {totalResults === 1 ? "resultado" : "resultados"}
             </span>
           </div>
@@ -681,14 +683,14 @@ export function FilterBar({
 
         {/* Toggle de Layout (Cards / Lista) caso ativado */}
         {onVisualizacaoChange && visualizacao && (
-          <div className="flex items-center p-0.5 bg-bg-muted rounded-lg border border-border">
+          <div className="inline-flex items-center gap-0.5 rounded-lg border border-border bg-bg-muted/40 p-0.5">
             <button
               type="button"
               onClick={() => onVisualizacaoChange("cards")}
-              className={`flex items-center gap-1 px-2.5 py-1 rounded-md font-semibold transition-all ${
+              className={`inline-flex items-center gap-1 rounded-md px-2.5 py-1 text-xs font-medium tracking-tight transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-text/50 ${
                 visualizacao === "cards"
-                  ? "bg-bg-elevated text-primary shadow-xs"
-                  : "text-text-muted hover:text-text"
+                  ? "bg-bg text-text shadow-sm ring-1 ring-border/60"
+                  : "text-text-muted hover:bg-bg-elevated/60 hover:text-text"
               }`}
             >
               <LayoutGrid size={13} />
@@ -697,10 +699,10 @@ export function FilterBar({
             <button
               type="button"
               onClick={() => onVisualizacaoChange("lista")}
-              className={`flex items-center gap-1 px-2.5 py-1 rounded-md font-semibold transition-all ${
+              className={`inline-flex items-center gap-1 rounded-md px-2.5 py-1 text-xs font-medium tracking-tight transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-text/50 ${
                 visualizacao === "lista"
-                  ? "bg-bg-elevated text-primary shadow-xs"
-                  : "text-text-muted hover:text-text"
+                  ? "bg-bg text-text shadow-sm ring-1 ring-border/60"
+                  : "text-text-muted hover:bg-bg-elevated/60 hover:text-text"
               }`}
             >
               <List size={13} />

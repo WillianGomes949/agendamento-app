@@ -1,3 +1,4 @@
+// src/components/features/ServicoForm.tsx
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
@@ -418,15 +419,15 @@ export default function ServicoForm({
       isOpen={isOpen}
       onClose={onClose}
       title={
-        <div className="flex items-center gap-3.5">
-          <div className="w-11 h-11 bg-primary/10 rounded-xl flex items-center justify-center border border-primary/20 text-primary shrink-0">
-            <NotepadText className="w-5 h-5" />
+        <div className="flex items-center gap-3">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary ring-1 ring-inset ring-primary/20">
+            <NotepadText className="h-5 w-5" />
           </div>
           <div>
-            <h2 className="text-lg font-bold text-text tracking-tight">
+            <h2 className="text-base font-semibold tracking-tight text-text">
               {initialData ? "Editar Ordem de Serviço" : "Novo Agendamento"}
             </h2>
-            <p className="text-xs font-medium text-text-muted mt-0.5">
+            <p className="mt-0.5 text-xs font-medium text-text-muted">
               {initialData
                 ? "Atualize as informações do atendimento"
                 : "Preencha os dados em 4 etapas simples"}
@@ -438,7 +439,7 @@ export default function ServicoForm({
       closeOnOverlayClick={false}
     >
       {configLoading && (
-        <div className="flex items-center justify-center p-3.5 bg-bg-muted/60 rounded-xl border border-border mb-6 animate-pulse">
+        <div className="mb-5 flex animate-pulse items-center justify-center rounded-lg border border-border bg-bg-muted/60 p-3.5">
           <Spinner size="sm" variant="slate" />
           <span className="ml-2.5 text-xs font-medium text-text-muted">
             Sincronizando configurações...
@@ -447,13 +448,13 @@ export default function ServicoForm({
       )}
 
       {/* Stepper de Progresso Visual */}
-      <div className="relative mb-8 mt-1 px-1">
+      <div className="relative mb-7 mt-1 px-1">
         <div
-          className="absolute top-4 left-0 right-0 h-0.5 bg-border -translate-y-1/2 z-0 mx-6"
+          className="absolute left-0 right-0 top-4 z-0 mx-6 h-0.5 -translate-y-1/2 bg-border"
           aria-hidden="true"
         />
         <div
-          className="absolute top-4 left-0 h-0.5 bg-primary -translate-y-1/2 z-0 mx-6 transition-all duration-300 ease-in-out"
+          className="absolute left-0 top-4 z-0 h-0.5 -translate-y-1/2 bg-primary mx-6 transition-all duration-300 ease-in-out"
           style={{ width: `${(currentStep / (STEPS.length - 1)) * 88}%` }}
           aria-hidden="true"
         />
@@ -476,33 +477,33 @@ export default function ServicoForm({
                 aria-selected={isActive}
                 onClick={() => isClickable && goToStep(index)}
                 disabled={!isClickable}
-                className={`flex flex-col items-center gap-1.5 group outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 rounded-lg p-1 transition-all ${
+                className={`group flex flex-col items-center gap-1.5 rounded-lg p-1 outline-none transition-all focus-visible:ring-2 focus-visible:ring-text/50 focus-visible:ring-offset-2 ${
                   !isClickable
                     ? "cursor-not-allowed opacity-60"
                     : "cursor-pointer"
                 }`}
               >
                 <div
-                  className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold border-2 transition-all duration-200 shadow-sm ${
+                  className={`flex h-8 w-8 items-center justify-center rounded-full border-2 text-xs font-bold transition-all duration-200 ${
                     isActive
-                      ? "bg-primary border-primary text-primary-foreground scale-110 ring-4 ring-primary/15"
+                      ? "scale-110 border-primary bg-primary text-white ring-2 ring-primary/20"
                       : isCompleted
-                        ? "bg-primary border-primary text-primary-foreground hover:bg-primary/90"
-                        : "bg-bg-elevated border-border text-text-muted group-hover:border-primary/50"
+                        ? "border-primary bg-primary text-white hover:bg-primary/90"
+                        : "border-border bg-bg-elevated text-text-muted group-hover:border-primary/50"
                   }`}
                 >
                   {isCompleted && !isActive ? (
-                    <CheckCircle2 className="w-4 h-4" />
+                    <CheckCircle2 className="h-4 w-4" />
                   ) : (
                     index + 1
                   )}
                 </div>
                 <span
-                  className={`text-[11px] font-semibold hidden sm:block transition-colors ${
+                  className={`hidden text-[11px] transition-colors sm:block ${
                     isActive
-                      ? "text-primary font-bold"
+                      ? "font-semibold text-primary"
                       : isCompleted
-                        ? "text-text font-medium"
+                        ? "font-medium text-text"
                         : "text-text-muted"
                   }`}
                 >
@@ -514,19 +515,19 @@ export default function ServicoForm({
         </div>
       </div>
 
-      <form onSubmit={handleSubmit} noValidate className="space-y-6">
+      <form onSubmit={handleSubmit} noValidate className="space-y-5">
         {/* Conteúdo da Etapa */}
         <div
           key={currentStep}
           className="animate-in fade-in slide-in-from-right-3 duration-200 ease-out"
         >
           {/* Cabeçalho da Etapa Atual */}
-          <div className="mb-5 flex items-center gap-3 pb-3 border-b border-border/60">
-            <div className="w-9 h-9 rounded-lg bg-primary/10 text-primary flex items-center justify-center font-semibold">
+          <div className="mb-4 flex items-center gap-3 border-b border-border pb-3">
+            <div className="flex h-8 w-8 items-center justify-center rounded-md bg-primary/10 font-semibold text-primary">
               {STEPS[currentStep].icon}
             </div>
             <div>
-              <h3 className="text-base font-bold text-text">
+              <h3 className="text-sm font-semibold tracking-tight text-text">
                 Etapa {currentStep + 1}: {STEPS[currentStep].title}
               </h3>
               <p className="text-xs text-text-muted">
@@ -537,7 +538,7 @@ export default function ServicoForm({
 
           {/* ═══════════════ ETAPA 1: SERVIÇO ═══════════════ */}
           {currentStep === 0 && (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
               <div data-field="tecnico">
                 <Select
                   label="Técnico Responsável"
@@ -625,8 +626,8 @@ export default function ServicoForm({
 
               {/* Informação sobre ocupação de agenda */}
               {form.tecnico && form.data && horariosOcupados.size > 0 && (
-                <div className="md:col-span-2 flex items-start gap-2.5 p-3 rounded-lg bg-amber-500/10 border border-amber-500/20 text-amber-700 dark:text-amber-400 text-xs">
-                  <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
+                <div className="flex items-start gap-2.5 rounded-md border border-amber-500/20 bg-amber-500/10 p-3 text-xs text-amber-700 dark:text-amber-400 md:col-span-2">
+                  <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
                   <div>
                     <span className="font-semibold">
                       Horários indisponíveis:
@@ -642,14 +643,14 @@ export default function ServicoForm({
 
           {/* ═══════════════ ETAPA 2: CLIENTE & VEÍCULO ═══════════════ */}
           {currentStep === 1 && (
-            <div className="space-y-5">
+            <div className="space-y-4">
               {/* Card Cliente */}
-              <div className="bg-bg-elevated border border-border rounded-xl p-4 space-y-4">
-                <div className="flex items-center gap-2 text-primary font-bold text-sm">
-                  <User className="w-4 h-4" />
+              <div className="space-y-4 rounded-lg border border-border bg-bg-elevated p-4">
+                <div className="flex items-center gap-2 text-sm font-semibold text-primary">
+                  <User className="h-4 w-4" />
                   <h4>Dados do Cliente</h4>
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                   <div data-field="cliente.nome">
                     <Input
                       label="Nome Completo"
@@ -685,12 +686,12 @@ export default function ServicoForm({
               </div>
 
               {/* Card Veículo */}
-              <div className="bg-bg-elevated border border-border rounded-xl p-4 space-y-4">
-                <div className="flex items-center gap-2 text-primary font-bold text-sm">
-                  <Car className="w-4 h-4" />
+              <div className="space-y-4 rounded-lg border border-border bg-bg-elevated p-4">
+                <div className="flex items-center gap-2 text-sm font-semibold text-primary">
+                  <Car className="h-4 w-4" />
                   <h4>Identificação do Veículo</h4>
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                   <div data-field="veiculo.placa">
                     <Input
                       label="Placa do Veículo"
@@ -729,10 +730,10 @@ export default function ServicoForm({
 
           {/* ═══════════════ ETAPA 3: LOCALIZAÇÃO ═══════════════ */}
           {currentStep === 2 && (
-            <div className="bg-bg-elevated border border-border rounded-xl p-4 space-y-4">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-2 border-b border-border/50">
-                <div className="flex items-center gap-2 text-primary font-bold text-sm">
-                  <MapPin className="w-4 h-4" />
+            <div className="space-y-4 rounded-lg border border-border bg-bg-elevated p-4">
+              <div className="flex flex-col justify-between gap-2 border-b border-border pb-2 sm:flex-row sm:items-center">
+                <div className="flex items-center gap-2 text-sm font-semibold text-primary">
+                  <MapPin className="h-4 w-4" />
                   <h4>Endereço de Atendimento</h4>
                 </div>
                 <Button
@@ -740,12 +741,12 @@ export default function ServicoForm({
                   variant="ghost"
                   size="sm"
                   onClick={() => setManualAddress(!manualAddress)}
-                  className="text-xs h-8 text-text-muted hover:text-text"
+                  className="h-8 text-xs text-text-muted hover:text-text"
                 >
                   {manualAddress ? (
-                    <Search className="w-3.5 h-3.5 mr-1.5" />
+                    <Search className="mr-1.5 h-3.5 w-3.5" />
                   ) : (
-                    <Pencil className="w-3.5 h-3.5 mr-1.5" />
+                    <Pencil className="mr-1.5 h-3.5 w-3.5" />
                   )}
                   {manualAddress
                     ? "Usar Busca Automática por CEP"
@@ -772,14 +773,14 @@ export default function ServicoForm({
                   />
                 </div>
               ) : (
-                <p className="text-xs font-medium text-amber-700 dark:text-amber-400 bg-amber-500/10 p-2.5 rounded-lg border border-amber-500/20 flex items-center gap-2">
-                  <AlertCircle className="w-4 h-4 shrink-0" />
+                <p className="flex items-center gap-2 rounded-md border border-amber-500/20 bg-amber-500/10 p-2.5 text-xs font-medium text-amber-700 dark:text-amber-400">
+                  <AlertCircle className="h-4 w-4 shrink-0" />
                   Preenchimento manual ativo. Digite os dados do endereço
                   abaixo.
                 </p>
               )}
 
-              <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-12">
                 <div data-field="endereco.cep" className="md:col-span-4">
                   <Input
                     label="CEP"
@@ -876,19 +877,19 @@ export default function ServicoForm({
           {/* ═══════════════ ETAPA 4: REVISÃO ═══════════════ */}
           {currentStep === 3 && (
             <div className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                 {/* Resumo: Serviço */}
-                <div className="bg-bg-muted/50 border border-border rounded-xl p-4 relative">
+                <div className="relative rounded-lg border border-border bg-bg-muted/40 p-4">
                   <button
                     type="button"
                     onClick={() => goToStep(0)}
-                    className="absolute top-3 right-3 p-1 text-text-muted hover:text-primary transition-colors"
+                    className="absolute right-3 top-3 p-1 text-text-muted transition-colors hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-text/50 rounded"
                     title="Editar Atendimento"
                   >
-                    <Pencil className="w-3.5 h-3.5" />
+                    <Pencil className="h-3.5 w-3.5" />
                   </button>
-                  <span className="text-[11px] font-bold tracking-wider uppercase text-text-muted flex items-center gap-1.5 mb-2.5">
-                    <ToolCase className="w-3.5 h-3.5 text-primary" /> Serviço
+                  <span className="mb-2.5 flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-text-muted">
+                    <ToolCase className="h-3.5 w-3.5 text-primary" /> Serviço
                   </span>
                   <div className="space-y-1.5 text-xs">
                     <div className="flex justify-between">
@@ -921,23 +922,23 @@ export default function ServicoForm({
                 </div>
 
                 {/* Resumo: Cliente & Veículo */}
-                <div className="bg-bg-muted/50 border border-border rounded-xl p-4 relative">
+                <div className="relative rounded-lg border border-border bg-bg-muted/40 p-4">
                   <button
                     type="button"
                     onClick={() => goToStep(1)}
-                    className="absolute top-3 right-3 p-1 text-text-muted hover:text-primary transition-colors"
+                    className="absolute right-3 top-3 p-1 text-text-muted transition-colors hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-text/50 rounded"
                     title="Editar Cliente"
                   >
-                    <Pencil className="w-3.5 h-3.5" />
+                    <Pencil className="h-3.5 w-3.5" />
                   </button>
-                  <span className="text-[11px] font-bold tracking-wider uppercase text-text-muted flex items-center gap-1.5 mb-2.5">
-                    <Users className="w-3.5 h-3.5 text-primary" /> Cliente &
+                  <span className="mb-2.5 flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-text-muted">
+                    <Users className="h-3.5 w-3.5 text-primary" /> Cliente &
                     Veículo
                   </span>
                   <div className="space-y-1.5 text-xs">
                     <div className="flex justify-between">
                       <span className="text-text-muted">Nome:</span>
-                      <span className="font-semibold text-text truncate max-w-37.5">
+                      <span className="max-w-37.5 truncate font-semibold text-text">
                         {form.cliente.nome}
                       </span>
                     </div>
@@ -949,7 +950,7 @@ export default function ServicoForm({
                     </div>
                     <div className="flex justify-between">
                       <span className="text-text-muted">Placa:</span>
-                      <span className="font-mono font-bold text-text uppercase">
+                      <span className="font-mono font-bold uppercase text-text">
                         {form.veiculo.placa}
                       </span>
                     </div>
@@ -963,17 +964,17 @@ export default function ServicoForm({
                 </div>
 
                 {/* Resumo: Localização */}
-                <div className="bg-bg-muted/50 border border-border rounded-xl p-4 relative md:col-span-2">
+                <div className="relative rounded-lg border border-border bg-bg-muted/40 p-4 md:col-span-2">
                   <button
                     type="button"
                     onClick={() => goToStep(2)}
-                    className="absolute top-3 right-3 p-1 text-text-muted hover:text-primary transition-colors"
+                    className="absolute right-3 top-3 p-1 text-text-muted transition-colors hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-text/50 rounded"
                     title="Editar Local"
                   >
-                    <Pencil className="w-3.5 h-3.5" />
+                    <Pencil className="h-3.5 w-3.5" />
                   </button>
-                  <span className="text-[11px] font-bold tracking-wider uppercase text-text-muted flex items-center gap-1.5 mb-2">
-                    <MapPin className="w-3.5 h-3.5 text-primary" /> Endereço
+                  <span className="mb-2 flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-text-muted">
+                    <MapPin className="h-3.5 w-3.5 text-primary" /> Endereço
                   </span>
                   <p className="text-xs font-semibold text-text">
                     {form.endereco.rua}, {form.endereco.numero}
@@ -986,13 +987,13 @@ export default function ServicoForm({
               </div>
 
               {/* Observações */}
-              <div className="bg-bg-elevated border border-border rounded-xl p-4 space-y-2">
-                <label className="text-xs font-bold uppercase tracking-wider text-text-muted flex items-center gap-1.5">
-                  <NotepadText className="w-3.5 h-3.5 text-primary" />{" "}
+              <div className="space-y-2 rounded-lg border border-border bg-bg-elevated p-4">
+                <label className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-text-muted">
+                  <NotepadText className="h-3.5 w-3.5 text-primary" />{" "}
                   Observações Gerais (Opcional)
                 </label>
                 <textarea
-                  className="w-full p-3 rounded-lg text-xs outline-none transition-all focus:ring-2 focus:ring-primary/20 focus:border-primary resize-none bg-bg-muted text-text border border-border"
+                  className="w-full resize-none rounded-md border border-border bg-bg-muted/30 p-3 text-xs text-text outline-none transition-colors placeholder:text-text-muted/50 focus:border-text focus:outline-none focus:ring-2 focus:ring-text/30"
                   placeholder="Instruções adicionais, pontos de referência..."
                   value={form.observacao || ""}
                   onChange={(e) =>
@@ -1006,24 +1007,19 @@ export default function ServicoForm({
         </div>
 
         {/* ═══════════════ FOOTER / BOTÕES ═══════════════ */}
-        <div className="flex flex-col-reverse sm:flex-row justify-between gap-3 pt-5 border-t border-border mt-6">
+        <div className="mt-5 flex flex-col-reverse justify-between gap-3 border-t border-border pt-5">
           <Button
             type="button"
             variant="ghost"
             onClick={currentStep === 0 ? onClose : prevStep}
             disabled={isLoading}
+            icon={currentStep === 0 ? undefined : ChevronLeft}
             className="w-full sm:w-auto"
           >
-            {currentStep === 0 ? (
-              "Cancelar"
-            ) : (
-              <>
-                <ChevronLeft className="w-4 h-4 mr-1" /> Anterior
-              </>
-            )}
+            {currentStep === 0 ? "Cancelar" : "Anterior"}
           </Button>
 
-          <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
+          <div className="flex w-full flex-col gap-3 sm:w-auto sm:flex-row">
             {!isLastStep ? (
               <Button
                 key="btn-next"
@@ -1031,9 +1027,9 @@ export default function ServicoForm({
                 variant="primary"
                 onClick={nextStep}
                 disabled={configLoading}
-                className="w-full sm:w-auto px-7"
+                className="w-full px-6 sm:w-auto"
               >
-                Próximo <ChevronRight className="w-4 h-4 ml-1" />
+                Próximo <ChevronRight className="ml-1 h-4 w-4" />
               </Button>
             ) : (
               <Button
@@ -1042,14 +1038,14 @@ export default function ServicoForm({
                 variant="primary"
                 isLoading={isLoading}
                 disabled={configLoading}
-                className="w-full sm:w-auto px-7 shadow-sm"
+                icon={isLoading ? undefined : CheckCircle2}
+                className="w-full px-6 sm:w-auto"
               >
                 {isLoading
                   ? "Salvando..."
                   : initialData
                     ? "Salvar Alterações"
                     : "Confirmar Agendamento"}
-                {!isLoading && <CheckCircle2 className="w-4 h-4 ml-1.5" />}
               </Button>
             )}
           </div>

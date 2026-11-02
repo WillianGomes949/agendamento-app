@@ -28,7 +28,7 @@ export function ServiceList({
   }
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6">
+    <div className="grid grid-cols-1 gap-5 sm:gap-6 md:grid-cols-2 lg:grid-cols-3">
       <AnimatePresence mode="popLayout">
         {servicos.map((servico, index) => {
           const idSeguro = String(servico?.id ?? `fallback-${index}`);

@@ -1,3 +1,4 @@
+// src/components/features/ServiceCard.tsx
 import { motion, Variants } from "framer-motion";
 import {
   Car,
@@ -30,7 +31,15 @@ const getDiaSemana = (dataStr?: string) => {
   const [d, m, y] = dataStr.split("/");
   if (!d || !m || !y) return "";
   const date = new Date(Number(y), Number(m) - 1, Number(d));
-  const dias = ["DOMINGO", "SEGUNDA", "TERÇA", "QUARTA", "QUINTA", "SEXTA", "SÁBADO"];
+  const dias = [
+    "DOMINGO",
+    "SEGUNDA",
+    "TERÇA",
+    "QUARTA",
+    "QUINTA",
+    "SEXTA",
+    "SÁBADO",
+  ];
   return dias[date.getDay()];
 };
 
@@ -48,26 +57,30 @@ export function ServicoCard({
       case "concluido":
         return {
           bar: "bg-emerald-500",
-          badge: "text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800 bg-emerald-50 dark:bg-emerald-950/30",
+          badge:
+            "text-emerald-700 dark:text-emerald-400 ring-emerald-600/20 dark:ring-emerald-500/20 bg-emerald-50 dark:bg-emerald-500/10",
           icon: <Clock className="w-3.5 h-3.5" />,
         };
       case "em andamento":
         return {
           bar: "bg-blue-500",
-          badge: "text-blue-700 dark:text-blue-400 border-blue-200 dark:border-blue-800 bg-blue-50 dark:bg-blue-950/30",
+          badge:
+            "text-blue-700 dark:text-blue-400 ring-blue-600/20 dark:ring-blue-500/20 bg-blue-50 dark:bg-blue-500/10",
           icon: <Clock className="w-3.5 h-3.5" />,
         };
       case "cancelado":
         return {
           bar: "bg-rose-500",
-          badge: "text-rose-700 dark:text-rose-400 border-rose-200 dark:border-rose-800 bg-rose-50 dark:bg-rose-950/30",
+          badge:
+            "text-rose-700 dark:text-rose-400 ring-rose-600/20 dark:ring-rose-500/20 bg-rose-50 dark:bg-rose-500/10",
           icon: <Clock className="w-3.5 h-3.5" />,
         };
       case "pendente":
       default:
         return {
           bar: "bg-orange-400",
-          badge: "text-orange-700 dark:text-orange-400 border-orange-200 dark:border-orange-800 bg-orange-50 dark:bg-orange-950/30",
+          badge:
+            "text-orange-700 dark:text-orange-400 ring-orange-600/20 dark:ring-orange-500/20 bg-orange-50 dark:bg-orange-500/10",
           icon: <Clock className="w-3.5 h-3.5" />,
         };
     }
@@ -84,92 +97,105 @@ export function ServicoCard({
       className="group h-full cursor-pointer"
       onClick={() => onViewDetails(serviceId)}
     >
-      <Card className="flex flex-col h-full bg-bg-elevated shadow-sm hover:shadow-md border border-border rounded-2xl transition-all duration-300 relative overflow-hidden">
+      <Card className="relative flex h-full flex-col overflow-hidden rounded-2xl border border-border bg-bg-elevated shadow-sm transition-shadow duration-200 hover:shadow-md">
         {/* Barra superior de Status */}
-        <div className={cn("absolute top-0 left-0 w-full h-1", style.bar)} />
-        
-        <div className="p-5 flex flex-col h-full mt-1">
+        <div className={cn("absolute left-0 top-0 h-1 w-full", style.bar)} />
+
+        <div className="mt-1 flex h-full flex-col p-5">
           {/* HEADER: Cliente, OS e Badge */}
-          <div className="flex items-start justify-between mb-4 gap-2">
-            <div>
-              <h3 className="font-extrabold text-[17px] text-text uppercase tracking-tight leading-tight">
+          <div className="mb-4 flex items-start justify-between gap-2">
+            <div className="min-w-0">
+              <h3 className="truncate text-base font-semibold uppercase tracking-tight leading-tight text-text">
                 {servico.cliente?.nome || "CLIENTE NÃO INFORMADO"}
               </h3>
-              <div className="text-[14px] text-text-muted mt-1">
-                <span className="font-semibold text-text-muted/70">OS:</span> {servico.ordemServico || "N/A"}
+              <div className="mt-1 text-[13px] text-text-muted">
+                <span className="font-medium text-text-muted/70">OS:</span>{" "}
+                {servico.ordemServico || "N/A"}
               </div>
             </div>
-            {/* Badge Estilizado conforme a imagem */}
-            <div className={cn("flex items-center gap-1.5 px-2.5 py-1 rounded-lg border font-bold text-xs uppercase tracking-wide whitespace-nowrap", style.badge)}>
+            {/* Badge */}
+            <div
+              className={cn(
+                "inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-md px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider ring-1 ring-inset",
+                style.badge,
+              )}
+            >
               {style.icon}
               {servico.status || "PENDENTE"}
             </div>
           </div>
 
-          {/* BODY: Retângulo Cinza com os Dados */}
-          <div className="bg-bg-muted border border-border rounded-2xl p-4 flex flex-col gap-3.5 grow">
+          {/* BODY: Dados */}
+          <div className="flex grow flex-col gap-3 rounded-xl border border-border bg-bg-muted/40 p-4">
             {/* Data */}
-            <div className="flex items-center gap-3 text-[15px] text-text font-medium">
-              <Calendar className="w-5 h-5 text-text-muted shrink-0" />
+            <div className="flex items-center gap-3 text-sm font-medium text-text">
+              <Calendar className="h-4 w-4 shrink-0 text-text-muted" />
               <span>
-                {formatarDataExibicao(servico.data)} {diaSemana && <span className="text-text-muted">• {diaSemana}</span>}
+                {formatarDataExibicao(servico.data)}{" "}
+                {diaSemana && (
+                  <span className="text-text-muted">• {diaSemana}</span>
+                )}
               </span>
             </div>
             {/* Horário */}
-            <div className="flex items-center gap-3 text-[15px] text-text font-medium">
-              <Clock className="w-5 h-5 text-text-muted shrink-0" />
+            <div className="flex items-center gap-3 text-sm font-medium text-text">
+              <Clock className="h-4 w-4 shrink-0 text-text-muted" />
               <span>{formatarHorarioExibicao(servico.horario)}</span>
             </div>
             {/* Veículo (Placa e Modelo) */}
-            <div className="flex items-center gap-3 text-[15px] text-text font-medium">
-              <Car className="w-5 h-5 text-text-muted shrink-0" />
+            <div className="flex items-center gap-3 text-sm font-medium text-text">
+              <Car className="h-4 w-4 shrink-0 text-text-muted" />
               <div className="flex items-center gap-2">
-                <span className="bg-bg-elevated text-text px-2 py-0.5 rounded text-sm font-mono uppercase tracking-wider border border-border">
+                <span className="rounded-md border border-border bg-bg px-2 py-0.5 font-mono text-xs uppercase tracking-wider text-text">
                   {servico.veiculo?.placa || "S/ PLACA"}
                 </span>
-                <span className="text-text-muted truncate">
+                <span className="truncate text-text-muted">
                   {(servico.veiculo as any)?.modelo || "Veículo"}
                 </span>
               </div>
             </div>
             {/* Localização */}
-            <div className="flex items-center gap-3 text-[15px] text-text font-medium">
-              <MapPin className="w-5 h-5 text-text-muted shrink-0" />
+            <div className="flex items-center gap-3 text-sm font-medium text-text">
+              <MapPin className="h-4 w-4 shrink-0 text-text-muted" />
               <span className="truncate" title={servico.endereco?.cidade}>
-                {servico.endereco?.cidade ? `${servico.endereco.cidade} / ${(servico.endereco as any)?.estado || 'CE'}` : "Local não informado"}
+                {servico.endereco?.cidade
+                  ? `${servico.endereco.cidade} / ${(servico.endereco as any)?.estado || "CE"}`
+                  : "Local não informado"}
               </span>
             </div>
           </div>
 
           {/* FOOTER: Técnico e Botões */}
-          <div className="mt-5 pt-4 border-t border-border flex items-center justify-between">
+          <div className="mt-4 flex items-center justify-between border-t border-border pt-4">
             {/* Técnico */}
-            <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-full bg-bg-muted flex items-center justify-center">
-                <User className="w-4 h-4 text-text-muted" />
+            <div className="flex min-w-0 items-center gap-2.5">
+              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-bg-muted">
+                <User className="h-4 w-4 text-text-muted" />
               </div>
-              <span className="text-[14px] font-medium text-text uppercase">
+              <span className="truncate text-[13px] font-medium uppercase text-text">
                 {servico.tecnico || "NÃO ATRIBUÍDO"}
               </span>
             </div>
             {/* Botões de Ação */}
-            <div 
-              className="flex items-center gap-2"
+            <div
+              className="flex shrink-0 items-center gap-2"
               onClick={(e) => e.stopPropagation()}
             >
               <button
                 onClick={() => onEdit(servico)}
-                className="w-10 h-10 flex items-center justify-center text-text-muted bg-bg-elevated border border-border rounded-xl hover:bg-bg-muted hover:text-text transition-colors shadow-sm"
+                className="flex h-9 w-9 items-center justify-center rounded-lg border border-border bg-bg-elevated text-text-muted transition-colors hover:bg-bg-hover hover:text-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-text/50"
                 title="Editar"
+                aria-label="Editar serviço"
               >
-                <Pencil className="w-4 h-4" strokeWidth={2} />
+                <Pencil className="h-4 w-4" strokeWidth={2} />
               </button>
               <button
                 onClick={() => onDelete(servico)}
-                className="w-10 h-10 flex items-center justify-center text-text-muted bg-bg-elevated border border-border rounded-xl hover:bg-rose-50 dark:hover:bg-rose-950/20 hover:text-rose-600 dark:hover:text-rose-400 hover:border-rose-300 dark:hover:border-rose-700 transition-colors shadow-sm"
+                className="flex h-9 w-9 items-center justify-center rounded-lg border border-border bg-bg-elevated text-text-muted transition-colors hover:bg-rose-500/10 hover:text-rose-600 hover:border-rose-500/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-500/50 dark:hover:text-rose-400"
                 title="Excluir"
+                aria-label="Excluir serviço"
               >
-                <Trash2 className="w-4 h-4" strokeWidth={2} />
+                <Trash2 className="h-4 w-4" strokeWidth={2} />
               </button>
             </div>
           </div>

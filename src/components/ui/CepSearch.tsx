@@ -3,7 +3,6 @@
 import { useState, useCallback } from "react";
 import { Input } from "./Input";
 import { Button } from "./Button";
-import { Spinner } from "./Spinner";
 import { Check } from "lucide-react";
 
 interface EnderecoData {
@@ -92,8 +91,8 @@ export function CepSearch({
 
   return (
     <div className={`space-y-3 ${className}`}>
-      <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-end bg-bg-muted border border-border p-4 rounded-2xl">
-        <div className="flex-1 w-full">
+      <div className="flex flex-col items-start gap-3 rounded-lg border border-border bg-bg-muted/30 p-4 sm:flex-row sm:items-end">
+        <div className="w-full flex-1">
           <Input
             label="Buscar por CEP"
             helperText="Digite o CEP para preencher os dados"
@@ -116,15 +115,16 @@ export function CepSearch({
           disabled={
             searching || isLoading || cep.replace(/\D/g, "").length !== 8
           }
-          className="w-full sm:w-auto h-10 mb-5" // Compensa o helperText no desktop
+          isLoading={searching}
+          className="mb-5 h-10 w-full sm:w-auto"
         >
-          {searching ? <Spinner size="sm" variant="slate" /> : "Buscar"}
+          {searching ? "" : "Buscar"}
         </Button>
       </div>
 
       {success && (
-        <div className="text-sm font-medium text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/30 p-3 rounded-xl flex items-center gap-2 border border-emerald-200 dark:border-emerald-800 shadow-sm">
-          <Check className="w-4 h-4" />
+        <div className="flex items-center gap-2 rounded-lg border border-emerald-500/20 bg-emerald-500/10 p-3 text-sm font-medium text-emerald-700 dark:text-emerald-400">
+          <Check className="h-4 w-4" />
           Endereço preenchido! Lembre-se de adicionar o número.
         </div>
       )}

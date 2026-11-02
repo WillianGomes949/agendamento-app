@@ -65,13 +65,13 @@ export default function AppLayout({ children, usuario }: AppLayoutProps) {
 
   if (!mounted) {
     return (
-      <div className="min-h-screen bg-bg flex">
-        <div className="flex-1 flex flex-col">
-          <div className="h-16 bg-bg-elevated/80 backdrop-blur-md border-b border-border" />
+      <div className="flex min-h-screen bg-bg">
+        <div className="flex flex-1 flex-col">
+          <div className="h-16 border-b border-border bg-bg-elevated/80 backdrop-blur-md" />
           <main className="flex-1 p-4 lg:p-8">
-            <div className="animate-pulse space-y-6 max-w-7xl mx-auto">
-              <div className="h-32 bg-bg-muted rounded-2xl" />
-              <div className="h-64 bg-bg-muted rounded-2xl" />
+            <div className="mx-auto max-w-7xl animate-pulse space-y-6">
+              <div className="h-32 rounded-2xl bg-bg-elevated/40" />
+              <div className="h-64 rounded-2xl bg-bg-elevated/30" />
             </div>
           </main>
         </div>
@@ -86,7 +86,7 @@ export default function AppLayout({ children, usuario }: AppLayoutProps) {
       : "16rem";
 
   return (
-    <div className="min-h-screen bg-bg flex font-sans">
+    <div className="flex min-h-screen bg-bg font-sans">
       <Sidebar
         isOpen={mobileMenuOpen}
         isCollapsed={sidebarCollapsed && !isMobile}
@@ -98,7 +98,7 @@ export default function AppLayout({ children, usuario }: AppLayoutProps) {
       />
 
       <div
-        className="flex-1 flex flex-col min-w-0 transition-[margin] duration-300 ease-in-out"
+        className="flex min-w-0 flex-1 flex-col transition-[margin] duration-300 ease-in-out"
         style={{ marginLeft: effectiveSidebarWidth }}
       >
         <Header
@@ -108,8 +108,8 @@ export default function AppLayout({ children, usuario }: AppLayoutProps) {
           isMobile={isMobile}
           usuario={usuario}
         />
-        <main className="flex-1 p-4 sm:p-6 lg:p-8 overflow-y-auto">
-          <div className="max-w-7xl mx-auto pb-20 lg:pb-0">{children}</div>
+        <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8">
+          <div className="mx-auto max-w-7xl pb-20 lg:pb-0">{children}</div>
         </main>
       </div>
     </div>

@@ -1,6 +1,7 @@
 // src/app/error.tsx
 "use client";
 import { AlertCircle } from "lucide-react";
+import { Button } from "@/components/ui/Button";
 
 export default function Error({
   error,
@@ -10,21 +11,28 @@ export default function Error({
   reset: () => void;
 }) {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-bg p-4">
-      <div className="max-w-md w-full bg-bg-elevated p-8 rounded-2xl shadow-lg border border-border text-center">
-        <div className="w-16 h-16 bg-rose-50 dark:bg-rose-950/30 rounded-full flex items-center justify-center mx-auto mb-4 border border-rose-200 dark:border-rose-800">
-          <AlertCircle className="w-8 h-8 text-rose-500 dark:text-rose-400" />
+    <div className="flex min-h-screen items-center justify-center bg-bg p-4">
+      <div className="w-full max-w-md rounded-2xl border border-border bg-bg-elevated p-8 text-center shadow-lg">
+        <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-xl border border-rose-500/20 bg-rose-500/10">
+          <AlertCircle
+            className="h-6 w-6 text-rose-600 dark:text-rose-400"
+            aria-hidden
+          />
         </div>
-        <h2 className="text-2xl font-bold text-text mb-2">Algo deu errado</h2>
-        <p className="text-text-muted mb-6">
+        <h2 className="mb-1.5 text-lg font-semibold tracking-tight text-text">
+          Algo deu errado
+        </h2>
+        <p className="mb-4 text-sm text-text-muted">
           {error.message || "Ocorreu um erro inesperado."}
         </p>
-        <button
-          onClick={reset}
-          className="w-full py-3 px-4 bg-accent text-accent-foreground font-semibold rounded-xl hover:bg-accent/90 transition-colors focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2"
-        >
+        {error.digest && (
+          <p className="mb-4 text-xs text-text-muted">
+            Código: <span className="font-mono">{error.digest}</span>
+          </p>
+        )}
+        <Button onClick={reset} variant="primary" size="lg" className="w-full">
           Tentar novamente
-        </button>
+        </Button>
       </div>
     </div>
   );

@@ -6,7 +6,6 @@ import {
   MapPin,
   Home,
   Building,
-  Loader2,
   AlertCircle,
 } from "lucide-react";
 import { Input } from "./Input";
@@ -119,13 +118,13 @@ export function AdvancedAddressSearch({
   );
 
   return (
-    <div className={`space-y-5 ${className}`}>
-      {/* Abas (Tabs) Modernas */}
+    <div className={`space-y-4 ${className}`}>
+      {/* Abas (Tabs) */}
       <div className="flex gap-4 border-b border-border">
         <button
           type="button"
           onClick={() => setSearchType("cep")}
-          className={`pb-3 text-sm font-semibold transition-all relative flex items-center gap-2 ${
+          className={`relative flex items-center gap-2 pb-2.5 text-[13px] font-medium tracking-tight transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-text/50 ${
             searchType === "cep"
               ? "text-text"
               : "text-text-muted hover:text-text"
@@ -133,13 +132,13 @@ export function AdvancedAddressSearch({
         >
           <Home size={14} /> Buscar por CEP
           {searchType === "cep" && (
-            <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-accent rounded-t-full" />
+            <div className="absolute bottom-0 left-0 right-0 h-0.5 rounded-t-full bg-accent" />
           )}
         </button>
         <button
           type="button"
           onClick={() => setSearchType("address")}
-          className={`pb-3 text-sm font-semibold transition-all relative flex items-center gap-2 ${
+          className={`relative flex items-center gap-2 pb-2.5 text-[13px] font-medium tracking-tight transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-text/50 ${
             searchType === "address"
               ? "text-text"
               : "text-text-muted hover:text-text"
@@ -147,15 +146,15 @@ export function AdvancedAddressSearch({
         >
           <Building size={14} /> Buscar por Endereço
           {searchType === "address" && (
-            <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-accent rounded-t-full" />
+            <div className="absolute bottom-0 left-0 right-0 h-0.5 rounded-t-full bg-accent" />
           )}
         </button>
       </div>
 
       {/* Área do Formulário */}
-      <div className="bg-bg-muted border border-border p-5 rounded-2xl">
+      <div className="rounded-lg border border-border bg-bg-muted/30 p-4">
         {searchType === "cep" && (
-          <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-end">
+          <div className="flex flex-col items-start gap-3 sm:flex-row sm:items-end">
             <Input
               label="CEP"
               placeholder="00000000"
@@ -166,27 +165,24 @@ export function AdvancedAddressSearch({
               onKeyPress={(e) => e.key === "Enter" && buscarPorCep()}
               helperText="Digite o CEP com 8 dígitos"
               error={error}
-              className="flex-1 w-full"
+              className="w-full flex-1"
             />
             <Button
               type="button"
               onClick={buscarPorCep}
               disabled={loading}
-              className="w-full sm:w-auto mb-5"
+              icon={loading ? undefined : Search}
+              isLoading={loading}
+              className="mb-5 w-full sm:w-auto"
             >
-              {loading ? (
-                <Loader2 size={16} className="animate-spin" />
-              ) : (
-                <Search size={16} />
-              )}
-              Buscar
+              {loading ? "" : "Buscar"}
             </Button>
           </div>
         )}
 
         {searchType === "address" && (
           <div className="space-y-4">
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
               <Input
                 label="UF"
                 placeholder="SP"
@@ -205,31 +201,28 @@ export function AdvancedAddressSearch({
                 />
               </div>
             </div>
-            <div className="flex flex-col sm:flex-row gap-3 items-end">
+            <div className="flex flex-col items-end gap-3 sm:flex-row">
               <Input
                 label="Rua / Logradouro"
                 placeholder="Ex: Av. Paulista"
                 value={street}
                 onChange={(e) => setStreet(e.target.value)}
                 onKeyPress={(e) => e.key === "Enter" && buscarPorEndereco()}
-                className="flex-1 w-full"
+                className="w-full flex-1"
               />
               <Button
                 type="button"
                 onClick={buscarPorEndereco}
                 disabled={loading}
+                icon={loading ? undefined : Search}
+                isLoading={loading}
                 className="w-full sm:w-auto"
               >
-                {loading ? (
-                  <Loader2 size={16} className="animate-spin" />
-                ) : (
-                  <Search size={16} />
-                )}
-                Buscar
+                {loading ? "" : "Buscar"}
               </Button>
             </div>
             {error && (
-              <div className="flex items-center gap-2 text-sm font-medium text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/30 p-3 rounded-xl border border-rose-200 dark:border-rose-800">
+              <div className="flex items-center gap-2 rounded-lg border border-rose-500/20 bg-rose-500/10 p-3 text-sm font-medium text-rose-600 dark:text-rose-400">
                 <AlertCircle size={16} /> {error}
               </div>
             )}
@@ -239,35 +232,35 @@ export function AdvancedAddressSearch({
 
       {/* Resultados da Busca (Endereços) */}
       {showResults && results.length > 0 && (
-        <div className="border border-border rounded-2xl overflow-hidden shadow-sm">
-          <div className="bg-bg-muted px-5 py-3 border-b border-border">
-            <p className="text-sm font-bold text-text">
+        <div className="overflow-hidden rounded-lg border border-border shadow-sm">
+          <div className="border-b border-border bg-bg-muted/40 px-4 py-2.5">
+            <p className="text-sm font-semibold text-text">
               {results.length} endereço(s) encontrado(s)
             </p>
           </div>
-          <div className="max-h-64 overflow-y-auto scrollbar-thin">
+          <div className="no-scrollbar max-h-64 overflow-y-auto">
             {results.map((result, index) => (
               <button
                 key={index}
                 type="button"
                 onClick={() => selecionarEndereco(result)}
-                className="w-full text-left px-5 py-3.5 hover:bg-bg-muted transition-colors border-b border-border last:border-0 group"
+                className="group w-full border-b border-border px-4 py-3 text-left transition-colors last:border-0 hover:bg-bg-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-text/50"
               >
                 <div className="flex items-start gap-3">
-                  <div className="p-2 bg-bg-elevated rounded-lg group-hover:bg-bg-muted transition-colors border border-border">
+                  <div className="flex items-center justify-center rounded-md border border-border bg-bg-elevated p-1.5 transition-colors group-hover:bg-bg-muted">
                     <MapPin
                       size={16}
-                      className="text-text-muted group-hover:text-text"
+                      className="text-text-muted transition-colors group-hover:text-text"
                     />
                   </div>
                   <div>
-                    <p className="text-sm font-bold text-text">
+                    <p className="text-sm font-semibold text-text">
                       {result.street}
                     </p>
-                    <p className="text-xs font-medium text-text-muted mt-0.5">
+                    <p className="mt-0.5 text-xs font-medium text-text-muted">
                       {result.neighborhood} - {result.city}/{result.state}
                     </p>
-                    <p className="text-xs font-semibold text-text-muted mt-1 uppercase tracking-wider">
+                    <p className="mt-1 text-xs font-semibold uppercase tracking-wider text-text-muted">
                       CEP: {result.cep}
                     </p>
                   </div>

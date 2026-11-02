@@ -322,7 +322,7 @@ export default function RelatoriosPage() {
         <div className="w-20 h-20 bg-rose-50 dark:bg-rose-950/30 rounded-3xl flex items-center justify-center border border-rose-200 dark:border-rose-900 mb-6 shadow-sm">
           <AlertCircle className="w-10 h-10 text-rose-500 dark:text-rose-400" />
         </div>
-        <h2 className="text-2xl font-extrabold text-text tracking-tight">
+        <h2 className="text-3xl md:text-4xl font-extrabold tracking-tight text-text mb-2">
           Não foi possível carregar os relatórios
         </h2>
         <p className="text-text-muted mt-2 max-w-md leading-relaxed">{error}</p>

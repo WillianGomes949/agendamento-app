@@ -314,7 +314,7 @@ export default function TecnicosPage() {
       {/* Header */}
       <motion.div
         variants={itemVariants}
-        className="flex flex-col md:flex-row md:items-end justify-between gap-6"
+        className="flex flex-col sm:flex-row justify-between items-center gap-4 bg-bg-elevated p-6 rounded-2xl shadow-sm border border-border"
       >
         <div>
           <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight text-text mb-2">

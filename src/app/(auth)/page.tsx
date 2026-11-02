@@ -52,38 +52,50 @@ export default function LoginPage() {
       setIsLoading(false);
     }
   };
+
   return (
-    <div className="min-h-screen flex items-center justify-center bg-bg-muted px-4 py-12">
-      <Toaster position="top-right" />
+    <div className="flex min-h-screen items-center justify-center bg-bg-muted px-4 py-12">
+      <Toaster
+        position="top-right"
+        toastOptions={{
+          className:
+            "!rounded-lg !bg-bg-elevated !text-text !border !border-border !shadow-lg backdrop-blur-md",
+          success: { iconTheme: { primary: "#10b981", secondary: "#fff" } },
+          error: { iconTheme: { primary: "#e11d48", secondary: "#fff" } },
+        }}
+      />
 
       <motion.div
-        initial={{ opacity: 0, y: 20 }}
+        initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
+        transition={{ duration: 0.4, ease: "easeOut" }}
         className="w-full max-w-md"
       >
-        <div className="bg-bg-elevated rounded-3xl border border-border shadow-xl p-8 space-y-8">
+        <div className="space-y-6 rounded-2xl border border-border bg-bg-elevated p-8 shadow-lg">
           {/* Header */}
-          <div className="text-center space-y-2">
-            <div className="w-16 h-16 bg-linear-to-br from-blue-500 to-indigo-600 rounded-2xl flex items-center justify-center mx-auto shadow-lg mb-4">
-              <ShieldCheck className="w-8 h-8 text-white" />
+          <div className="space-y-3 text-center">
+            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-linear-to-br from-blue-600 to-indigo-700 shadow-md ring-1 ring-inset ring-white/15">
+              <ShieldCheck className="h-7 w-7 text-white" aria-hidden />
             </div>
-            <h1 className="text-3xl font-extrabold text-text tracking-tight">
-              Bem-vindo de volta
-            </h1>
-            <p className="text-text-muted text-sm">
-              Insira suas credenciais para acessar o painel.
-            </p>
+            <div className="space-y-1">
+              <h1 className="text-2xl font-semibold tracking-tight text-text">
+                Bem-vindo de volta
+              </h1>
+              <p className="text-sm text-text-muted">
+                Insira suas credenciais para acessar o painel.
+              </p>
+            </div>
           </div>
 
           {/* Form */}
-          <form onSubmit={handleLogin} className="space-y-5">
+          <form onSubmit={handleLogin} className="space-y-4">
             {error && (
-              <div className="flex items-center gap-3 p-4 bg-rose-50 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-800 rounded-xl text-rose-700 dark:text-rose-400 text-sm">
-                <AlertCircle className="w-5 h-5 shrink-0" />
+              <div className="flex items-center gap-2.5 rounded-lg border border-rose-500/20 bg-rose-500/10 px-3.5 py-3 text-sm text-rose-600 dark:text-rose-400">
+                <AlertCircle className="h-4 w-4 shrink-0" aria-hidden />
                 <span>{error}</span>
               </div>
             )}
+
             <Input
               label="Email"
               type="email"
@@ -98,37 +110,49 @@ export default function LoginPage() {
               autoFocus
             />
 
-            <div className="relative">
-              <Input
-                label="Senha"
-                type={showSenha ? "text" : "password"}
-                placeholder="••••••••"
-                value={senha}
-                onChange={(e) => {
-                  setSenha(e.target.value);
-                  setError("");
-                }}
-                leftIcon={Lock}
-                required
-              />
-              <button
-                type="button"
-                onClick={() => setShowSenha(!showSenha)}
-                className="absolute right-3 top-8.5 p-1.5 text-text-muted hover:text-text transition-colors"
+            <div className="w-full">
+              <label
+                htmlFor="senha"
+                className="mb-1.5 block text-[13px] font-medium tracking-tight text-text"
               >
-                {showSenha ? (
-                  <EyeOff className="w-4 h-4" />
-                ) : (
-                  <Eye className="w-4 h-4" />
-                )}
-              </button>
+                Senha
+              </label>
+              <div className="relative">
+                <Input
+                  id="senha"
+                  type={showSenha ? "text" : "password"}
+                  placeholder="••••••••"
+                  value={senha}
+                  onChange={(e) => {
+                    setSenha(e.target.value);
+                    setError("");
+                  }}
+                  leftIcon={Lock}
+                  required
+                  className="pr-9"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowSenha(!showSenha)}
+                  className="absolute right-3 top-1/2 inline-flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-md text-text-muted transition-colors hover:bg-bg-hover hover:text-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-text/50"
+                  tabIndex={-1}
+                  aria-label={showSenha ? "Ocultar senha" : "Mostrar senha"}
+                >
+                  {showSenha ? (
+                    <EyeOff className="h-4 w-4" aria-hidden />
+                  ) : (
+                    <Eye className="h-4 w-4" aria-hidden />
+                  )}
+                </button>
+              </div>
             </div>
 
             <Button
               type="submit"
               variant="primary"
+              size="lg"
               isLoading={isLoading}
-              className="w-full py-3 text-base font-semibold shadow-md hover:shadow-lg transition-all"
+              className="w-full"
             >
               {isLoading ? "Entrando..." : "Acessar Sistema"}
             </Button>

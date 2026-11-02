@@ -488,10 +488,10 @@ export default function AgendamentosPage() {
       {/* Header */}
       <motion.div
         variants={itemVariants}
-        className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 px-4 sm:px-0"
+        className="flex flex-col sm:flex-row items-center justify-between gap-4 bg-bg-elevated p-6 rounded-2xl shadow-sm border border-border"
       >
         <div>
-          <h1 className="text-2xl sm:text-3xl font-extrabold text-text tracking-tight">
+          <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight text-text mb-2">
             Agenda
           </h1>
           <p className="text-text-muted text-sm mt-1">

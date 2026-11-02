@@ -10,41 +10,45 @@ export default function NotFound() {
   const router = useRouter();
 
   return (
-    <main className="min-h-screen bg-bg flex items-center justify-center p-4 font-sans selection:bg-accent/20 selection:text-text">
+    <main className="flex min-h-screen items-center justify-center bg-bg p-4 selection:bg-primary/20 selection:text-text">
       <motion.div
-        initial={{ opacity: 0, y: 20, scale: 0.95 }}
+        initial={{ opacity: 0, y: 12, scale: 0.95 }}
         animate={{ opacity: 1, y: 0, scale: 1 }}
         transition={{
-          duration: 0.4,
-          ease: "easeOut",
           type: "spring",
           stiffness: 300,
           damping: 25,
         }}
-        className="max-w-md w-full bg-bg-elevated p-8 sm:p-10 rounded-4xl shadow-xl shadow-black/5 dark:shadow-black/30 border border-border text-center relative overflow-hidden"
+        className="relative w-full max-w-md overflow-hidden rounded-2xl border border-border bg-bg-elevated p-8 text-center shadow-lg sm:p-10"
       >
-        {/* Decoração de fundo sutil (Blobs) */}
-        <div className="absolute -top-24 -right-24 w-48 h-48 bg-bg-muted rounded-full blur-3xl opacity-60 pointer-events-none" />
-        <div className="absolute -bottom-24 -left-24 w-48 h-48 bg-bg-muted rounded-full blur-3xl opacity-60 pointer-events-none" />
+        {/* Decoração de fundo sutil */}
+        <div
+          className="pointer-events-none absolute -right-24 -top-24 h-48 w-48 rounded-full bg-primary/5 blur-3xl"
+          aria-hidden
+        />
+        <div
+          className="pointer-events-none absolute -bottom-24 -left-24 h-48 w-48 rounded-full bg-primary/5 blur-3xl"
+          aria-hidden
+        />
 
         <div className="relative z-10">
-          {/* Ícone com leve inclinação para dar um tom mais "perdido" */}
+          {/* Ícone */}
           <motion.div
             initial={{ rotate: -15 }}
             animate={{ rotate: 0 }}
             transition={{ delay: 0.2, type: "spring", stiffness: 200 }}
-            className="w-20 h-20 bg-bg-muted rounded-3xl flex items-center justify-center mx-auto mb-6 border border-border shadow-sm"
+            className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-2xl border border-border bg-bg-elevated/60"
           >
-            <Compass className="w-10 h-10 text-text-muted" />
+            <Compass className="h-8 w-8 text-text-muted" aria-hidden />
           </motion.div>
 
-          <h1 className="text-6xl font-extrabold text-text tracking-tighter mb-2">
+          <h1 className="mb-2 text-7xl font-bold tracking-tighter text-text">
             404
           </h1>
-          <h2 className="text-xl font-bold text-text mb-3">
+          <h2 className="mb-3 text-lg font-semibold tracking-tight text-text">
             Página não encontrada
           </h2>
-          <p className="text-text-muted mb-8 leading-relaxed text-sm sm:text-base">
+          <p className="mb-6 text-sm leading-relaxed text-text-muted sm:text-base">
             Ops! Parece que você se perdeu. A página que está procurando não
             existe, foi movida ou o link está incorreto.
           </p>
@@ -53,20 +57,19 @@ export default function NotFound() {
             <Button
               onClick={() => router.back()}
               variant="outline"
-              className="w-full py-3 sm:py-3.5 h-auto text-text border-border"
+              size="lg"
+              icon={ArrowLeft}
+              className="w-full"
             >
-              <ArrowLeft className="w-4 h-4 mr-2" />
               Voltar para onde estava
             </Button>
-            <Link
-              href="/"
-              className="w-full focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2 rounded-xl"
-            >
+            <Link href="/" className="block w-full">
               <Button
                 variant="primary"
-                className="w-full py-3 sm:py-3.5 h-auto shadow-md"
+                size="lg"
+                icon={Home}
+                className="w-full"
               >
-                <Home className="w-4 h-4 mr-2" />
                 Ir para o Início
               </Button>
             </Link>

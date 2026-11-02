@@ -21,18 +21,20 @@ export function EmptyState({
 }: EmptyStateProps) {
   return (
     <motion.div
-      initial={{ opacity: 0, y: 20 }}
+      initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
       className={cn(
-        "flex flex-col items-center justify-center py-16 px-6 text-center bg-bg-elevated rounded-2xl border-2 border-dashed border-border",
+        "flex flex-col items-center justify-center rounded-xl border-2 border-dashed border-border bg-bg-elevated px-6 py-16 text-center",
         className,
       )}
     >
-      <div className="w-16 h-16 bg-bg-muted rounded-2xl flex items-center justify-center mb-5 shadow-sm border border-border">
-        <Icon className="w-8 h-8 text-text-muted" />
+      <div className="mb-5 flex h-14 w-14 items-center justify-center rounded-xl border border-border bg-bg-muted/50">
+        <Icon className="h-7 w-7 text-text-muted" aria-hidden />
       </div>
-      <h3 className="text-xl font-bold text-text mb-2">{title}</h3>
-      <p className="text-sm text-text-muted max-w-sm mb-6 leading-relaxed">
+      <h3 className="mb-2 text-lg font-semibold tracking-tight text-text">
+        {title}
+      </h3>
+      <p className="mb-6 max-w-sm text-sm leading-relaxed text-text-muted">
         {description}
       </p>
       {action && <div className="mt-2">{action}</div>}

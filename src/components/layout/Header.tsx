@@ -70,83 +70,67 @@ export default function Header({
     }
   };
 
+  const iconColorClass =
+    apiStatus === "checking"
+      ? "text-text-muted animate-spin"
+      : apiStatus === "online"
+        ? "text-emerald-600 dark:text-emerald-400"
+        : "text-rose-600 dark:text-rose-400";
+
   return (
-    <header className="sticky top-0 z-30 bg-bg-elevated/80 backdrop-blur-lg border-b border-border h-16 px-4 md:px-6 flex items-center justify-between gap-4">
+    <header className="sticky top-0 z-30 flex h-16 items-center justify-between gap-4 border-b border-border bg-bg-elevated/85 px-4 backdrop-blur-xl md:px-6">
       {/* Esquerda: Menu & Logo */}
-      <div className="flex items-center gap-2 sm:gap-4 flex-1">
+      <div className="flex flex-1 items-center gap-2 sm:gap-4">
         <button
           onClick={isMobile ? onToggleMobile : onToggleSidebar}
-          className="md:hidden p-2.5 -ml-2 lg:ml-0 hover:bg-bg-muted rounded-xl transition-colors text-text-muted hover:text-text focus:outline-none focus:ring-2 focus:ring-accent"
+          className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-text-muted transition-colors hover:bg-bg-hover hover:text-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-text/50"
           aria-label={isMobile ? "Abrir menu" : "Alternar menu lateral"}
         >
-          <Menu size={22} />
+          <Menu size={20} />
         </button>
 
         <div className="flex items-center gap-2.5">
-          <h1 className="hidden sm:block text-lg font-extrabold tracking-tight text-text">
+          <h1 className="hidden text-base font-semibold tracking-tight text-text sm:block">
             AgendaApp
           </h1>
         </div>
       </div>
 
       {/* Direita: Ações & Perfil */}
-      <div className="flex items-center gap-1 sm:gap-2 ">
-        {/* Indicador de Status da API */}
+      <div className="flex items-center gap-1.5 sm:gap-2">
+        {/* Indicador de Status da API (unificado desktop/mobile) */}
         <div
-          className="hidden md:flex px-3 h-11 items-center gap-4 p-1 rounded-xl bg-bg-muted border border-border"
+          className="inline-flex h-10 items-center gap-2 rounded-lg border border-border bg-bg-muted/40 px-2.5"
           title={apiConfig.label}
         >
-          <ApiIcon
-            size={14}
-            className={
-              apiStatus === "checking"
-                ? "text-text-muted animate-spin"
-                : apiStatus === "online"
-                  ? "text-emerald-600 dark:text-emerald-400"
-                  : "text-rose-600 dark:text-rose-400"
-            }
-          />
-          <span className="text-xs font-semibold text-text-muted">
+          <ApiIcon size={14} className={iconColorClass} />
+          <span className="hidden text-xs font-medium text-text-muted md:inline">
             {apiConfig.label}
           </span>
-          <div className={`w-2 h-2 rounded-full ${apiConfig.color}`} />
-        </div>
-
-        {/* Indicador Mobile */}
-        <div
-          className="md:hidden flex px-3 h-11 items-center gap-4 p-1 rounded-xl bg-bg-muted border border-border"
-          title={apiConfig.label}
-        >
-          <ApiIcon
-            size={16}
-            className={
-              apiStatus === "checking"
-                ? "text-text-muted animate-spin"
-                : apiStatus === "online"
-                  ? "text-emerald-600 dark:text-emerald-400"
-                  : "text-rose-600 dark:text-rose-400"
-            }
+          <div
+            className={`hidden h-2 w-2 rounded-full ${apiConfig.color} md:block`}
           />
         </div>
 
         {/* Menu do Usuário */}
-        <div className="items-center gap-4 inline-flex p-1 rounded-xl bg-bg-muted border border-border">
-          <div className="text-right hidden sm:block mx-3">
-            <p className="text-sm font-semibold text-text">
+        <div className="inline-flex h-10 items-center gap-3 rounded-lg border border-border bg-bg-muted/40 pl-3 pr-1">
+          <div className="hidden text-right sm:block">
+            <p className="text-[13px] font-semibold leading-tight text-text">
               {usuario?.tecnico_nome}
             </p>
-            <p className="text-xs text-text-muted">
+            <p className="text-[11px] leading-tight text-text-muted">
               {usuario?.role === "master" ? "Administrador" : "Técnico"}
             </p>
           </div>
 
           <button
             onClick={handleLogout}
-            className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/20 rounded-lg transition-colors"
+            className="inline-flex h-7 w-7 items-center justify-center rounded-md text-rose-600 transition-colors hover:bg-rose-500/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-500/50 dark:text-rose-400"
             title="Sair do sistema"
+            aria-label="Sair do sistema"
           >
-            <LogOut className="w-5 h-5" />
-            <span className="hidden sm:inline">Sair</span>
+            <LogOut size={16} />
+            <span className="sr-only">Sair</span>
           </button>
         </div>
       </div>

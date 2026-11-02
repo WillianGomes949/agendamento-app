@@ -18,21 +18,21 @@ interface ButtonProps extends Omit<HTMLMotionProps<"button">, "children"> {
 
 const variantClasses: Record<ButtonVariant, string> = {
   primary:
-    "bg-accent text-accent-foreground hover:bg-accent/90 focus:ring-accent shadow-sm",
+    "bg-accent text-accent-foreground shadow-sm hover:bg-accent/90 focus-visible:ring-text/50",
   secondary:
-    "bg-bg-muted text-text hover:bg-bg-muted/80 focus:ring-border-strong",
+    "bg-bg-muted/60 text-text border border-border hover:bg-bg-hover focus-visible:ring-border",
   outline:
-    "border-2 border-border bg-transparent text-text hover:border-border-strong hover:bg-bg-muted focus:ring-border",
+    "border border-border bg-transparent text-text hover:bg-bg-hover focus-visible:ring-border",
   ghost:
-    "bg-transparent text-text-muted hover:bg-bg-muted hover:text-text focus:ring-border",
+    "bg-transparent text-text-muted hover:bg-bg-hover hover:text-text focus-visible:ring-border",
   danger:
-    "bg-rose-500 text-white hover:bg-rose-600 focus:ring-rose-500 shadow-sm",
+    "bg-rose-600 text-white shadow-sm hover:bg-rose-700 focus-visible:ring-rose-500/50",
 };
 
 const sizeClasses: Record<ButtonSize, string> = {
-  sm: "px-3 py-2 text-sm",
-  md: "px-5 py-2.5 text-sm font-semibold",
-  lg: "px-6 py-3.5 text-base font-semibold",
+  sm: "h-8 px-3 gap-1.5 text-xs font-medium",
+  md: "h-10 px-4 gap-2 text-sm font-semibold",
+  lg: "h-12 px-6 gap-2 text-base font-semibold",
 };
 
 export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
@@ -56,10 +56,10 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
         ref={ref}
         disabled={isDisabled}
         whileHover={!isDisabled ? { scale: 1.01 } : {}}
-        whileTap={!isDisabled ? { scale: 0.96 } : {}}
+        whileTap={!isDisabled ? { scale: 0.97 } : {}}
         transition={{ type: "spring", stiffness: 400, damping: 25 }}
         className={cn(
-          "inline-flex items-center justify-center gap-2 rounded-xl transition-all focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed",
+          "inline-flex select-none items-center justify-center whitespace-nowrap rounded-lg tracking-tight transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-bg disabled:cursor-not-allowed disabled:opacity-50",
           variantClasses[variant],
           sizeClasses[size],
           className,
@@ -67,9 +67,9 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
         {...props}
       >
         {isLoading ? (
-          <Loader2 className="w-4 h-4 animate-spin" />
+          <Loader2 className="h-4 w-4 shrink-0 animate-spin" aria-hidden />
         ) : Icon ? (
-          <Icon className="w-4 h-4" />
+          <Icon className="h-4 w-4 shrink-0" aria-hidden />
         ) : null}
         {children}
       </motion.button>

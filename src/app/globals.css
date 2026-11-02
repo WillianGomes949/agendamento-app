@@ -5,6 +5,8 @@
 
 /* ===== Tokens de tema (claro por padrão) ===== */
 @theme {
+  --font-poppins: "Poppins", sans-serif;
+  --font-sans: var(--font-poppins);
   /* Superfícies */
   --color-bg: #f8fafc;
   --color-bg-elevated: #ffffff;
@@ -71,6 +73,7 @@ html.dark {
 }
 
 body {
+  font-family: var(--font-poppins);
   background-color: var(--color-bg);
   color: var(--color-text);
   @apply antialiased;

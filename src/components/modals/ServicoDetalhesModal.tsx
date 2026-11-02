@@ -101,7 +101,7 @@ export default function ServicoDetalhesModal({
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
         transition={{ duration: 0.2 }}
-        className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 dark:bg-black/70 backdrop-blur-sm"
+        className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm dark:bg-black/70"
         onClick={onClose}
         role="dialog"
         aria-modal="true"
@@ -111,18 +111,18 @@ export default function ServicoDetalhesModal({
           animate={{ scale: 1, opacity: 1, y: 0 }}
           exit={{ scale: 0.95, opacity: 0, y: 20 }}
           transition={{ duration: 0.3, ease: "easeOut" }}
-          className="bg-bg-elevated rounded-3xl shadow-2xl w-full max-w-3xl max-h-[90vh] overflow-hidden flex flex-col border border-border/50"
+          className="flex max-h-[90vh] w-full max-w-3xl flex-col overflow-hidden rounded-2xl border border-border bg-bg-elevated shadow-lg"
           onClick={(e) => e.stopPropagation()}
         >
           {/* --- CABEÇALHO --- */}
-          <div className="flex items-start justify-between px-6 py-5 border-b border-border/50 bg-bg-muted/30 backdrop-blur-sm shrink-0">
-            <div className="flex-1 min-w-0 pr-4">
-              <div className="flex items-center gap-3 mb-2">
-                <h2 className="text-2xl font-extrabold tracking-tight text-text truncate">
+          <div className="flex shrink-0 items-start justify-between border-b border-border bg-bg-muted/30 px-6 py-4 backdrop-blur-sm">
+            <div className="min-w-0 flex-1 pr-4">
+              <div className="mb-2 flex items-center gap-3">
+                <h2 className="truncate text-xl font-semibold tracking-tight text-text">
                   {cliente.nome}
                 </h2>
                 {servico?.ordemServico && (
-                  <span className="shrink-0 inline-flex items-center gap-1.5 bg-primary/10 text-primary px-2.5 py-1 rounded-lg text-xs font-bold uppercase tracking-wider border border-primary/20">
+                  <span className="inline-flex shrink-0 items-center gap-1.5 rounded-md bg-primary/10 px-2.5 py-1 text-xs font-bold uppercase tracking-wider text-primary ring-1 ring-primary/20">
                     <Hash size={12} />
                     OS {servico.ordemServico}
                   </span>
@@ -137,20 +137,20 @@ export default function ServicoDetalhesModal({
                 <span>{horarioFormatado}</span>
               </div>
             </div>
-            <div className="flex items-center gap-3 shrink-0">
+            <div className="flex shrink-0 items-center gap-3">
               {servico && <StatusBadge status={servico.status} />}
               <button
                 onClick={onClose}
-                className="p-2 rounded-xl hover:bg-bg-muted transition-colors text-text-muted hover:text-text"
+                className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-text-muted transition-colors hover:bg-bg-hover hover:text-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-text/50"
                 aria-label="Fechar modal"
               >
-                <X className="w-5 h-5" />
+                <X className="h-4 w-4" />
               </button>
             </div>
           </div>
 
           {/* --- CONTEÚDO --- */}
-          <div className="p-6 overflow-y-auto flex-1 custom-scrollbar">
+          <div className="custom-scrollbar flex-1 overflow-y-auto p-6">
             {loading && (
               <div className="flex flex-col items-center justify-center py-16">
                 <Spinner
@@ -163,14 +163,14 @@ export default function ServicoDetalhesModal({
             )}
 
             {!loading && (error || !servico) && (
-              <div className="flex flex-col items-center justify-center py-16 text-center bg-rose-500/5 rounded-2xl border border-rose-500/20">
-                <div className="w-16 h-16 bg-rose-500/10 rounded-2xl flex items-center justify-center mb-4">
-                  <AlertCircle className="w-8 h-8 text-rose-500" />
+              <div className="flex flex-col items-center justify-center rounded-xl border border-rose-500/20 bg-rose-500/5 py-16 text-center">
+                <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-xl border border-rose-500/20 bg-rose-500/10">
+                  <AlertCircle className="h-7 w-7 text-rose-600 dark:text-rose-400" />
                 </div>
-                <h3 className="text-lg font-bold text-text mb-2">
+                <h3 className="mb-2 text-base font-semibold tracking-tight text-text">
                   {error ? "Erro ao carregar" : "Serviço não encontrado"}
                 </h3>
-                <p className="text-text-muted max-w-md text-sm mb-6">
+                <p className="mb-6 max-w-md text-sm text-text-muted">
                   {error ||
                     "O agendamento solicitado foi removido ou o ID está incorreto."}
                 </p>
@@ -185,24 +185,24 @@ export default function ServicoDetalhesModal({
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.1 }}
-                className="space-y-6"
+                className="space-y-5"
               >
                 {/* Grid Principal */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                   {/* Card: Cliente e Contato */}
-                  <div className="bg-bg-muted/40 rounded-2xl border border-border/50 p-5 space-y-4">
-                    <div className="flex items-center gap-2.5 mb-1">
-                      <div className="p-2 bg-blue-500/10 text-blue-500 rounded-lg">
-                        <User className="w-4 h-4" />
+                  <div className="space-y-4 rounded-xl border border-border bg-bg-muted/40 p-4">
+                    <div className="mb-1 flex items-center gap-2.5">
+                      <div className="flex items-center justify-center rounded-md bg-blue-500/10 p-1.5 text-blue-600 dark:text-blue-400">
+                        <User className="h-4 w-4" />
                       </div>
-                      <h3 className="text-sm font-bold uppercase tracking-wider text-text-muted">
+                      <h3 className="text-[11px] font-bold uppercase tracking-wider text-text-muted">
                         Cliente & Contato
                       </h3>
                     </div>
                     <div className="space-y-3">
                       <div className="flex items-center gap-3 text-text">
-                        <Phone className="w-4 h-4 text-text-muted shrink-0" />
-                        <span className="font-medium">
+                        <Phone className="h-4 w-4 shrink-0 text-text-muted" />
+                        <span className="text-sm font-medium">
                           {formatarContato(cliente.contato) || "Não informado"}
                         </span>
                       </div>
@@ -211,7 +211,7 @@ export default function ServicoDetalhesModal({
                           href={whatsappUrl}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="flex items-center justify-center gap-2 w-full py-2.5 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 font-semibold text-sm transition-all hover:bg-emerald-500/20 hover:scale-[1.02]"
+                          className="flex w-full items-center justify-center gap-2 rounded-lg border border-emerald-500/20 bg-emerald-500/10 py-2.5 text-sm font-semibold text-emerald-600 transition-colors hover:bg-emerald-500/20 dark:text-emerald-400"
                         >
                           <MessageCircle size={16} />
                           Conversar no WhatsApp
@@ -221,44 +221,44 @@ export default function ServicoDetalhesModal({
                   </div>
 
                   {/* Card: Veículo */}
-                  <div className="bg-bg-muted/40 rounded-2xl border border-border/50 p-5 space-y-4">
-                    <div className="flex items-center gap-2.5 mb-1">
-                      <div className="p-2 bg-purple-500/10 text-purple-500 rounded-lg">
-                        <Car className="w-4 h-4" />
+                  <div className="space-y-4 rounded-xl border border-border bg-bg-muted/40 p-4">
+                    <div className="mb-1 flex items-center gap-2.5">
+                      <div className="flex items-center justify-center rounded-md bg-purple-500/10 p-1.5 text-purple-600 dark:text-purple-400">
+                        <Car className="h-4 w-4" />
                       </div>
-                      <h3 className="text-sm font-bold uppercase tracking-wider text-text-muted">
+                      <h3 className="text-[11px] font-bold uppercase tracking-wider text-text-muted">
                         Veículo
                       </h3>
                     </div>
                     <div className="space-y-3">
-                      <div className="flex justify-between items-center pb-3 border-b border-border/50">
+                      <div className="flex items-center justify-between border-b border-border pb-3">
                         <span className="text-sm text-text-muted">Placa</span>
-                        <span className="font-mono font-bold uppercase bg-bg-elevated px-2 py-1 rounded text-text border border-border/50 text-sm">
+                        <span className="rounded-md border border-border bg-bg px-2 py-1 font-mono text-sm font-bold uppercase text-text">
                           {veiculo.placa}
                         </span>
                       </div>
-                      <div className="flex justify-between items-center">
+                      <div className="flex items-center justify-between">
                         <span className="text-sm text-text-muted">Modelo</span>
-                        <span className="font-medium text-text text-sm text-right">
+                        <span className="text-right text-sm font-medium text-text">
                           {veiculo.marcaModelo}
                         </span>
                       </div>
                     </div>
                   </div>
 
-                  {/* Card: Localização (Full width no mobile, span 2 no desktop se quiser, mas aqui deixamos 1) */}
-                  <div className="md:col-span-2 bg-bg-muted/40 rounded-2xl border border-border/50 p-5">
-                    <div className="flex items-center gap-2.5 mb-4">
-                      <div className="p-2 bg-rose-500/10 text-rose-500 rounded-lg">
-                        <MapPin className="w-4 h-4" />
+                  {/* Card: Localização */}
+                  <div className="rounded-xl border border-border bg-bg-muted/40 p-4 md:col-span-2">
+                    <div className="mb-4 flex items-center gap-2.5">
+                      <div className="flex items-center justify-center rounded-md bg-rose-500/10 p-1.5 text-rose-600 dark:text-rose-400">
+                        <MapPin className="h-4 w-4" />
                       </div>
-                      <h3 className="text-sm font-bold uppercase tracking-wider text-text-muted">
+                      <h3 className="text-[11px] font-bold uppercase tracking-wider text-text-muted">
                         Localização do Serviço
                       </h3>
                     </div>
 
-                    <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 bg-bg-elevated p-4 rounded-xl border border-border/50">
-                      <address className="not-italic space-y-1 flex-1">
+                    <div className="flex flex-col justify-between gap-4 rounded-lg border border-border bg-bg p-4 sm:flex-row sm:items-start">
+                      <address className="flex-1 space-y-1 not-italic">
                         <p className="font-semibold text-text">
                           {endereco.rua}
                           {endereco.numero ? `, ${endereco.numero}` : ""}
@@ -272,24 +272,24 @@ export default function ServicoDetalhesModal({
                             : ""}
                         </p>
                         {endereco.cep && (
-                          <p className="text-xs font-medium text-text-muted pt-1">
+                          <p className="pt-1 text-xs font-medium text-text-muted">
                             CEP:{" "}
                             {endereco.cep.replace(/^(\d{5})(\d{3})$/, "$1-$2")}
                           </p>
                         )}
                       </address>
 
-                      <div className="flex gap-2 shrink-0">
+                      <div className="flex shrink-0 gap-2">
                         <Link
                           href={googleMapsUrl}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="flex items-center justify-center w-10 h-10 rounded-xl bg-bg-muted border border-border/50 transition-all hover:bg-primary/10 hover:border-primary/30 hover:text-primary group"
+                          className="group flex h-9 w-9 items-center justify-center rounded-lg border border-border bg-bg-muted transition-colors hover:border-primary/30 hover:bg-primary/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-text/50"
                           title="Abrir no Google Maps"
                         >
                           <Map
                             size={18}
-                            className="text-text-muted group-hover:text-primary transition-colors"
+                            className="text-text-muted transition-colors group-hover:text-primary"
                           />
                         </Link>
                       </div>
@@ -297,32 +297,36 @@ export default function ServicoDetalhesModal({
                   </div>
 
                   {/* Card: Detalhes Operacionais */}
-                  <div className="md:col-span-2 bg-bg-muted/40 rounded-2xl border border-border/50 p-5">
-                    <div className="flex items-center gap-2.5 mb-4">
-                      <div className="p-2 bg-orange-500/10 text-orange-500 rounded-lg">
-                        <Wrench className="w-4 h-4" />
+                  <div className="rounded-xl border border-border bg-bg-muted/40 p-4 md:col-span-2">
+                    <div className="mb-4 flex items-center gap-2.5">
+                      <div className="flex items-center justify-center rounded-md bg-orange-500/10 p-1.5 text-orange-600 dark:text-orange-400">
+                        <Wrench className="h-4 w-4" />
                       </div>
-                      <h3 className="text-sm font-bold uppercase tracking-wider text-text-muted">
+                      <h3 className="text-[11px] font-bold uppercase tracking-wider text-text-muted">
                         Detalhes Operacionais
                       </h3>
                     </div>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                      <div className="bg-bg-elevated p-3 rounded-xl border border-border/50">
-                        <span className="text-xs text-text-muted block mb-1">
+                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                      <div className="rounded-lg border border-border bg-bg p-3">
+                        <span className="mb-1 block text-xs text-text-muted">
                           Técnico Responsável
                         </span>
-                        <div className="flex items-center gap-2 text-text font-semibold">
+                        <div className="flex items-center gap-2 font-semibold text-text">
                           <User size={14} className="text-text-muted" />
-                          {servico.tecnico || "Não atribuído"}
+                          <span className="text-sm">
+                            {servico.tecnico || "Não atribuído"}
+                          </span>
                         </div>
                       </div>
-                      <div className="bg-bg-elevated p-3 rounded-xl border border-border/50">
-                        <span className="text-xs text-text-muted block mb-1">
+                      <div className="rounded-lg border border-border bg-bg p-3">
+                        <span className="mb-1 block text-xs text-text-muted">
                           Tipo de Serviço
                         </span>
-                        <div className="flex items-center gap-2 text-text font-semibold">
+                        <div className="flex items-center gap-2 font-semibold text-text">
                           <Wrench size={14} className="text-text-muted" />
-                          {servico.tipoServico || "Não especificado"}
+                          <span className="text-sm">
+                            {servico.tipoServico || "Não especificado"}
+                          </span>
                         </div>
                       </div>
                     </div>
@@ -330,16 +334,16 @@ export default function ServicoDetalhesModal({
 
                   {/* Card: Observações (Condicional) */}
                   {servico.observacao && (
-                    <div className="md:col-span-2 bg-amber-500/5 rounded-2xl border border-amber-500/20 p-5">
-                      <div className="flex items-center gap-2.5 mb-3">
-                        <div className="p-2 bg-amber-500/10 text-amber-600 dark:text-amber-400 rounded-lg">
-                          <NotepadText className="w-4 h-4" />
+                    <div className="rounded-xl border border-amber-500/20 bg-amber-500/5 p-4 md:col-span-2">
+                      <div className="mb-3 flex items-center gap-2.5">
+                        <div className="flex items-center justify-center rounded-md bg-amber-500/10 p-1.5 text-amber-600 dark:text-amber-400">
+                          <NotepadText className="h-4 w-4" />
                         </div>
-                        <h3 className="text-sm font-bold uppercase tracking-wider text-amber-700 dark:text-amber-400">
+                        <h3 className="text-[11px] font-bold uppercase tracking-wider text-amber-700 dark:text-amber-400">
                           Observações
                         </h3>
                       </div>
-                      <p className="text-sm text-text/90 leading-relaxed whitespace-pre-wrap">
+                      <p className="whitespace-pre-wrap text-sm leading-relaxed text-text/90">
                         {servico.observacao}
                       </p>
                     </div>
@@ -351,7 +355,7 @@ export default function ServicoDetalhesModal({
 
           {/* --- RODAPÉ COM AÇÕES --- */}
           {hasActions && servico && (
-            <div className="px-6 py-4 border-t border-border/50 bg-bg-muted/30 shrink-0 flex flex-col-reverse sm:flex-row justify-end gap-3 rounded-b-3xl">
+            <div className="flex flex-col-reverse justify-end gap-3 border-t border-border bg-bg-muted/30 px-6 py-4 shrink-0 sm:flex-row">
               <Button
                 variant="outline"
                 onClick={onClose}
@@ -362,24 +366,27 @@ export default function ServicoDetalhesModal({
               {onDelete && (
                 <Button
                   variant="danger"
+                  icon={Trash2}
                   onClick={() => {
                     onDelete(servico);
                     onClose();
                   }}
                   className="w-full sm:w-auto"
                 >
-                  <Trash2 className="w-4 h-4 mr-2" /> Excluir
+                  Excluir
                 </Button>
               )}
               {onEdit && (
                 <Button
+                  variant="primary"
+                  icon={Pencil}
                   onClick={() => {
                     onEdit(servico);
                     onClose();
                   }}
                   className="w-full sm:w-auto"
                 >
-                  <Pencil className="w-4 h-4 mr-2" /> Editar
+                  Editar
                 </Button>
               )}
             </div>

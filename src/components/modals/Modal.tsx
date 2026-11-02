@@ -55,7 +55,7 @@ export function Modal({
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           transition={{ duration: 0.2 }}
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 dark:bg-black/60 backdrop-blur-sm p-4 sm:p-6"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm sm:p-6"
           onClick={closeOnOverlayClick ? onClose : undefined}
         >
           <motion.div
@@ -65,24 +65,24 @@ export function Modal({
             transition={{ type: "spring", stiffness: 300, damping: 25 }}
             onClick={(e) => e.stopPropagation()}
             className={cn(
-              "w-full bg-bg-elevated rounded-2xl shadow-2xl border border-border overflow-hidden max-h-[90vh] flex flex-col",
+              "flex max-h-[90vh] w-full flex-col overflow-hidden rounded-2xl border border-border bg-bg-elevated shadow-lg",
               sizeClasses[size],
               className,
             )}
           >
             {title && (
-              <div className="flex items-center justify-between px-5 sm:px-6 py-4 border-b border-border bg-bg-elevated/80 backdrop-blur-md z-10 shrink-0">
+              <div className="z-10 flex shrink-0 items-center justify-between border-b border-border bg-bg-elevated/85 px-5 py-4 backdrop-blur-md sm:px-6">
                 <div className="font-semibold text-text">{title}</div>
                 <button
                   onClick={onClose}
-                  className="p-2 hover:bg-bg-muted rounded-xl transition-colors text-text-muted hover:text-text focus:outline-none focus:ring-2 focus:ring-accent"
+                  className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-text-muted transition-colors hover:bg-bg-hover hover:text-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-text/50"
                   aria-label="Fechar"
                 >
-                  <X className="w-5 h-5" aria-hidden="true" />
+                  <X className="h-4 w-4" aria-hidden="true" />
                 </button>
               </div>
             )}
-            <div className="p-5 sm:p-6 overflow-y-auto custom-scrollbar flex-1">
+            <div className="custom-scrollbar flex-1 overflow-y-auto p-5 sm:p-6">
               {children}
             </div>
           </motion.div>

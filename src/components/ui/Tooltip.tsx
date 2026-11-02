@@ -30,7 +30,7 @@ const positionClasses: Record<TooltipPosition, string> = {
 const variantClasses: Record<TooltipVariant, string> = {
   dark: "bg-accent text-accent-foreground shadow-lg shadow-accent/20",
   light:
-    "bg-bg-elevated text-text border border-border shadow-xl shadow-black/5",
+    "bg-bg-elevated text-text border border-border shadow-md",
   info: "bg-blue-600 text-white shadow-lg shadow-blue-900/20 dark:bg-blue-500 dark:shadow-blue-500/20",
   warning:
     "bg-amber-500 text-white shadow-lg shadow-amber-900/20 dark:bg-amber-400 dark:text-amber-950 dark:shadow-amber-500/20",
@@ -133,7 +133,7 @@ export function Tooltip({
             }}
             transition={{ duration: 0.15, ease: "easeOut" }}
             className={cn(
-              "absolute z-50 px-3 py-1.5 text-xs font-medium rounded-lg whitespace-nowrap pointer-events-none",
+              "pointer-events-none absolute z-50 whitespace-nowrap rounded-md px-3 py-1.5 text-xs font-medium",
               positionClasses[position],
               variantClasses[variant],
               className,
@@ -148,7 +148,7 @@ export function Tooltip({
             {showArrow && (
               <div
                 className={cn(
-                  "absolute w-0 h-0 border-[5px] border-transparent",
+                  "absolute h-0 w-0 border-[5px] border-transparent",
                   arrowPositionClasses[position],
                   arrowBorderClasses[position][variant],
                 )}
@@ -180,7 +180,7 @@ export function HelpTooltip({ content, className }: HelpTooltipProps) {
       <button
         type="button"
         className={cn(
-          "inline-flex items-center justify-center w-4 h-4 rounded-full bg-bg-muted text-text-muted text-xs font-bold hover:bg-bg-muted/80 hover:text-text transition-colors focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-1",
+          "inline-flex h-4 w-4 items-center justify-center rounded-full bg-bg-muted text-xs font-bold text-text-muted transition-colors hover:bg-bg-hover hover:text-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-text/50 focus-visible:ring-offset-1",
           className,
         )}
         aria-label="Ajuda"

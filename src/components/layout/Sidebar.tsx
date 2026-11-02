@@ -69,6 +69,7 @@ export default function Sidebar({
   };
 
   const sidebarWidth = isCollapsed && !isHovered ? "5rem" : "16rem";
+  const isExpanded = !isCollapsed || isHovered;
 
   const navItems = baseNavItems.map((item) => ({
     ...item,
@@ -88,7 +89,7 @@ export default function Sidebar({
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.2 }}
-            className="fixed inset-0 bg-black/40 dark:bg-black/60 backdrop-blur-sm z-40 lg:hidden"
+            className="fixed inset-0 z-40 bg-black/50 backdrop-blur-sm lg:hidden"
             onClick={onCloseMobile}
           />
         )}
@@ -104,109 +105,101 @@ export default function Sidebar({
         transition={{ type: "spring", stiffness: 400, damping: 35 }}
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
-        className="fixed top-0 left-0 h-full bg-bg border-r border-border z-50 flex flex-col overflow-hidden shadow-2xl lg:shadow-none"
+        className="fixed left-0 top-0 z-50 flex h-full flex-col overflow-hidden border-r border-border bg-bg shadow-xl lg:shadow-none"
       >
         {/* Logo Section */}
-        <div className="flex items-center justify-between p-4 border-b border-border h-16">
-          {(!isCollapsed || isHovered) && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              className="flex items-center gap-3"
-            >
-              <div className="md:hidden w-8 h-8 bg-accent rounded-xl flex items-center justify-center">
-                <span className="text-accent-foreground font-bold text-sm">
-                  Aa
-                </span>
+        <div className="flex h-16 items-center justify-between border-b border-border px-4">
+          {isExpanded ? (
+            <div className="flex items-center gap-2.5">
+              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-accent text-accent-foreground">
+                <span className="text-xs font-bold">Aa</span>
               </div>
-              <span className="md:hidden font-extrabold text-lg tracking-tight text-text">
+              <span className="text-base font-semibold tracking-tight text-text">
                 AgendaApp
               </span>
-            </motion.div>
-          )}
-          {isCollapsed && !isHovered && (
-            <div className="md:hidden w-8 h-8 bg-accent rounded-xl flex items-center justify-center mx-auto">
-              <span className="text-accent-foreground font-bold text-sm">
-                Aa
-              </span>
+            </div>
+          ) : (
+            <div className="mx-auto flex h-8 w-8 items-center justify-center rounded-lg bg-accent text-accent-foreground">
+              <span className="text-xs font-bold">Aa</span>
             </div>
           )}
           <button
             onClick={onCloseMobile}
-            className="lg:hidden p-2 hover:bg-bg-muted rounded-xl text-text-muted ml-auto"
+            className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-text-muted transition-colors hover:bg-bg-hover hover:text-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-text/50 lg:hidden"
             aria-label="Fechar menu"
           >
-            <X size={20} />
+            <X size={18} />
           </button>
         </div>
 
         {/* Navegação */}
-        <nav className="flex-1 py-6 px-3 space-y-1 overflow-y-auto scrollbar-none">
-          <div className="mb-6 space-y-1">
-            {navItems.map((item) => {
-              const isActive =
-                pathname === item.href ||
-                (item.href !== "/" && pathname.startsWith(item.href));
-              const Icon = item.icon;
-              const badge =
-                item.badgeKey === "agendamentos" &&
-                agendamentosPendentes !== undefined &&
-                agendamentosPendentes > 0
-                  ? String(agendamentosPendentes)
-                  : undefined;
-              return (
-                <Link
-                  key={item.label}
-                  href={item.href}
-                  onClick={() => onCloseMobile()}
-                  className={`flex items-center gap-3.5 px-3 py-3 lg:py-2.5 rounded-xl transition-all duration-200 group relative ${
-                    isActive
-                      ? "bg-accent text-accent-foreground shadow-sm"
-                      : "text-text-muted hover:bg-bg-muted hover:text-text"
-                  }`}
-                >
-                  <Icon size={20} className="shrink-0" />
-                  {(!isCollapsed || isHovered) && (
-                    <>
-                      <span className="font-semibold text-sm whitespace-nowrap">
-                        {item.label}
+        <nav className="no-scrollbar flex-1 space-y-0.5 overflow-y-auto p-3">
+          <p className="px-3 pb-2 pt-1 text-[11px] font-semibold uppercase tracking-[0.08em] text-text-muted/70">
+            Menu
+          </p>
+          {navItems.map((item) => {
+            const isActive =
+              pathname === item.href ||
+              (item.href !== "/" && pathname.startsWith(item.href));
+            const Icon = item.icon;
+            const badge =
+              item.badgeKey === "agendamentos" &&
+              agendamentosPendentes !== undefined &&
+              agendamentosPendentes > 0
+                ? String(agendamentosPendentes)
+                : undefined;
+            return (
+              <Link
+                key={item.label}
+                href={item.href}
+                onClick={() => onCloseMobile()}
+                className={`group relative flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-text/50 ${
+                  isActive
+                    ? "bg-accent text-accent-foreground shadow-sm"
+                    : "text-text-muted hover:bg-bg-hover hover:text-text"
+                }`}
+              >
+                <Icon size={18} className="shrink-0" />
+                {isExpanded && (
+                  <>
+                    <span className="tracking-tight whitespace-nowrap">
+                      {item.label}
+                    </span>
+                    {badge && (
+                      <span
+                        className={`ml-auto rounded-md px-1.5 py-0.5 text-[10px] font-bold ${
+                          isActive
+                            ? "bg-accent-foreground/20 text-accent-foreground"
+                            : "bg-amber-500/15 text-amber-600 dark:text-amber-400"
+                        }`}
+                      >
+                        {badge}
                       </span>
-                      {badge && (
-                        <span
-                          className={`ml-auto text-xs px-2 py-0.5 rounded-full font-bold ${
-                            isActive
-                              ? "bg-accent-foreground/20 text-accent-foreground"
-                              : "bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400"
-                          }`}
-                        >
-                          {badge}
-                        </span>
+                    )}
+                    {item.badgeKey === "agendamentos" &&
+                      isLoading &&
+                      !badge && (
+                        <span className="ml-auto inline-block h-4 w-4 animate-spin rounded-full border-2 border-border-strong border-t-text-muted" />
                       )}
-                      {item.badgeKey === "agendamentos" &&
-                        isLoading &&
-                        !badge && (
-                          <span className="ml-auto">
-                            <span className="inline-block w-4 h-4 border-2 border-border-strong border-t-text-muted rounded-full animate-spin" />
-                          </span>
-                        )}
-                    </>
-                  )}
-                </Link>
-              );
-            })}
-          </div>
+                  </>
+                )}
+              </Link>
+            );
+          })}
         </nav>
 
         {/* Footer Sidebar */}
-        <div className="p-4 border-t border-border">
-          {!isCollapsed || isHovered ? (
+        <div className="border-t border-border p-3">
+          {isExpanded ? (
             <>
-              <div className="hidden sm:block">
+              <div className="hidden justify-center sm:flex">
                 <ThemeToggle />
               </div>
-              <div className="sm:hidden justify-center items-center gap-4 flex p-1 rounded-xl bg-bg-muted border border-border mx-auto">
-                <p className="text-text-muted">Mudar Tema</p>
-                <ThemeSwitch />{" "}
+              <div className="flex items-center justify-center gap-3 rounded-lg border border-border bg-bg-muted/40 p-2 sm:hidden">
+                <span className="text-xs font-medium text-text-muted">
+                  Tema
+                </span>
+                <ThemeSwitch />
               </div>
             </>
           ) : (

@@ -34,7 +34,7 @@ export function Card({
       }
       transition={{ duration: 0.2, ease: "easeOut" }}
       className={cn(
-        "bg-bg-elevated rounded-2xl border border-border shadow-sm transition-colors",
+        "rounded-2xl border border-border bg-bg-elevated shadow-sm transition-shadow",
         paddingClasses[padding],
         className,
       )}
